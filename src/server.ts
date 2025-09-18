@@ -1,4 +1,12 @@
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 dotenv.config();
-console.log(process.env.PORT);
-console.log(process.env.MONGO_URL);
+
+mongoose
+  .connect(process.env.MONGO_URL as string, {})
+  .then((data) => {
+    console.log("connected to the database successfully 👏");
+  })
+  .catch((error) => {
+    console.log("Error🆘: ", error);
+  });
