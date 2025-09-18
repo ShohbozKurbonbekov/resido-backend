@@ -1,6 +1,8 @@
 import express from "express";
 import path from "path";
 import router from "./router";
+import residoAdminController from "./controllers/resido-admin.controller";
+import adminRouter from "./admin-router";
 
 // PATHs
 const publicPath = path.join(__dirname, "public");
@@ -21,5 +23,6 @@ app.set("view engine", "ejs");
 
 // ROUTERS
 app.use("/", router);
+app.use("/admin", adminRouter);
 
 export default app;
