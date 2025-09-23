@@ -4,7 +4,7 @@
   "main": "src/server.ts",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "start:dev": "nodemon  --exec ts-node src/server.ts",
+    "start:dev": " env-cmd -f ./config/dev.env nodemon  --exec ts-node src/server.ts",
     "build": "tsc"
   },
   "author": "MIT24_DANIEL",
@@ -12,18 +12,29 @@
   "description": "this is a fullstack real estate Resido portfolio",
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/validator": "^13.15.3",
+    "env-cmd": "^11.0.0",
+    "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "validator": "^13.15.15"
   },
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "moment": "^2.30.1",
     "mongodb": "^6.19.0",
-    "mongoose": "^8.18.1"
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.1"
   }
 }
