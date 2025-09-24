@@ -1,9 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import { MemberStatus, MemberType } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
-import { T } from "../libs/types/common";
-import { User } from "../libs/types/member";
+import { T } from "../../libs/types/common";
+import { User } from "../../libs/types/member";
 
 const UserSchema = new Schema<User>(
   {
@@ -12,15 +12,14 @@ const UserSchema = new Schema<User>(
       enum: MemberType,
       default: MemberType.USER,
     },
-    userName: {
+    memberName: {
       type: String,
       index: { unique: true },
       required: true,
       trim: true,
     },
-    userEmail: {
+    memberEmail: {
       type: String,
-      index: { unique: true },
       required: true,
       validator: {
         validator(value: string) {
@@ -30,13 +29,13 @@ const UserSchema = new Schema<User>(
         message: "Invalid email, chech again",
       },
     },
-    userStatus: {
+    memberStatus: {
       type: String,
       enum: MemberStatus,
       default: MemberStatus.ACTIVE,
     },
 
-    userPhone: {
+    memberPhone: {
       type: String,
       index: {
         unique: true,
@@ -44,7 +43,7 @@ const UserSchema = new Schema<User>(
       required: true,
     },
 
-    userPassword: {
+    memberPassword: {
       type: String,
       select: false,
       required: true,
@@ -80,16 +79,16 @@ const UserSchema = new Schema<User>(
 UserSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject(); //  In Mongoose, the .toObject() method is used to convert a Mongoose document into a plain JavaScript object.
-  delete userObject.userPassword;
+  delete userObject.memberPassword;
 
   return userObject;
 };
 
 UserSchema.pre("save", async function (next) {
   const user = this;
-  if (user.isModified("userPassword")) {
+  if (user.isModified("memberPassword")) {
     const salt: string = await bcrypt.genSalt();
-    user.userPassword = await bcrypt.hash(user.userPassword, salt);
+    user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
     next();
   }
 });

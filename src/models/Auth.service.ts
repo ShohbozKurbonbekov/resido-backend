@@ -1,4 +1,4 @@
-import { User } from "../libs/types/member";
+import { Agency, User } from "../libs/types/member";
 import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
@@ -9,7 +9,7 @@ class AuthService {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: User): Promise<string> {
+  public async createToken(payload: User | Agency): Promise<string> {
     return new Promise((resolve, reject) => {
       console.log("token", this.secretToken);
       jwt.sign(

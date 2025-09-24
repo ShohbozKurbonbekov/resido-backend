@@ -1,4 +1,9 @@
-import { UserMemberInput, Agency, Agent, User } from "../libs/types/member";
+import {
+  UserMemberInput,
+  Agency,
+  User,
+  AgencyMemberInput,
+} from "../libs/types/member";
 import { T } from "../libs/types/common";
 import { Response, Request } from "express";
 import MemberService from "../models/Member.service";
@@ -12,33 +17,11 @@ const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
 
-memberController.getRealEstateAdmin = async (req: Request, res: Response) => {
-  try {
-    console.log("get realEstateAdmin process");
-  } catch (error) {
-    console.log("Error in Home page: ", error);
-  }
-};
-
-memberController.getLogin = async (req: Request, res: Response) => {
-  try {
-    res.send("Login Page");
-  } catch (error) {
-    console.log("Error in Login Page: ", error);
-  }
-};
-
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup access completed");
-    const input: UserMemberInput = req.body;
-    let result: User;
-    if (req.body.role === MemberType.USER) {
-      result = await memberService.userSignup(input);
-    } else {
-      result = await memberService.userSignup(input);
-    }
-    console.log({ ...result });
+    const input: UserMemberInput | AgencyMemberInput = req.body;
+    let result: User | Agency = await memberService.signup(input);
     // create token
     const token = await authService.createToken(result);
     res.cookie("accessToken", token, {
