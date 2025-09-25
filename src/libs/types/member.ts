@@ -29,6 +29,7 @@ export interface User {
   userAddress?: string;
   userDescription?: string;
   userImage?: string;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -84,7 +85,9 @@ export interface Agency {
   billingInfo?: BillingDetails;
   socialLinks?: Social;
   views?: number;
-  agenycBadge?: AgencyCurrentBadge;
+  agencyBadge?: AgencyCurrentBadge;
   createdAt: Date;
   updatedAt: Date;
+  verified: boolean;
+  isDeleted: boolean;
 }

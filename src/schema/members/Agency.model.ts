@@ -30,23 +30,24 @@ const AgencySchema = new Schema<Agency>(
     role: {
       type: String,
       enum: MemberType,
-      default: MemberType.USER,
+      default: MemberType.AGENCY,
     },
     memberName: {
       type: String,
-      index: { unique: true },
+      index: true,
       required: true,
       trim: true,
     },
     memberEmail: {
       type: String,
+      index: true,
       required: true,
-      validator: {
+      validate: {
         validator(value: string) {
           return validator.isEmail(value);
         },
 
-        message: "Invalid email, chech again",
+        message: "Invalid email, check again",
       },
     },
     memberStatus: {
@@ -57,9 +58,7 @@ const AgencySchema = new Schema<Agency>(
 
     memberPhone: {
       type: String,
-      index: {
-        unique: true,
-      },
+      index: true,
       required: true,
     },
 
@@ -67,13 +66,13 @@ const AgencySchema = new Schema<Agency>(
       type: String,
       select: false,
       required: true,
-      minLength: 7,
+      minlength: 7,
       trim: true,
-      validator: {
+      validate: {
         validator(value: string) {
-          return !value.includes("password");
+          return validator.isStrongPassword(value);
         },
-        message: `Don't include (password) key in your inputs`,
+        message: `Type a strong password`,
       },
     },
 
@@ -93,21 +92,20 @@ const AgencySchema = new Schema<Agency>(
     registrationNumber: {
       type: String,
     },
-    agents: {
-      type: [],
-    },
-    agenycBadge: {
+    agents: [{ type: Schema.Types.ObjectId, ref: "Agent" }],
+    properties: [{ type: Schema.Types.ObjectId, ref: "Property" }],
+    agencyBadge: {
       type: String,
       enum: AgencyCurrentBadge,
       default: AgencyCurrentBadge.VERIFIED_AGENCY,
     },
     billingInfo: {
       type: BillingSchema,
-      default: {
+      default: () => ({
         planName: "Free",
-        subscriptionDate: new Date(),
+        subscriptionDate: Date.now(),
         subscriptionStatus: "inactive",
-      },
+      }),
     },
     city: {
       type: String,
@@ -116,14 +114,14 @@ const AgencySchema = new Schema<Agency>(
       type: String,
     },
     memberSince: {
-      type: Number,
-      default: new Date(),
+      type: Date,
+      default: Date.now,
     },
-    properties: [],
+
     socialLinks: {
       instagram: { type: String, default: null },
       twitter: { type: String, default: null },
-      facbook: {
+      facebook: {
         type: String,
         default: null,
       },
@@ -131,14 +129,22 @@ const AgencySchema = new Schema<Agency>(
         type: String,
         default: null,
       },
-      emial: {
+      email: {
         type: String,
-        defult: null,
+        default: null,
       },
     },
     views: {
       type: Number,
       default: 0,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -163,4 +169,5 @@ AgencySchema.pre("save", async function (next) {
     next();
   }
 });
+
 export default mongoose.model("Agency", AgencySchema);
