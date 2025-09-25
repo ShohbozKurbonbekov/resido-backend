@@ -1,9 +1,4 @@
-import {
-  UserMemberInput,
-  Agency,
-  User,
-  AgencyMemberInput,
-} from "../libs/types/member";
+import { UserMemberInput, User } from "../libs/types/member";
 import { T } from "../libs/types/common";
 import { Response, Request } from "express";
 import MemberService from "../models/Member.service";
@@ -12,6 +7,9 @@ import { HttpCode } from "../libs/Errors";
 import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime } from "../libs/config";
+import { AgencyMemberInput } from "../libs/types/agency";
+import { Agency } from "../libs/types/agency";
+import { Agent, MemberAgentInput } from "../libs/types/agent";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -20,8 +18,9 @@ const authService = new AuthService();
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup access completed");
-    const input: UserMemberInput | AgencyMemberInput = req.body;
-    let result: User | Agency = await memberService.signup(input);
+    const input: UserMemberInput | AgencyMemberInput | MemberAgentInput =
+      req.body;
+    let result: User | Agency | Agent = await memberService.signup(input);
     // create token
     const token = await authService.createToken(result);
     res.cookie("accessToken", token, {

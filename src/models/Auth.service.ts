@@ -1,7 +1,9 @@
-import { Agency, User } from "../libs/types/member";
+import { User } from "../libs/types/member";
 import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
+import { Agency } from "../libs/types/agency";
+import { Agent } from "../libs/types/agent";
 
 class AuthService {
   private readonly secretToken;
@@ -9,7 +11,7 @@ class AuthService {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: User | Agency): Promise<string> {
+  public async createToken(payload: User | Agency | Agent): Promise<string> {
     return new Promise((resolve, reject) => {
       console.log("token", this.secretToken);
       jwt.sign(

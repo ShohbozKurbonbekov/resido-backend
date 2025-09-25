@@ -4,7 +4,6 @@ import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
 import { T } from "../../libs/types/common";
 import { User } from "../../libs/types/member";
-import { MongoTailableCursorError } from "mongodb/mongodb";
 
 const UserSchema = new Schema<User>(
   {
@@ -16,11 +15,14 @@ const UserSchema = new Schema<User>(
     memberName: {
       type: String,
       index: true,
+      unique: true,
       required: true,
       trim: true,
     },
     memberEmail: {
       type: String,
+      index: true,
+      unique: true,
       required: true,
       validate: {
         validator(value: string) {
@@ -39,18 +41,21 @@ const UserSchema = new Schema<User>(
     memberPhone: {
       type: String,
       index: true,
+      unique: true,
       required: true,
     },
 
     memberPassword: {
       type: String,
       select: false,
+      unique: true,
+      index: true,
       required: true,
       minLength: 7,
       trim: true,
       validate: {
         validator(value: string) {
-          return validator.isStrongPassword(value);
+          return !value.includes("password");
         },
         message: `Type a strong password`,
       },

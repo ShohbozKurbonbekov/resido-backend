@@ -2,9 +2,8 @@ import mongoose, { now, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
-import { T } from "../../libs/types/common";
-import { Agency, User } from "../../libs/types/member";
 import { AgencyCurrentBadge } from "../../libs/enums/agency.enum";
+import { Agency } from "../../libs/types/agency";
 
 const BillingSchema = new Schema(
   {
@@ -35,11 +34,13 @@ const AgencySchema = new Schema<Agency>(
     memberName: {
       type: String,
       index: true,
+      unique: true,
       required: true,
       trim: true,
     },
     memberEmail: {
       type: String,
+      unique: true,
       index: true,
       required: true,
       validate: {
@@ -59,18 +60,21 @@ const AgencySchema = new Schema<Agency>(
     memberPhone: {
       type: String,
       index: true,
+      unique: true,
       required: true,
     },
 
     memberPassword: {
       type: String,
+      index: true,
+      unique: true,
       select: false,
       required: true,
       minlength: 7,
       trim: true,
       validate: {
         validator(value: string) {
-          return validator.isStrongPassword(value);
+          return !value.includes("password");
         },
         message: `Type a strong password`,
       },

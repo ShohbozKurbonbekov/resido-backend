@@ -9,8 +9,8 @@ export interface UserMemberInput {
   memberPhone: string;
   memberEmail: string;
   memberPassword: string;
-  memberStatus?: MemberStatus;
   role: MemberType;
+  memberStatus?: MemberStatus;
   userFullname?: string;
   userAddress?: string;
   userDescription?: string;
@@ -38,56 +38,4 @@ export interface BillingDetails {
   planName: string;
   subscriptionDate: Date;
   subscriptionStatus: String;
-}
-
-export interface AgencyMemberInput {
-  memberName: string;
-  memberEmail: string;
-  memberPhone: string;
-  memberPassword: string;
-  memberStatus?: string;
-  role: MemberType;
-  agencyOwner?: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  avatar?: string;
-  registrationNumber?: string;
-  memberSince?: number;
-  properties?: [];
-  agents?: [];
-  bioInfo?: string;
-  billingInfo?: BillingDetails;
-  viewCount?: number;
-  socialLinks?: Social[];
-  views?: number;
-  agenycBadge?: AgencyCurrentBadge;
-}
-
-export interface Agency {
-  _id: ObjectId;
-  memberName: string;
-  memberEmail: string;
-  memberPhone: string;
-  memberPassword: string;
-  memberStatus: string;
-  role: MemberType;
-  agencyOwner?: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  avatar?: string;
-  registrationNumber?: string;
-  memberSince?: number;
-  properties?: [];
-  agents?: [];
-  bioInfo?: string;
-  billingInfo?: BillingDetails;
-  socialLinks?: Social;
-  views?: number;
-  agencyBadge?: AgencyCurrentBadge;
-  createdAt: Date;
-  updatedAt: Date;
-  verified: boolean;
-  isDeleted: boolean;
 }
