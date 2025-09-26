@@ -1,13 +1,14 @@
 import Errors, { Message } from "../libs/Errors";
-import { UserMemberInput, User } from "../libs/types/member";
+import { UserMemberInput, User, LoginInput } from "../libs/types/member";
 import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
 import AgencyModel from "../schema/members/Agency.model";
-import { AgencyMemberInput } from "../libs/types/agency";
-import { Agency } from "../libs/types/agency";
+import { Agency, AgencyMemberInput } from "../libs/types/agency";
 import { MemberAgentInput } from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
+import { MemberStatus } from "../libs/enums/member.enum";
+import bcrypt from "bcrypt";
 
 class MemberService {
   private readonly userModel;
@@ -37,6 +38,91 @@ class MemberService {
       console.log("Error in userSignup service model", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.USED_USERNAME_PHONE);
     }
+  }
+
+  public async login(input: LoginInput): Promise<User | Agency | Agent> {
+    let member: null | Agency | Agent | User = null;
+    const memberUser: null | User = await this.userModel.findOne(
+      {
+        memberEmail: input.memberEmail,
+        memberStatus: { $ne: MemberStatus.DELETED },
+      },
+      {
+        memberPassword: 1,
+        memberStatus: 1,
+        _id: 1,
+      }
+    );
+    const memberAgent: null | Agent = await this.agentModel.findOne(
+      {
+        memberEmail: input.memberEmail,
+        memberStatus: { $ne: MemberStatus.DELETED },
+      },
+      {
+        memberPassword: 1,
+        memberStatus: 1,
+        _id: 1,
+      }
+    );
+    const memberAgency: null | Agency = await this.agencyModel
+      .findOne(
+        {
+          memberEmail: input.memberEmail,
+          memberStatus: { $ne: MemberStatus.DELETED },
+        },
+        {
+          memberPassword: 1,
+          memberStatus: 1,
+          _id: 1,
+        }
+      )
+      .exec();
+
+    if (memberUser) member = memberUser;
+    if (memberAgency) member = memberAgency;
+    if (memberAgent) member = memberAgent;
+
+    if (!member) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
+    } else if (member.memberStatus === MemberStatus.BLOCKED) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
+    }
+    const isMatch: boolean = await bcrypt.compare(
+      input.memberPassword,
+      member.memberPassword
+    );
+
+    if (!isMatch) {
+      throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
+    }
+
+    let result: User | Agent | Agency | null = null;
+
+    const resultUser: null | User = await this.userModel
+      .findById(member?._id)
+      .lean()
+      .exec();
+    const resultAgent: null | Agent = await this.agentModel
+      .findById(member?._id)
+      .lean()
+      .exec();
+    const resultAgency: null | Agency = await this.agencyModel
+      .findById(member?._id)
+      .lean()
+      .exec();
+
+    if (resultUser) {
+      result = resultUser;
+    } else if (resultAgent) {
+      result = resultAgent;
+    } else if (resultAgency) {
+      result = resultAgency;
+    }
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
+    }
+    return result;
   }
 }
 

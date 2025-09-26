@@ -14,7 +14,6 @@ const UserSchema = new Schema<User>(
     },
     memberName: {
       type: String,
-      index: true,
       unique: true,
       required: true,
       trim: true,
@@ -48,8 +47,6 @@ const UserSchema = new Schema<User>(
     memberPassword: {
       type: String,
       select: false,
-      unique: true,
-      index: true,
       required: true,
       minLength: 7,
       trim: true,

@@ -15,7 +15,7 @@ class AuthService {
     return new Promise((resolve, reject) => {
       console.log("token", this.secretToken);
       jwt.sign(
-        { ...payload },
+        payload,
         this.secretToken,
         {
           expiresIn: `${jwtTime}h`,

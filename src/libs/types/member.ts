@@ -18,7 +18,7 @@ export interface UserMemberInput {
 }
 
 export interface User {
-  id: ObjectId;
+  _id: ObjectId;
   memberName: string;
   memberPhone: string;
   memberEmail: string;
@@ -38,4 +38,9 @@ export interface BillingDetails {
   planName: string;
   subscriptionDate: Date;
   subscriptionStatus: String;
+}
+
+export interface LoginInput {
+  memberEmail: string;
+  memberPassword: string;
 }

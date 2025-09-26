@@ -1,18 +1,19 @@
 import { ObjectId } from "mongoose";
-import { MemberType } from "../enums/member.enum";
+import { MemberStatus, MemberType } from "../enums/member.enum";
 import Social, { T } from "./common";
 
 export interface MemberAgentInput {
   agencyId: string;
   nickname: string;
   fullName: string;
-  email: string;
+  memberEmail: string;
   phone: string;
-  password: string;
+  memberPassword: string;
   role: MemberType;
   address: string;
   yearOfExperience: number;
   bioInfo: string;
+  memberStatus?: MemberStatus;
   licenseNumber?: string;
   avatar?: string;
   points?: number;
@@ -27,13 +28,14 @@ export interface Agent {
   agencyId: ObjectId;
   nickname: string;
   fullName: string;
-  email: string;
+  memberEmail: string;
   phone: string;
-  password: string;
+  memberPassword: string;
   role: MemberType;
   address: string;
   yearOfExperience: number;
   bioInfo: string;
+  memberStatus: MemberStatus; // setIn the schema
   licenseNumber: string; // set in the schema
   points: number; // set in the schema
   socialLinks: Social; // set in the schema

@@ -1,7 +1,7 @@
 import validator from "validator";
 import mongoose, { model, Schema } from "mongoose";
 import { Agent } from "../../libs/types/agent";
-import { MemberType } from "../../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import bcrypt from "bcrypt";
 const AgentSchema = new Schema<Agent>(
   {
@@ -18,7 +18,7 @@ const AgentSchema = new Schema<Agent>(
       trim: true,
       required: true,
     },
-    email: {
+    memberEmail: {
       type: String,
       index: true,
       unique: true,
@@ -39,17 +39,23 @@ const AgentSchema = new Schema<Agent>(
       unique: true,
       trim: true,
     },
-    password: {
+    memberPassword: {
       type: String,
       required: true,
-      index: true,
-      unique: true,
+      minlength: 7,
+      trim: true,
+      select: false,
       validate: {
         validator: (value) => {
           return !value.includes("password");
         },
         message: "Don't include (passord) key",
       },
+    },
+    memberStatus: {
+      type: String,
+      enum: MemberStatus,
+      default: MemberStatus.ACTIVE,
     },
     role: {
       type: String,
@@ -109,16 +115,16 @@ const AgentSchema = new Schema<Agent>(
 AgentSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject(); //  In Mongoose, the .toObject() method is used to convert a Mongoose document into a plain JavaScript object.
-  delete userObject.password;
+  delete userObject.memberPassword;
 
   return userObject;
 };
 
 AgentSchema.pre("save", async function (next) {
   const user = this;
-  if (user.isModified("password")) {
+  if (user.isModified("memberPassword")) {
     const salt: string = await bcrypt.genSalt();
-    user.password = await bcrypt.hash(user.password, salt);
+    user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
     next();
   }
 });
