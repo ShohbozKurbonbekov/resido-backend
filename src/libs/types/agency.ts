@@ -18,8 +18,8 @@ export interface AgencyMemberInput {
   avatar?: string;
   registrationNumber?: string;
   memberSince?: number;
-  properties?: T[];
-  agents?: T[];
+  properties?: ObjectId[];
+  agents?: ObjectId[];
   bioInfo?: string;
   billingInfo?: BillingDetails;
   viewCount?: number;
@@ -43,8 +43,8 @@ export interface Agency {
   avatar?: string;
   registrationNumber?: string;
   memberSince?: number;
-  properties?: [];
-  agents?: [];
+  properties?: ObjectId[];
+  agents?: ObjectId[];
   bioInfo?: string;
   billingInfo?: BillingDetails;
   socialLinks?: Social;

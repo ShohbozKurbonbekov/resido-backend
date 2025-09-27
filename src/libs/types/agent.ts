@@ -17,8 +17,8 @@ export interface MemberAgentInput {
   licenseNumber?: string;
   avatar?: string;
   points?: number;
-  properties?: T[];
-  comments?: T[];
+  properties?: ObjectId[];
+  comments?: ObjectId[];
   socialLinks?: Social;
   isVerified?: boolean;
 }
@@ -40,7 +40,7 @@ export interface Agent {
   points: number; // set in the schema
   socialLinks: Social; // set in the schema
   isVerified: boolean; // set in the schema
-  properties?: T[];
-  comments?: T[];
+  properties?: ObjectId[];
+  comments?: ObjectId[];
   avatar?: string;
 }

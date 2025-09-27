@@ -7,3 +7,6 @@ const router = express.Router();
 router.post("/member/signup", memberController.getSignup);
 router.post("/member/login", memberController.login);
 export default router;
+
+// CREATE PROPERTY
+router.post("/property/create");
