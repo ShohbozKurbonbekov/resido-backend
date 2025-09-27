@@ -1,8 +1,13 @@
 import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
-import { Document } from "mongoose";
-import Social from "./common";
-import { AgencyCurrentBadge } from "../enums/agency.enum";
+import { Request } from "express";
+import { Agent } from "./agent";
+
+export interface ExtendedRequest extends Request {
+  file: Express.Multer.File;
+  files: Express.Multer.File[];
+  member: Agent;
+}
 
 export interface UserMemberInput {
   memberName: string;

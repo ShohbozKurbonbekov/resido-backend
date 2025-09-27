@@ -32,6 +32,11 @@ class AuthService {
       );
     });
   }
+
+  public async checkAuth(token: string): Promise<Agent> {
+    const decoded: Agent = (await jwt.verify(token, this.secretToken)) as Agent;
+    return decoded;
+  }
 }
 
 export default AuthService;

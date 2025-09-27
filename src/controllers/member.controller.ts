@@ -1,8 +1,13 @@
-import { UserMemberInput, User, LoginInput } from "../libs/types/member";
+import {
+  UserMemberInput,
+  User,
+  LoginInput,
+  ExtendedRequest,
+} from "../libs/types/member";
 import { T } from "../libs/types/common";
-import { Response, Request } from "express";
+import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
-import { HttpCode } from "../libs/Errors";
+import { HttpCode, Message } from "../libs/Errors";
 import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime } from "../libs/config";
@@ -60,6 +65,30 @@ memberController.login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log("Error in login proccess: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+memberController.verifyMember = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token: string | undefined = req.cookies?.accessToken;
+    if (token) {
+      req.member = await authService.checkAuth(token);
+    }
+    if (!req.member) {
+      throw new Errors(HttpCode.UNAUTHORIZED, Message.NOT_AUTHENTICATED);
+    }
+    next();
+  } catch (error) {
+    console.log("Error in veryAuth: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

@@ -1,5 +1,9 @@
 import mongoose, { Schema } from "mongoose";
-import { PropertyInput } from "../libs/types/property";
+import {
+  Property,
+  PropertyDocument,
+  PropertyInput,
+} from "../libs/types/property";
 import {
   PropertyCooling,
   PropertyFurnature,
@@ -69,9 +73,13 @@ const PropertyAmenitiesSchema = new Schema(
   { _id: false }
 );
 
-const PropertySchema = new Schema<PropertyInput>(
+const PropertySchema = new Schema(
   {
-    agencyId: { type: Schema.Types.ObjectId, ref: "Agency", required: true },
+    agencyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Agency",
+      required: true,
+    },
     agentId: { type: Schema.Types.ObjectId, ref: "Agent", required: true },
     title: {
       type: String,
@@ -92,14 +100,27 @@ const PropertySchema = new Schema<PropertyInput>(
       type: Number,
       required: true,
     },
-    propertyType: { type: String, enum: PropertyType, required: true },
-    area: { type: Number, required: true },
-    images: [{ type: String }],
-    bathrooms: { type: Number, required: true },
-    bedrooms: { type: Number, required: true },
-    address: {
+    propertyType: {
       type: String,
+      enum: PropertyType,
       required: true,
+    },
+    area: { type: Number, required: true },
+    images: {
+      type: [String],
+      default: [],
+    },
+    bathrooms: {
+      type: Number,
+      required: true,
+    },
+    bedrooms: {
+      type: Number,
+      required: true,
+    },
+    address: {
+      type: PropertyAddressSchema,
+      default: () => ({}),
     },
     description: {
       type: String,
@@ -149,9 +170,14 @@ const PropertySchema = new Schema<PropertyInput>(
     viewedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     likedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     firePlace: { type: Boolean, default: false },
-    comments: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    videos: [{ type: String }],
+    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+    videos: {
+      type: [String],
+      default: [],
+    },
   },
 
   { timestamps: true }
 );
+
+export default mongoose.model<PropertyDocument>("Property", PropertySchema);

@@ -7,7 +7,6 @@ import {
   PropertyStatus,
   PropertyType,
 } from "../enums/property.enum";
-import { T } from "./common";
 import { Document } from "mongoose";
 
 export interface PropertyAddress {
@@ -83,7 +82,7 @@ export interface PropertyInput {
   videos?: string[];
 }
 
-export interface Property extends Document {
+export interface Property {
   _id: ObjectId;
   agencyId: ObjectId;
   agentId: ObjectId;
@@ -113,3 +112,4 @@ export interface Property extends Document {
   firePlace?: boolean;
   videos?: string[];
 }
+export type PropertyDocument = Property & Document;
