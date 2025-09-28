@@ -10,8 +10,23 @@ const router = express.Router();
 
 // SIGNUP
 router.post("/member/signup", memberController.getSignup);
+
+// LOGIN
 router.post("/member/login", memberController.login);
-export default router;
+
+// MEMBER DETAIL
+router.get(
+  "/member/detail",
+  memberController.verifyMember,
+  memberController.getMemberDetail
+);
+
+// LOGOUT
+router.post(
+  "/member/logout",
+  memberController.verifyMember,
+  memberController.logout
+);
 
 // CREATE PROPERTY
 
@@ -31,3 +46,4 @@ router.post(
   uploadProperties,
   propertyController.createProperty
 );
+export default router;

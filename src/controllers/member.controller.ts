@@ -19,7 +19,7 @@ const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
 
-// SINGUP
+///////////////////////////////// ----- SIGNUP ---- ///////////////////////////////////////////////////
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup access completed");
@@ -44,7 +44,7 @@ memberController.getSignup = async (req: Request, res: Response) => {
   }
 };
 
-// LOGIN
+///////////////////////////////// ----- LOGIN ---- ///////////////////////////////////////////////////
 memberController.login = async (req: Request, res: Response) => {
   try {
     console.log("login");
@@ -73,6 +73,47 @@ memberController.login = async (req: Request, res: Response) => {
   }
 };
 
+//////////////////////////////// ------- GET MEMBER DETAIL--- /////////////////////////////////////
+memberController.getMemberDetail = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  console.log("getting a specific member detail");
+  try {
+    const result: User | Agent | Agency = await memberService.getMemberDetail(
+      req.member
+    );
+
+    res.status(HttpCode.OK).json({ member: result });
+  } catch (error) {
+    console.log("Error in getMemberDetail controller: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////////////// ----- LOGOUT ---- ///////////////////////////////////////////////////
+memberController.logout = async (req: Request, res: Response) => {
+  try {
+    res.cookie("accessToken", null, {
+      maxAge: 0,
+      httpOnly: true,
+    });
+    res.status(HttpCode.OK).json({ logout: true });
+  } catch (error) {
+    console.log("Error in logout controller: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////////// VERIFY MEMBER ////////////////
 memberController.verifyMember = async (
   req: ExtendedRequest,
   res: Response,

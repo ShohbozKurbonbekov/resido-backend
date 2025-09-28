@@ -22,6 +22,7 @@ export enum Message {
   WRONG_PASSWORD = "Wrong password, Please try again",
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
   NO_MEMBER = "No member with that email",
+  INVALID_ROLE = "there is no such role found",
 }
 
 class Errors extends Error {

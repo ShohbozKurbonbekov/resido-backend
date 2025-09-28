@@ -9,6 +9,8 @@ import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
 import { MemberStatus } from "../libs/enums/member.enum";
 import bcrypt from "bcrypt";
+import { Property } from "../libs/types/property";
+import { shapeIntoMongooseObjectId } from "../libs/config";
 
 class MemberService {
   private readonly userModel;
@@ -121,6 +123,50 @@ class MemberService {
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
+    }
+    return result;
+  }
+
+  public async getMemberDetail(
+    member: Agency | Agent | User
+  ): Promise<Agency | Agent | User> {
+    const memberId = shapeIntoMongooseObjectId(member._id);
+    let result;
+
+    switch (member.role) {
+      case "USER":
+        result = await this.userModel
+          .findOne({
+            _id: memberId,
+            memberStatus: MemberStatus.ACTIVE,
+          })
+          .lean()
+          .exec();
+        break;
+      case "AGENT":
+        result = await this.agentModel
+          .findOne({
+            _id: memberId,
+            memberStatus: MemberStatus.ACTIVE,
+          })
+          .lean()
+          .exec();
+        break;
+      case "AGENCY":
+        result = await this.agencyModel
+          .findOne({
+            _id: memberId,
+            memberStatus: MemberStatus.ACTIVE,
+          })
+          .lean()
+          .exec();
+        break;
+      default:
+        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    }
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result;
   }
