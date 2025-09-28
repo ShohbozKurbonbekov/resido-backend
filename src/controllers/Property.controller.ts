@@ -1,10 +1,10 @@
 import PropertyService from "../models/Property.service";
 import { T } from "../libs/types/common";
-import { Request, Response } from "express";
-import { ExtendedRequest } from "../libs/types/member";
+import { NextFunction, Request, Response } from "express";
+import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertyInput } from "../libs/types/property";
-
+import makeUploader from "../libs/utils/uploader";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -40,6 +40,21 @@ propertyController.createProperty = async (
         window.location.replace("/agent/properties/all")
         </script>`);
   }
+};
+
+propertyController.uploadProperties = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const upload = makeUploader("properties").array("images");
+
+  upload(req, res, (error: any) => {
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+    next();
+  });
 };
 
 export default propertyController;

@@ -3,7 +3,8 @@ import {
   User,
   LoginInput,
   ExtendedRequest,
-} from "../libs/types/member";
+  UserInputUpdate,
+} from "../libs/types/user";
 import { T } from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
@@ -12,8 +13,13 @@ import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime } from "../libs/config";
 
-import { Agency, AgencyMemberInput } from "../libs/types/agency";
-import { Agent, MemberAgentInput } from "../libs/types/agent";
+import {
+  Agency,
+  AgencyInputUpdate,
+  AgencyMemberInput,
+} from "../libs/types/agency";
+import { Agent, AgentInputUpdate, MemberAgentInput } from "../libs/types/agent";
+import makeUploader from "../libs/utils/uploader";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -95,6 +101,31 @@ memberController.getMemberDetail = async (
   }
 };
 
+////////////////////////// ------------ UPLOAD MEMBER -------------- /////////////////
+memberController.updateMember = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("memberUpdate controller");
+    const input: UserInputUpdate | AgencyInputUpdate | AgentInputUpdate =
+      req.body;
+
+    if (req.file) {
+      input.avatar = req.file.path.replace(/\\/g, "/");
+    }
+    const result: Agency | Agent | User = await memberService.updateMember(
+      req.member,
+      input
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateMember procees: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 ///////////////////////////////// ----- LOGOUT ---- ///////////////////////////////////////////////////
 memberController.logout = async (req: Request, res: Response) => {
   try {
@@ -138,4 +169,22 @@ memberController.verifyMember = async (
   }
 };
 
+//////////////////// -------- UPLOAD IMAGE ------------- //////////////////////
+memberController.uploadMemberImage = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const upload = makeUploader("members").single("avatar");
+
+  upload(req, res, (error: any) => {
+    if (error) {
+      res.status(400).json({
+        error: error.message,
+      });
+    }
+
+    next();
+  });
+};
 export default memberController;

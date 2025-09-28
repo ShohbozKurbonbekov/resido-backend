@@ -80,9 +80,11 @@ const AgencySchema = new Schema<Agency>(
 
     address: {
       type: String,
+      default: null,
     },
     bioInfo: {
       type: String,
+      default: null,
     },
     avatar: {
       type: String,
@@ -90,9 +92,11 @@ const AgencySchema = new Schema<Agency>(
 
     agencyOwner: {
       type: String,
+      default: null,
     },
     registrationNumber: {
       type: String,
+      default: null,
     },
     agents: [{ type: Schema.Types.ObjectId, ref: "Agent" }],
     properties: [{ type: Schema.Types.ObjectId, ref: "Property" }],
@@ -111,9 +115,11 @@ const AgencySchema = new Schema<Agency>(
     },
     city: {
       type: String,
+      default: null,
     },
     country: {
       type: String,
+      default: null,
     },
     memberSince: {
       type: Date,
@@ -136,9 +142,9 @@ const AgencySchema = new Schema<Agency>(
         default: null,
       },
     },
-    views: {
-      type: Number,
-      default: 0,
+    viewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "View",
     },
     verified: {
       type: Boolean,

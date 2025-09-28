@@ -19,7 +19,7 @@ export interface UserMemberInput {
   userFullname?: string;
   userAddress?: string;
   userDescription?: string;
-  userImage?: string;
+  avatar?: string;
 }
 
 export interface User {
@@ -33,10 +33,22 @@ export interface User {
   userFullname?: string;
   userAddress?: string;
   userDescription?: string;
-  userImage?: string;
+  avatar?: string;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserInputUpdate {
+  _id: ObjectId;
+  memberName?: string;
+  memberPhone?: string;
+  memberEmail?: string;
+  memberPassword?: string;
+  userFullname?: string;
+  userAddress?: string;
+  userDescription?: string;
+  avatar?: string;
 }
 
 export interface BillingDetails {

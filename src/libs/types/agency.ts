@@ -1,8 +1,8 @@
 import { ObjectId } from "mongoose";
 import { AgencyCurrentBadge } from "../enums/agency.enum";
-import { MemberType } from "../enums/member.enum";
+import { MemberStatus, MemberType } from "../enums/member.enum";
 import Social, { T } from "./common";
-import { BillingDetails } from "./member";
+import { BillingDetails } from "./user";
 
 export interface AgencyMemberInput {
   memberName: string;
@@ -10,7 +10,7 @@ export interface AgencyMemberInput {
   memberPhone: string;
   memberPassword: string;
   role: MemberType;
-  memberStatus?: string;
+  memberStatus?: MemberStatus;
   agencyOwner?: string;
   country?: string;
   city?: string;
@@ -22,7 +22,7 @@ export interface AgencyMemberInput {
   agents?: ObjectId[];
   bioInfo?: string;
   billingInfo?: BillingDetails;
-  viewCount?: number;
+  viewedBy?: ObjectId[];
   socialLinks?: Social;
   views?: number;
   agenycBadge?: AgencyCurrentBadge;
@@ -34,7 +34,7 @@ export interface Agency {
   memberEmail: string;
   memberPhone: string;
   memberPassword: string;
-  memberStatus: string;
+  memberStatus: MemberStatus;
   role: MemberType;
   agencyOwner?: string;
   country?: string;
@@ -48,10 +48,25 @@ export interface Agency {
   bioInfo?: string;
   billingInfo?: BillingDetails;
   socialLinks?: Social;
-  views?: number;
+  viewedBy?: ObjectId[];
   agencyBadge?: AgencyCurrentBadge;
   createdAt: Date;
   updatedAt: Date;
   verified: boolean;
   isDeleted: boolean;
+}
+
+export interface AgencyInputUpdate {
+  _id: ObjectId;
+  memberName?: string;
+  memberEmail?: string;
+  memberPhone?: string;
+  memberPassword?: string;
+  bioInfo?: string;
+  address?: string;
+  agencyOwner?: string;
+  country?: string;
+  socialLinks?: Social;
+  city?: string;
+  avatar?: string;
 }

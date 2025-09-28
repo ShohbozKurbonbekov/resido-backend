@@ -1,15 +1,23 @@
 import Errors, { Message } from "../libs/Errors";
-import { UserMemberInput, User, LoginInput } from "../libs/types/member";
+import {
+  UserMemberInput,
+  User,
+  LoginInput,
+  UserInputUpdate,
+} from "../libs/types/user";
 import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
 import AgencyModel from "../schema/members/Agency.model";
-import { Agency, AgencyMemberInput } from "../libs/types/agency";
-import { MemberAgentInput } from "../libs/types/agent";
+import {
+  Agency,
+  AgencyInputUpdate,
+  AgencyMemberInput,
+} from "../libs/types/agency";
+import { AgentInputUpdate, MemberAgentInput } from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
 import { MemberStatus } from "../libs/enums/member.enum";
 import bcrypt from "bcrypt";
-import { Property } from "../libs/types/property";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 
 class MemberService {
@@ -167,6 +175,42 @@ class MemberService {
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
+
+  public async updateMember(
+    member: User | Agency | Agent,
+    input: UserInputUpdate | AgencyInputUpdate | AgentInputUpdate
+  ): Promise<User | Agent | Agency> {
+    const memberId = shapeIntoMongooseObjectId(member._id);
+    let result;
+
+    switch (member.role) {
+      case "AGENT":
+        result = await this.agentModel
+          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
+          .lean()
+          .exec();
+        break;
+      case "AGENCY":
+        result = await this.agencyModel
+          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
+          .lean()
+          .exec();
+        break;
+      case "USER":
+        result = await this.userModel
+          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
+          .lean()
+          .exec();
+        break;
+      default:
+        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    }
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
   }

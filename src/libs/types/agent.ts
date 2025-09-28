@@ -44,3 +44,18 @@ export interface Agent {
   comments?: ObjectId[];
   avatar?: string;
 }
+
+export interface AgentInputUpdate {
+  _id: ObjectId;
+  nickname?: string;
+  fullName?: string;
+  memberEmail?: string;
+  phone?: string;
+  memberPassword?: string;
+  address?: string;
+  yearOfExperience?: number;
+  bioInfo?: string;
+  licenseNumber?: string; // set in the schema
+  socialLinks?: Social; // set in the schema
+  avatar?: string;
+}

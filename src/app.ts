@@ -15,7 +15,7 @@ const viewPath = path.join(__dirname, "views");
 
 const app = express();
 app.use(express.static(publicPath));
-app.use("./uploads", express.static("/uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(express.urlencoded({ extended: true })); // traditional API
 app.use(express.json()); // REST API
 app.use(

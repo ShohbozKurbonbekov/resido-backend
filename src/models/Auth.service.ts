@@ -1,4 +1,4 @@
-import { User } from "../libs/types/member";
+import { User } from "../libs/types/user";
 import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";

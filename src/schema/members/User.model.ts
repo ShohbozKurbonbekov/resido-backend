@@ -2,8 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
-import { T } from "../../libs/types/common";
-import { User } from "../../libs/types/member";
+import { User } from "../../libs/types/user";
 
 const UserSchema = new Schema<User>(
   {
@@ -67,7 +66,7 @@ const UserSchema = new Schema<User>(
     userDescription: {
       type: String,
     },
-    userImage: {
+    avatar: {
       type: String,
     },
 
