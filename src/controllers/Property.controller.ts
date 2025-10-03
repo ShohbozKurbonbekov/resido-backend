@@ -3,7 +3,11 @@ import { T } from "../libs/types/common";
 import { NextFunction, Request, Response } from "express";
 import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { PropertyInput } from "../libs/types/property";
+import {
+  PropertyInput,
+  RecentForRentInput,
+  RecentForRentOutput,
+} from "../libs/types/property";
 import makeUploader from "../libs/utils/uploader";
 const propertyController: T = {};
 const propertyService = new PropertyService();
@@ -42,6 +46,7 @@ propertyController.createProperty = async (
   }
 };
 
+/////////////////// ---------- UPLOAD PROPERTIES ---------------- /////////////////////////////////
 propertyController.uploadProperties = (
   req: Request,
   res: Response,
@@ -55,6 +60,26 @@ propertyController.uploadProperties = (
     }
     next();
   });
+};
+
+/////////////////// ------- GET RECENT PROPERTIES FOR RENT -------------- ///////////////////////
+propertyController.getRecentPropertiesForRent = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const input: RecentForRentInput = req.body;
+    const result: RecentForRentOutput =
+      await propertyService.getRecentPropertiesForRent(input);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getRecentPropertiesForRent process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
 };
 
 export default propertyController;

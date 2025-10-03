@@ -113,3 +113,13 @@ export interface Property {
   videos?: string[];
 }
 export type PropertyDocument = Property & Document;
+
+export interface RecentForRentInput {
+  page: number;
+  limit: number;
+}
+
+export interface RecentForRentOutput {
+  properties: Property[];
+  totalPropertiesNumber: number;
+}

@@ -39,4 +39,10 @@ router.post(
   propertyController.uploadProperties,
   propertyController.createProperty
 );
+
+// GET RECENTLY ADDED PROPERTIES
+router.post(
+  "/property/property-recent-rent",
+  propertyController.getRecentPropertiesForRent
+);
 export default router;

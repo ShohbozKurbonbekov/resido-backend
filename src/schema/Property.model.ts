@@ -31,15 +31,19 @@ const PropertyAddressSchema = new Schema(
 const PropertySellingOptionSchema = new Schema(
   {
     optionRent: {
-      type: String,
-      monthlyPayment: Number,
-      overalAmount: Number,
-      devidedMonths: Number,
+      type: {
+        type: String,
+      },
+      monthlyPayment: { type: Number },
+      overalAmount: { type: Number },
+      devidedMonths: { type: Number },
     },
     optionSell: {
-      type: String,
-      overalAmunt: Number,
-      discount: Number,
+      type: {
+        type: String,
+      },
+      overalAmunt: { type: Number },
+      discount: { type: Number },
     },
   },
   { _id: false }
