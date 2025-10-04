@@ -1,9 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import {
-  Property,
-  PropertyDocument,
-  PropertyInput,
-} from "../libs/types/property";
+import { Property, PropertyDocument } from "../libs/types/property";
 import {
   PropertyCooling,
   PropertyFurnature,
@@ -11,6 +7,7 @@ import {
   PropertySecurity,
   PropertyStatus,
   PropertyType,
+  SellingTypeEnum,
 } from "../libs/enums/property.enum";
 
 const PropertyAddressSchema = new Schema(
@@ -33,6 +30,7 @@ const PropertySellingOptionSchema = new Schema(
     optionRent: {
       type: {
         type: String,
+        enum: SellingTypeEnum,
       },
       monthlyPayment: { type: Number },
       overalAmount: { type: Number },
@@ -41,6 +39,7 @@ const PropertySellingOptionSchema = new Schema(
     optionSell: {
       type: {
         type: String,
+        enum: SellingTypeEnum,
       },
       overalAmunt: { type: Number },
       discount: { type: Number },
@@ -50,10 +49,10 @@ const PropertySellingOptionSchema = new Schema(
 );
 
 PropertySellingOptionSchema.pre("save", function (next) {
-  if (this.optionRent && Object.keys(this.optionRent).length === 0) {
+  if (!this.optionRent && Object.keys(this.optionRent ?? {}).length === 0) {
     this.optionRent = undefined;
   }
-  if (this.optionSell && Object.keys(this.optionSell).length === 0) {
+  if (!this.optionSell && Object.keys(this.optionSell ?? {}).length === 0) {
     this.optionSell = undefined;
   }
   next();
@@ -98,7 +97,6 @@ const PropertySchema = new Schema(
     sellingOption: {
       required: true,
       type: PropertySellingOptionSchema,
-      default: () => ({}),
     },
     floors: {
       type: Number,
@@ -157,7 +155,6 @@ const PropertySchema = new Schema(
     garageSpace: {
       type: Number,
       required: true,
-      default: 0,
     },
     amenities: {
       type: PropertyAmenitiesSchema,
@@ -171,8 +168,24 @@ const PropertySchema = new Schema(
       type: Boolean,
       default: false,
     },
-    viewedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    likedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    views: {
+      type: Number,
+      default: 0,
+    },
+    totalComments: {
+      type: Number,
+    },
+    featuredScore: {
+      type: Number,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    totalLikes: {
+      type: Number,
+      default: 0,
+    },
     firePlace: { type: Boolean, default: false },
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     videos: {
@@ -184,4 +197,35 @@ const PropertySchema = new Schema(
   { timestamps: true }
 );
 
+PropertySchema.pre("save", async function (next) {
+  this.totalComments = this.comments.length ? this.comments.length : 0;
+
+  const ratings = this.comments.map((c: any) => c.rating || 0) || [];
+  this.averageRating = ratings.length
+    ? ratings.reduce((acc, val) => acc + val, 0) / ratings.length
+    : 0;
+
+  if (!this.createdAt) this.createdAt = new Date();
+  const daysSinceCreated = Math.floor(
+    (Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const recencyBoost = daysSinceCreated <= 7 ? 1 : 0;
+
+  const views = this.views || 0;
+  const avgRating = this.averageRating || 0;
+  const totalComments = this.totalComments || 0;
+  const totalLikes = this.totalLikes || 0;
+
+  this.featuredScore =
+    avgRating * 0.4 +
+    Math.log(totalComments + 1) * 0.25 +
+    Math.log(views + 1) * 0.2 +
+    Math.log(totalLikes + 1) * 0.1 +
+    recencyBoost * 0.05;
+  next();
+});
+PropertySchema.index({
+  featuredScore: -1,
+  status: 1,
+});
 export default mongoose.model<PropertyDocument>("Property", PropertySchema);

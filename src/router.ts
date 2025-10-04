@@ -46,3 +46,9 @@ router.post(
   propertyController.getRecentPropertiesForRent
 );
 export default router;
+
+// GET FEATURED PROPERTY
+router.post(
+  "/property/featured-property",
+  propertyController.getFeaturedProperty
+);

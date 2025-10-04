@@ -6,6 +6,7 @@ import {
   PropertySecurity,
   PropertyStatus,
   PropertyType,
+  SellingTypeEnum,
 } from "../enums/property.enum";
 import { Document } from "mongoose";
 
@@ -25,7 +26,7 @@ interface GeocodeType {
 
 interface SellingType {
   optionRent?: {
-    type?: string;
+    type?: SellingTypeEnum;
     overalAmount?: number;
     monthlyPayment?: number;
     devidedMonths?: number;
@@ -60,23 +61,24 @@ export interface PropertyInput {
   floors: number;
   propertyType: PropertyType;
   area: number;
-  images: string[];
   bathrooms: number;
   bedrooms: number;
-  address: PropertyAddress;
   description: string;
   heating: PropertyHeating;
   cooling: PropertyCooling;
-  furnished: PropertyFurnature;
-  security: PropertySecurity;
+  address?: PropertyAddress;
+  furnished?: PropertyFurnature;
+  images?: string[];
+  security?: PropertySecurity;
   yearBuilt: number;
   garageSpace: number;
-  amenities: PropertyAmenities;
+  amenities?: PropertyAmenities;
   nearBySchools?: boolean;
   nearByTransports?: boolean;
-  viewedBy?: ObjectId[];
+  views?: number;
+  averageRating?: number;
   status?: PropertyStatus;
-  likedBy?: ObjectId[];
+  totalLikes?: number;
   firePlace?: boolean;
   comments?: ObjectId[];
   videos?: string[];
@@ -101,25 +103,29 @@ export interface Property {
   cooling: PropertyCooling;
   furnished: PropertyFurnature;
   security: PropertySecurity;
-  comments: ObjectId[];
   yearBuilt: number;
   garageSpace: number;
   amenities: PropertyAmenities;
-  viewedBy: ObjectId[];
-  likedBy: ObjectId[];
-  nearBySchools?: boolean;
-  nearByTransports?: boolean;
-  firePlace?: boolean;
-  videos?: string[];
+  views: number;
+  averageRating: number;
+  totalLikes: number;
+  featuredScore: number;
+  totalComments: number;
+  nearBySchools: boolean;
+  nearByTransports: boolean;
+  firePlace: boolean;
+  comments: ObjectId[];
+  videos: string[];
 }
+
 export type PropertyDocument = Property & Document;
 
-export interface RecentForRentInput {
+export interface RecentPropertyForRent {
   page: number;
   limit: number;
 }
 
-export interface RecentForRentOutput {
+export interface RecentPropertyResult {
   properties: Property[];
   totalPropertiesNumber: number;
 }

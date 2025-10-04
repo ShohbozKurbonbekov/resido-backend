@@ -4,9 +4,10 @@ import { NextFunction, Request, Response } from "express";
 import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import {
+  Property,
   PropertyInput,
-  RecentForRentInput,
-  RecentForRentOutput,
+  RecentPropertyForRent,
+  RecentPropertyResult,
 } from "../libs/types/property";
 import makeUploader from "../libs/utils/uploader";
 const propertyController: T = {};
@@ -17,17 +18,15 @@ propertyController.createProperty = async (
   res: Response
 ) => {
   try {
-    console.log("/////////////////////////////////////////");
-    console.log("files here", req.files);
     console.log("createProperty process");
-    if (!req.files?.length) {
-      throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATING_FAILED);
-    }
+    // if (!req.files?.length) {
+    //   throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATING_FAILED);
+    // }
 
-    const data: PropertyInput = req.body;
-    data.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
+    const input: PropertyInput = req.body;
+    // input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
 
-    await propertyService.createProperty(data);
+    await propertyService.createProperty(input);
     res.send(`
         <script>
         alert("successful creation");
@@ -68,8 +67,8 @@ propertyController.getRecentPropertiesForRent = async (
   res: Response
 ) => {
   try {
-    const input: RecentForRentInput = req.body;
-    const result: RecentForRentOutput =
+    const input: RecentPropertyForRent = req.body;
+    const result: RecentPropertyResult =
       await propertyService.getRecentPropertiesForRent(input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
@@ -82,4 +81,25 @@ propertyController.getRecentPropertiesForRent = async (
   }
 };
 
+/////////////////////// --------- FEATURED PROPERTY ------------- ////////////////////////////
+propertyController.getFeaturedProperty = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    console.log("getFeaturedProperty process");
+    const input: RecentPropertyForRent = req.body;
+
+    const result: RecentPropertyResult =
+      await propertyService.getFeaturedProperty(input);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getFeaturedProperties: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default propertyController;

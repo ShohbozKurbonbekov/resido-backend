@@ -2,8 +2,8 @@ import {
   Property,
   PropertyDocument,
   PropertyInput,
-  RecentForRentInput,
-  RecentForRentOutput,
+  RecentPropertyForRent,
+  RecentPropertyResult,
 } from "../libs/types/property";
 import PropertyModel from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
@@ -25,12 +25,13 @@ class PropertyService {
     }
   }
 
+  // GET RECENT PROPERTY FOR RENT
   public async getRecentPropertiesForRent(
-    input: RecentForRentInput
-  ): Promise<RecentForRentOutput> {
+    input: RecentPropertyForRent
+  ): Promise<RecentPropertyResult> {
     const [properties, totalPropertiesNumber]: any[] = await Promise.all([
       this.propertyModel
-        .find({ "sellingOption.optionRent.type": "rent" })
+        .find({ "sellingOption.optionRent.type": "RENT" })
         .sort({
           createdAt: -1,
         })
@@ -40,16 +41,50 @@ class PropertyService {
         .exec(),
       this.propertyModel
         .countDocuments({
-          "sellingOption.optionRent.type": "rent",
+          "sellingOption.optionRent.type": "RENT",
         })
         .lean()
         .exec(),
     ]);
-    console.log("//////////////////", properties);
     if (!properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return { properties, totalPropertiesNumber };
+  }
+
+  // GET FEATURED PROPERTY
+  public async getFeaturedProperty(
+    input: RecentPropertyForRent
+  ): Promise<RecentPropertyResult> {
+    const [properties, totalPropertiesNumber] = await Promise.all([
+      this.propertyModel
+        .find({
+          status: PropertyStatus.AVAILABLE,
+          featuredScore: { $gt: 1 },
+        })
+        .sort({
+          featuredScore: -1,
+        })
+        .skip((input.page - 1) * input.limit)
+        .limit(input.limit)
+        .lean()
+        .exec(),
+      this.propertyModel
+        .countDocuments({
+          status: PropertyStatus.AVAILABLE,
+          featuredScore: { $gt: 1 },
+        })
+        .exec(),
+    ]);
+
+    console.log("properties ------------------", properties);
+    if (!properties.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return {
+      properties,
+      totalPropertiesNumber,
+    };
   }
 }
 export default PropertyService;

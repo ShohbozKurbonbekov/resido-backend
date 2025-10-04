@@ -42,3 +42,8 @@ export enum PropertyStatus {
   EXPIRED = "expired",
   UNDER_MAINTENANCE = "under_maintenance",
 }
+
+export enum SellingTypeEnum {
+  RENT = "RENT",
+  SALE = "SALE",
+}
