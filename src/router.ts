@@ -25,6 +25,7 @@ router.post(
   memberController.updateMember
 );
 
+router.post("/member/featured-agents", memberController.getFeaturedAgents);
 // LOGOUT
 router.post(
   "/member/logout",

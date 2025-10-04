@@ -2,7 +2,7 @@ export interface T {
   [key: string]: any;
 }
 
-export default interface Social {
+export interface Social {
   facbook: string;
   twitter: string;
   instagram: string;

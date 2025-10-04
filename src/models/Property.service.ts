@@ -60,7 +60,9 @@ class PropertyService {
       this.propertyModel
         .find({
           status: PropertyStatus.AVAILABLE,
-          featuredScore: { $gt: 1 },
+          featuredScore: {
+            $gte: 0.5,
+          },
         })
         .sort({
           featuredScore: -1,
@@ -72,12 +74,13 @@ class PropertyService {
       this.propertyModel
         .countDocuments({
           status: PropertyStatus.AVAILABLE,
-          featuredScore: { $gt: 1 },
+          featuredScore: {
+            $gte: 0.5,
+          },
         })
         .exec(),
     ]);
 
-    console.log("properties ------------------", properties);
     if (!properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }

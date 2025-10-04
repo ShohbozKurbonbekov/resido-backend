@@ -13,12 +13,20 @@ import {
   AgencyInputUpdate,
   AgencyMemberInput,
 } from "../libs/types/agency";
-import { AgentInputUpdate, MemberAgentInput } from "../libs/types/agent";
+import {
+  AgentInputUpdate,
+  FeaturedAgentsInput,
+  FeaturedAgentsResult,
+  MemberAgentInput,
+} from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
 import { MemberStatus } from "../libs/enums/member.enum";
 import bcrypt from "bcrypt";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { RecentPropertyForRent } from "../libs/types/property";
+import { RecentPropertyResult } from "../libs/types/property";
+import { AgentStatus } from "../libs/enums/agent.enum";
 
 class MemberService {
   private readonly userModel;
@@ -46,7 +54,10 @@ class MemberService {
       return result.toObject();
     } catch (error) {
       console.log("Error in userSignup service model", error);
-      throw new Errors(HttpCode.BAD_REQUEST, Message.USED_USERNAME_PHONE);
+      throw new Errors(
+        HttpCode.BAD_REQUEST,
+        Message.USED_USERNAME_PHONE_PASSWORD
+      );
     }
   }
 
@@ -213,6 +224,39 @@ class MemberService {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
+  }
+
+  // GET FEATURED AGENTS
+  public async getFeaturedAgents(
+    input: FeaturedAgentsInput
+  ): Promise<FeaturedAgentsResult> {
+    const [properties, totalPropertiesNumber] = await Promise.all([
+      this.agentModel
+        .find({
+          currentStatus: AgentStatus.AVAILABLE,
+          memberStatus: MemberStatus.ACTIVE,
+          featuredScore: { $gte: 0.8 },
+        })
+        .sort({
+          featuredScore: -1,
+        })
+        .skip((input.page - 1) * input.limit)
+        .limit(input.limit)
+        .lean()
+        .exec(),
+      this.agentModel
+        .countDocuments({
+          memberStatus: MemberStatus.ACTIVE,
+          currentStatus: AgentStatus.AVAILABLE,
+          featuredScore: {
+            $gte: 0.8,
+          },
+        })
+        .exec(),
+    ]);
+    if (!properties.length) {
+    }
+    return { properties, totalPropertiesNumber };
   }
 }
 

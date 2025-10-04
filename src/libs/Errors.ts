@@ -18,7 +18,7 @@ export enum Message {
   TOKEN_CREATION_FAILED = "Token creation error!",
   NO_USERNAME = "No user found with that username",
   BLOCKED_USER = "You have been blocked, Please contact the admin",
-  USED_USERNAME_PHONE = "You are inserting already used username or phone",
+  USED_USERNAME_PHONE_PASSWORD = "Oops, Something wrong with your either username or email, at least check you have strong password",
   WRONG_PASSWORD = "Wrong password, Please try again",
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
   NO_MEMBER = "No member with that email",

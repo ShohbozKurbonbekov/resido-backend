@@ -18,8 +18,15 @@ import {
   AgencyInputUpdate,
   AgencyMemberInput,
 } from "../libs/types/agency";
-import { Agent, AgentInputUpdate, MemberAgentInput } from "../libs/types/agent";
+import {
+  Agent,
+  AgentInputUpdate,
+  FeaturedAgentsResult,
+  MemberAgentInput,
+} from "../libs/types/agent";
 import makeUploader from "../libs/utils/uploader";
+import { RecentPropertyForRent } from "../libs/types/property";
+import { RecentPropertyResult } from "../libs/types/property";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -118,6 +125,26 @@ memberController.updateMember = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in updateMember procees: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////// ------------ GET FEATURED AGENTS ----------////////////////
+memberController.getFeaturedAgents = async (req: Request, res: Response) => {
+  try {
+    console.log("getFeaturedAgents process");
+    const input: RecentPropertyForRent = req.body;
+
+    const result: FeaturedAgentsResult = await memberService.getFeaturedAgents(
+      input
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getFeaturedAgents process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

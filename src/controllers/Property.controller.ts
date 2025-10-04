@@ -19,12 +19,12 @@ propertyController.createProperty = async (
 ) => {
   try {
     console.log("createProperty process");
-    // if (!req.files?.length) {
-    //   throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATING_FAILED);
-    // }
+    if (!req.files?.length) {
+      throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATING_FAILED);
+    }
 
     const input: PropertyInput = req.body;
-    // input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
+    input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
 
     await propertyService.createProperty(input);
     res.send(`

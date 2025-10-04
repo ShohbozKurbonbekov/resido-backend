@@ -1,6 +1,7 @@
 import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
-import Social, { T } from "./common";
+import { Social } from "./common";
+import { AgentStatus } from "../enums/agent.enum";
 
 export interface MemberAgentInput {
   agencyId: string;
@@ -9,12 +10,20 @@ export interface MemberAgentInput {
   memberEmail: string;
   phone: string;
   memberPassword: string;
-  role: MemberType;
+  role?: MemberType;
   address: string;
+  memberStatus?: MemberStatus;
   yearOfExperience: number;
   bioInfo: string;
-  memberStatus?: MemberStatus;
-  licenseNumber?: string;
+  licenseNumber: string;
+  currentStatus?: AgentStatus;
+  // featuresScore
+  totalComments?: number;
+  views?: number;
+  totalLikes?: number;
+  averageRating?: number;
+  featuredScore?: number;
+  ///////////
   avatar?: string;
   points?: number;
   properties?: ObjectId[];
@@ -40,6 +49,14 @@ export interface Agent {
   points: number; // set in the schema
   socialLinks: Social; // set in the schema
   isVerified: boolean; // set in the schema
+  // featuresScore
+  totalComments: number;
+  views: number;
+  totalLikes: number;
+  averageRating: number;
+  featuredScore: number;
+  ///////////
+  currentStatus: AgentStatus;
   properties?: ObjectId[];
   comments?: ObjectId[];
   avatar?: string;
@@ -55,7 +72,16 @@ export interface AgentInputUpdate {
   address?: string;
   yearOfExperience?: number;
   bioInfo?: string;
-  licenseNumber?: string; // set in the schema
-  socialLinks?: Social; // set in the schema
+  socialLinks?: Social;
   avatar?: string;
+}
+
+export interface FeaturedAgentsInput {
+  page: number;
+  limit: number;
+}
+
+export interface FeaturedAgentsResult {
+  properties: Agent[];
+  totalPropertiesNumber: number;
 }

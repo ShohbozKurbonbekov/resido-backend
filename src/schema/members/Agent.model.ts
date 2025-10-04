@@ -1,14 +1,15 @@
-import validator from "validator";
+import validator, { isStrongPassword } from "validator";
 import mongoose, { model, Schema } from "mongoose";
 import { Agent } from "../../libs/types/agent";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import bcrypt from "bcrypt";
+import { AgentStatus } from "../../libs/enums/agent.enum";
+
 const AgentSchema = new Schema<Agent>(
   {
     agencyId: { type: String, required: true },
     nickname: {
       type: String,
-      index: true,
       unique: true,
       trim: true,
       required: true,
@@ -20,7 +21,6 @@ const AgentSchema = new Schema<Agent>(
     },
     memberEmail: {
       type: String,
-      index: true,
       unique: true,
       trim: true,
       required: true,
@@ -31,31 +31,54 @@ const AgentSchema = new Schema<Agent>(
         message: "Please give a valid email",
       },
     },
-
+    featuredScore: {
+      type: Number,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    totalLikes: {
+      type: Number,
+      defualt: 0,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    totalComments: {
+      type: Number,
+      default: 0,
+    },
+    currentStatus: {
+      type: String,
+      enum: AgentStatus,
+      default: AgentStatus.PENDING,
+    },
     phone: {
       type: String,
       required: true,
-      index: true,
       unique: true,
       trim: true,
     },
     memberPassword: {
       type: String,
       required: true,
-      minlength: 7,
       trim: true,
       select: false,
       validate: {
         validator: (value) => {
-          return !value.includes("password");
+          return isStrongPassword(value, {
+            minLength: 7,
+            minLowercase: 1,
+            minSymbols: 1,
+            minUppercase: 1,
+            minNumbers: 3,
+          });
         },
-        message: "Don't include (passord) key",
+        message:
+          "Please, Make sure that You are providing at leat 7 characters with at least one lowercase letter, one symbol, one uppercase and 3 numbers ",
       },
-    },
-    memberStatus: {
-      type: String,
-      enum: MemberStatus,
-      default: MemberStatus.ACTIVE,
     },
     role: {
       type: String,
@@ -67,6 +90,11 @@ const AgentSchema = new Schema<Agent>(
       type: String,
       required: true,
     },
+    memberStatus: {
+      type: String,
+      enum: MemberStatus,
+      default: MemberStatus.ACTIVE,
+    },
     yearOfExperience: {
       type: Number,
       required: true,
@@ -77,7 +105,7 @@ const AgentSchema = new Schema<Agent>(
     },
     licenseNumber: {
       type: String,
-      default: null,
+      required: true,
     },
     avatar: {
       type: String,
@@ -121,10 +149,32 @@ AgentSchema.methods.toJSON = function () {
 };
 
 AgentSchema.pre("save", async function (next) {
-  const user = this;
+  // HASHING PASSWORD
+  const user: any = this;
   if (user.isModified("memberPassword")) {
     const salt: string = await bcrypt.genSalt();
     user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
+
+    // CREATING FEATURED PROPERTY
+    user.totalComments = user.comments.length ? user.comments.length : 0;
+
+    const ratings = user.comments.map((c: any) => c.rating || 0) || [];
+    user.averageRating = ratings.length
+      ? ratings.reduce((acc: number, val: any) => acc + val, 0) / ratings.length
+      : 0;
+
+    const points = user.points || 0;
+    const views = user.views || 0;
+    const avgRating = user.averageRating || 0;
+    const totalComments = user.totalComments || 0;
+    const totalLikes = user.totalLikes || 0;
+
+    user.featuredScore =
+      avgRating * 0.4 +
+      Math.log(totalComments + 1) * 0.1 +
+      Math.log(views + 1) * 0.1 +
+      Math.log(totalLikes + 1) * 0.1 +
+      points * 0.3;
     next();
   }
 });
