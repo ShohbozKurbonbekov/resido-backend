@@ -61,3 +61,6 @@ router.post(
   memberController.verifyMember,
   commentController.createComment
 );
+
+//  GET 10 LATEST COMMENTS
+router.get("/member/comments/latest", commentController.getLatestComments);

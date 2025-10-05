@@ -9,6 +9,7 @@ import { CommentDocs } from "../schema/Comment.model";
 const commentController: T = {};
 const commentService = new CommentService();
 
+//////////////// ----------- CREATE A COMMENT ------------////////////////////////////
 commentController.createComment = async (
   req: ExtendedRequest,
   res: Response
@@ -21,6 +22,22 @@ commentController.createComment = async (
     res.status(HttpCode.CREATED).json(result);
   } catch (error) {
     console.log("Error in creating comment process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////// GET LATEST COMMENTS -------------////////////////
+commentController.getLatestComments = async (req: Request, res: Response) => {
+  try {
+    console.log("getLatestComments");
+    const result = await commentService.getLatestComments();
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getLatestComment: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

@@ -1,9 +1,8 @@
-import { ObjectId } from "mongoose";
 import { CommentInput } from "../libs/types/comment";
 import CommentModel, { CommentDocs } from "../schema/Comment.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
-import { CommentTargetType } from "../libs/enums/comment.enum";
+import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
@@ -18,6 +17,7 @@ class CommentService {
     this.propertyModel = PropertyModel;
   }
 
+  ///////////////////////// CREATE A COMMENT /////////////
   public async createComment(
     input: CommentInput,
     member: any
@@ -55,6 +55,22 @@ class CommentService {
       console.log("Error in  createComment service: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
+  }
+
+  public async getLatestComments(): Promise<CommentDocs[]> {
+    const result = await this.commentModel
+      .find({
+        status: CommentStatus.ACTIVE,
+      })
+      .sort({
+        createdAt: -1,
+      })
+      .limit(10)
+      .exec();
+    if (!result.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
   }
 }
 export default CommentService;
