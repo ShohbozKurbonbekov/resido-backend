@@ -17,6 +17,7 @@ export interface UserMemberInput {
   role: MemberType;
   memberStatus?: MemberStatus;
   userFullname?: string;
+  isDeleted?: boolean;
   userAddress?: string;
   userDescription?: string;
   avatar?: string;

@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
-import { CommentDocument, CommentInput } from "../libs/types/comment";
+import { CommentInput } from "../libs/types/comment";
 
 const CommentSchema = new Schema<CommentInput>(
   {
@@ -30,10 +30,34 @@ const CommentSchema = new Schema<CommentInput>(
       type: Number,
       default: 0,
     },
+    userInfo: {
+      type: {
+        name: {
+          type: String,
+          required: true,
+        },
+        avatar: {
+          type: String,
+          required: true,
+        },
+        phone: {
+          type: String,
+        },
+        email: {
+          type: String,
+        },
+        userAddress: { type: String },
+        userDescription: {
+          type: String,
+        },
+      },
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model<CommentDocument>("Comment", CommentSchema);
+export type CommentDocs = InferSchemaType<typeof CommentSchema>;
+
+export default mongoose.model<CommentDocs>("Comment", CommentSchema);

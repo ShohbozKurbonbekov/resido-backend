@@ -1,6 +1,7 @@
 import express from "express";
 import memberController from "./controllers/member.controller";
 import propertyController from "./controllers/Property.controller";
+import commentController from "./controllers/Comment.controller";
 
 const router = express.Router();
 
@@ -52,4 +53,11 @@ export default router;
 router.post(
   "/property/featured-property",
   propertyController.getFeaturedProperty
+);
+
+// CREATE COMMENTS
+router.post(
+  "/member/create-comment",
+  memberController.verifyMember,
+  commentController.createComment
 );

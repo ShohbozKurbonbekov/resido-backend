@@ -1,23 +1,21 @@
 import { ObjectId } from "mongoose";
 import { CommentStatus, CommentTargetType } from "../enums/comment.enum";
-import { Document } from "mongoose";
 
 interface UserInfoType {
   avatar: string;
   name: string;
   phone?: string;
-  email?: number;
-  occupation?: string;
+  email?: string;
   userAddress?: string;
   userDescription?: string;
 }
 
 export interface CommentInput {
-  userId: ObjectId;
   targetType: CommentTargetType;
   targetId: ObjectId;
   content: string;
-  userInfo: UserInfoType;
+  userInfo?: UserInfoType;
+  userId?: ObjectId;
   rating?: number;
   status?: CommentStatus;
 }
@@ -33,4 +31,3 @@ export interface Comment {
   createdAt: Date;
   updatedAt: Date;
 }
-export type CommentDocument = Comment & Document;

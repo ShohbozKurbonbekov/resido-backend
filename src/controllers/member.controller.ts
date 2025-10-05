@@ -26,7 +26,6 @@ import {
 } from "../libs/types/agent";
 import makeUploader from "../libs/utils/uploader";
 import { RecentPropertyForRent } from "../libs/types/property";
-import { RecentPropertyResult } from "../libs/types/property";
 
 const memberController: T = {};
 const memberService = new MemberService();
