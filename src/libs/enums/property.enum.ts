@@ -47,3 +47,30 @@ export enum SellingTypeEnum {
   RENT = "RENT",
   SALE = "SALE",
 }
+
+export enum PropertyMood {
+  Cozy = "Cozy",
+  Modern = "Modern",
+  Natural = "Natural",
+  Urban = "Urban",
+  Relaxing = "Relaxing",
+  Artistic = "Artistic",
+  Professional = "Professional",
+}
+export enum MajorCites {
+  Seoul = "Seoul",
+  Incheon = "Incheon",
+  Busan = "Busan",
+  Daegu = "Daegu",
+  Daejeon = "Daejeon",
+  Gwangju = "Gwangju",
+  Ulsan = "Ulsan",
+  Sejong = "Sejong",
+  Jeju = "Jeju",
+}
+
+export enum PropertySortOrder {
+  LOW_PRICE = "low_price",
+  HIGH_PRICE = "high_price",
+  FAMOUS_PRICE = "most_famous",
+}

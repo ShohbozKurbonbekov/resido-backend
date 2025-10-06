@@ -1,9 +1,12 @@
 import { ObjectId } from "mongoose";
 import {
+  MajorCites,
   PropertyCooling,
   PropertyFurnature,
   PropertyHeating,
+  PropertyMood,
   PropertySecurity,
+  PropertySortOrder,
   PropertyStatus,
   PropertyType,
   SellingTypeEnum,
@@ -27,13 +30,13 @@ interface GeocodeType {
 interface SellingType {
   optionRent?: {
     type?: SellingTypeEnum;
-    overalAmount?: number;
+    overalAmunt?: number;
     monthlyPayment?: number;
     devidedMonths?: number;
   };
   optionSell?: {
     type?: string;
-    overalAmunt?: number;
+    overalAmount?: number;
     discount?: string;
   };
 }
@@ -71,6 +74,7 @@ export interface PropertyInput {
   images?: string[];
   security?: PropertySecurity;
   yearBuilt: number;
+  mood?: PropertyMood;
   garageSpace: number;
   amenities?: PropertyAmenities;
   nearBySchools?: boolean;
@@ -116,6 +120,7 @@ export interface Property {
   firePlace: boolean;
   comments: ObjectId[];
   videos: string[];
+  mood?: PropertyMood;
 }
 
 export type PropertyDocument = Property & Document;
@@ -128,4 +133,19 @@ export interface RecentPropertyForRent {
 export interface RecentPropertyResult {
   properties: Property[];
   totalPropertiesNumber: number;
+}
+
+export interface PropertyInquery {
+  page: number;
+  limit: number;
+  order: PropertySortOrder;
+  propertySearch?: string;
+  propertyVerified?: boolean;
+  propertySuperAgent?: boolean;
+  propertyLocation?: MajorCites;
+  propertyType?: PropertyType;
+  propertyBedrooms?: number;
+  propertyAmenities?: PropertyAmenities;
+  propertyMood?: PropertyMood;
+  propertyPriceRange?: number;
 }

@@ -4,8 +4,8 @@ import { NextFunction, Request, Response } from "express";
 import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import {
-  Property,
   PropertyInput,
+  PropertyInquery,
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
@@ -95,6 +95,63 @@ propertyController.getFeaturedProperty = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getFeaturedProperties: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////// --------------- GET ALL PRODUCTS ---------- ///////////////
+propertyController.getAllProducts = async (req: Request, res: Response) => {
+  try {
+    console.log("GetAllProducts process");
+    const input: PropertyInquery = req.body;
+    const {
+      page,
+      limit,
+      order,
+      propertyAmenities,
+      propertyBedrooms,
+      propertyLocation,
+      propertyMood,
+      propertyPriceRange,
+      propertySuperAgent,
+      propertyType,
+      propertyVerified,
+      propertySearch,
+    } = input;
+    const inquery: PropertyInquery = {
+      order: order,
+      page: Number(page),
+      limit: Number(limit),
+    };
+
+    if (propertySearch) inquery.propertySearch = propertySearch;
+    if (propertyAmenities) inquery.propertyAmenities = propertyAmenities;
+
+    if (propertyBedrooms) inquery.propertyBedrooms = Number(propertyBedrooms);
+
+    if (propertyLocation) inquery.propertyLocation = propertyLocation;
+
+    if (propertyMood) inquery.propertyMood = propertyMood;
+
+    if (propertyPriceRange)
+      inquery.propertyPriceRange = Number(propertyPriceRange);
+
+    if (propertySuperAgent)
+      inquery.propertySuperAgent = Boolean(propertySuperAgent);
+
+    if (propertyType) inquery.propertyType = propertyType;
+
+    if (propertyVerified) inquery.propertyVerified = Boolean(propertyVerified);
+
+    const result = await propertyService.getAllProperties(inquery);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getAllProducts process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

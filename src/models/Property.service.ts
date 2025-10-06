@@ -2,12 +2,14 @@ import {
   Property,
   PropertyDocument,
   PropertyInput,
+  PropertyInquery,
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
 import PropertyModel from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { PropertyStatus } from "../libs/enums/property.enum";
+import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
+import { T } from "../libs/types/common";
 class PropertyService {
   private readonly propertyModel;
   constructor() {
@@ -88,6 +90,46 @@ class PropertyService {
       properties,
       totalPropertiesNumber,
     };
+  }
+
+  // GET ALL PROPERTIES
+  public async getAllProperties(inquery: PropertyInquery): Promise<Property[]> {
+    const match: T = {
+      status: PropertyStatus.AVAILABLE,
+    };
+
+    const properties: Property[] =
+      inquery?.order.toLowerCase() === PropertySortOrder.LOW_PRICE
+        ? await this.sortPropertiesAccordingPrice("asc", inquery, match)
+        : await this.sortPropertiesAccordingPrice("desc", inquery, match);
+
+    return properties;
+  }
+
+  // SORT PROPERTIS ACCORDING TO THEIR PRICE
+
+  private async sortPropertiesAccordingPrice(
+    order: "asc" | "desc",
+    inquery: PropertyInquery,
+    match: T
+  ): Promise<Property[]> {
+    const properties = await this.propertyModel.aggregate([
+      { $match: match },
+      {
+        $addFields: {
+          priceValue: {
+            $ifNull: [
+              "$sellingOption.optionRent.overalAmount",
+              "$sellingOption.optionSell.overalAmunt",
+            ],
+          },
+        },
+      },
+      { $sort: { priceValue: order === "asc" ? 1 : -1 } },
+      { $skip: (inquery.page - 1) * inquery.limit },
+      { $limit: inquery.limit },
+    ]);
+    return properties;
   }
 }
 export default PropertyService;

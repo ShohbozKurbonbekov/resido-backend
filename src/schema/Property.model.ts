@@ -4,6 +4,7 @@ import {
   PropertyCooling,
   PropertyFurnature,
   PropertyHeating,
+  PropertyMood,
   PropertySecurity,
   PropertyStatus,
   PropertyType,
@@ -185,6 +186,10 @@ const PropertySchema = new Schema(
     totalLikes: {
       type: Number,
       default: 0,
+    },
+    mood: {
+      type: String,
+      enum: PropertyMood,
     },
     firePlace: { type: Boolean, default: false },
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],

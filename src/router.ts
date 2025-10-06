@@ -54,6 +54,7 @@ router.post(
   "/property/featured-property",
   propertyController.getFeaturedProperty
 );
+router.get("/property/all", propertyController.getAllProducts);
 
 // CREATE COMMENTS
 router.post(
