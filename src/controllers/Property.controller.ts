@@ -10,6 +10,7 @@ import {
   RecentPropertyResult,
 } from "../libs/types/property";
 import makeUploader from "../libs/utils/uploader";
+import buildPropertyInquery from "../libs/utils/buildPropertyInquery";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -107,47 +108,10 @@ propertyController.getFeaturedProperty = async (
 propertyController.getAllProducts = async (req: Request, res: Response) => {
   try {
     console.log("GetAllProducts process");
-    const input: PropertyInquery = req.body;
-    const {
-      page,
-      limit,
-      order,
-      propertyAmenities,
-      propertyBedrooms,
-      propertyLocation,
-      propertyMood,
-      propertyPriceRange,
-      propertySuperAgent,
-      propertyType,
-      propertyVerified,
-      propertySearch,
-    } = input;
-    const inquery: PropertyInquery = {
-      order: order,
-      page: Number(page),
-      limit: Number(limit),
-    };
 
-    if (propertySearch) inquery.propertySearch = propertySearch;
-    if (propertyAmenities) inquery.propertyAmenities = propertyAmenities;
+    const queries: T = buildPropertyInquery(req.body);
 
-    if (propertyBedrooms) inquery.propertyBedrooms = Number(propertyBedrooms);
-
-    if (propertyLocation) inquery.propertyLocation = propertyLocation;
-
-    if (propertyMood) inquery.propertyMood = propertyMood;
-
-    if (propertyPriceRange)
-      inquery.propertyPriceRange = Number(propertyPriceRange);
-
-    if (propertySuperAgent)
-      inquery.propertySuperAgent = Boolean(propertySuperAgent);
-
-    if (propertyType) inquery.propertyType = propertyType;
-
-    if (propertyVerified) inquery.propertyVerified = Boolean(propertyVerified);
-
-    const result = await propertyService.getAllProperties(inquery);
+    const result = await propertyService.getAllProperties(queries);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

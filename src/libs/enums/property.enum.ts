@@ -72,5 +72,5 @@ export enum MajorCites {
 export enum PropertySortOrder {
   LOW_PRICE = "low_price",
   HIGH_PRICE = "high_price",
-  FAMOUS_PRICE = "most_famous",
+  MOST_FAMOUS = "most_famous",
 }

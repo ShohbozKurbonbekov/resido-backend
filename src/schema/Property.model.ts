@@ -25,7 +25,6 @@ const PropertyAddressSchema = new Schema(
   },
   { _id: false }
 );
-
 const PropertySellingOptionSchema = new Schema(
   {
     optionRent: {

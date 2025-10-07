@@ -135,10 +135,7 @@ export interface RecentPropertyResult {
   totalPropertiesNumber: number;
 }
 
-export interface PropertyInquery {
-  page: number;
-  limit: number;
-  order: PropertySortOrder;
+export interface PropertySearchFeatures {
   propertySearch?: string;
   propertyVerified?: boolean;
   propertySuperAgent?: boolean;
@@ -148,4 +145,20 @@ export interface PropertyInquery {
   propertyAmenities?: PropertyAmenities;
   propertyMood?: PropertyMood;
   propertyPriceRange?: number;
+}
+
+export interface PropertyInquery {
+  page: number;
+  limit: number;
+  order: PropertySortOrder;
+  search?: PropertySearchFeatures;
+}
+
+interface TotalCounter {
+  total?: number;
+}
+
+export interface Properties {
+  properties: Property[];
+  metaCounter?: TotalCounter[];
 }
