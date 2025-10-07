@@ -12,6 +12,7 @@ import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
 import { T } from "../libs/types/common";
 import { text } from "stream/consumers";
+import { priceValueField, famousIndicatorField } from "../libs/config";
 class PropertyService {
   private readonly propertyModel;
   constructor() {
@@ -102,8 +103,6 @@ class PropertyService {
 
     const sort: T = {};
 
-    console.log(queries);
-
     if (queries?.order === PropertySortOrder.LOW_PRICE) {
       sort.priceValue = 1;
     }
@@ -117,119 +116,46 @@ class PropertyService {
 
     this.shapeMatchQuery(match, queries);
 
-    const result =
-      Object.keys(match).length > 3
-        ? await this.propertyModel
-            .aggregate([
-              { $match: match },
-              {
-                $lookup: {
-                  from: "agents",
-                  localField: "agentId",
-                  foreignField: "_id",
-                  as: "agentData",
-                },
-              },
+    const pipeline: any[] = [{ $match: match }];
 
-              { $unwind: "$agentData" },
-              {
-                $match: {
-                  "agentData.isVerified": queries.propertyVerified,
-                  "agentData.rank": queries.rank,
-                },
-              },
-              {
-                $addFields: {
-                  priceValue: {
-                    $ifNull: [
-                      "$sellingOption.optionRent.overalAmount",
-                      "$sellingOption.optionSell.overalAmunt",
-                    ],
-                  },
-                },
-              },
-              {
-                $addFields: {
-                  famousIndicator: {
-                    $add: [
-                      { $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4] },
-                      {
-                        $multiply: [{ $ln: { $add: ["$totalLikes", 1] } }, 0.3],
-                      },
-                      {
-                        $multiply: [
-                          { $ln: { $add: ["$totalComments", 1] } },
-                          0.2,
-                        ],
-                      },
-                      { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
-                    ],
-                  },
-                },
-              },
-              {
-                $sort: sort,
-              },
+    if (Object.keys(match).length > 1) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "agents",
+            localField: "agentId",
+            foreignField: "_id",
+            as: "agentData",
+            pipeline: [{ $project: { name: 1, rank: 1, isVerified: 1 } }],
+          },
+        },
+        { $unwind: "$agentData" },
+        {
+          $match: {
+            "agentData.isVerified": queries.propertyVerified,
+            "agentData.rank": queries.rank,
+          },
+        }
+      );
+    }
 
-              {
-                $facet: {
-                  properties: [
-                    {
-                      $skip: (queries.page - 1) * queries.limit,
-                    },
-                    { $limit: queries.limit },
-                  ],
-                  metaCounter: [{ $count: "total" }],
-                },
-              },
-            ])
-            .exec()
-        : await this.propertyModel.aggregate([
-            { $match: match },
+    pipeline.push(
+      priceValueField,
+      famousIndicatorField,
+      { $sort: sort },
+      {
+        $facet: {
+          properties: [
             {
-              $addFields: {
-                priceValue: {
-                  $ifNull: [
-                    "$sellingOption.optionRent.overalAmount",
-                    "$sellingOption.optionSell.overalAmunt",
-                  ],
-                },
-              },
+              $skip: (queries.page - 1) * queries.limit,
             },
-            {
-              $addFields: {
-                famousIndicator: {
-                  $add: [
-                    { $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4] },
-                    {
-                      $multiply: [{ $ln: { $add: ["$totalLikes", 1] } }, 0.3],
-                    },
-                    {
-                      $multiply: [
-                        { $ln: { $add: ["$totalComments", 1] } },
-                        0.2,
-                      ],
-                    },
-                    { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
-                  ],
-                },
-              },
-            },
-            {
-              $sort: sort,
-            },
-            {
-              $facet: {
-                properties: [
-                  {
-                    $skip: (queries.page - 1) * queries.limit,
-                  },
-                  { $limit: queries.limit },
-                ],
-                metaCounter: [{ $count: "total" }],
-              },
-            },
-          ]);
+            { $limit: queries.limit },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      }
+    );
+    const result = await this.propertyModel.aggregate(pipeline);
 
     if (!result[0].properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
