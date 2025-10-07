@@ -100,27 +100,138 @@ class PropertyService {
       status: PropertyStatus.AVAILABLE,
     };
 
+    const sort: T = {};
+
+    console.log(queries);
+
+    if (queries?.order === PropertySortOrder.LOW_PRICE) {
+      sort.priceValue = 1;
+    }
+    if (queries?.order === PropertySortOrder.HIGH_PRICE) {
+      sort.priceValue = -1;
+    }
+    if (queries?.order === PropertySortOrder.MOST_FAMOUS) {
+      sort.famousIndicator = -1;
+      sort.createdAt = -1;
+    }
+
     this.shapeMatchQuery(match, queries);
 
-    const result = await this.propertyModel.aggregate([
-      { $match: match },
-      {
-        $sort: { createdAt: -1 },
-      },
-      {
-        $facet: {
-          properties: [
-            {
-              $skip: (queries.page - 1) * queries.limit,
-            },
-            { $limit: queries.limit },
-          ],
-          metaCounter: [{ $count: "total" }],
-        },
-      },
-    ]);
+    const result =
+      Object.keys(match).length > 3
+        ? await this.propertyModel
+            .aggregate([
+              { $match: match },
+              {
+                $lookup: {
+                  from: "agents",
+                  localField: "agentId",
+                  foreignField: "_id",
+                  as: "agentData",
+                },
+              },
 
-    if (!result.length) {
+              { $unwind: "$agentData" },
+              {
+                $match: {
+                  "agentData.isVerified": queries.propertyVerified,
+                  "agentData.rank": queries.rank,
+                },
+              },
+              {
+                $addFields: {
+                  priceValue: {
+                    $ifNull: [
+                      "$sellingOption.optionRent.overalAmount",
+                      "$sellingOption.optionSell.overalAmunt",
+                    ],
+                  },
+                },
+              },
+              {
+                $addFields: {
+                  famousIndicator: {
+                    $add: [
+                      { $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4] },
+                      {
+                        $multiply: [{ $ln: { $add: ["$totalLikes", 1] } }, 0.3],
+                      },
+                      {
+                        $multiply: [
+                          { $ln: { $add: ["$totalComments", 1] } },
+                          0.2,
+                        ],
+                      },
+                      { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
+                    ],
+                  },
+                },
+              },
+              {
+                $sort: sort,
+              },
+
+              {
+                $facet: {
+                  properties: [
+                    {
+                      $skip: (queries.page - 1) * queries.limit,
+                    },
+                    { $limit: queries.limit },
+                  ],
+                  metaCounter: [{ $count: "total" }],
+                },
+              },
+            ])
+            .exec()
+        : await this.propertyModel.aggregate([
+            { $match: match },
+            {
+              $addFields: {
+                priceValue: {
+                  $ifNull: [
+                    "$sellingOption.optionRent.overalAmount",
+                    "$sellingOption.optionSell.overalAmunt",
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                famousIndicator: {
+                  $add: [
+                    { $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4] },
+                    {
+                      $multiply: [{ $ln: { $add: ["$totalLikes", 1] } }, 0.3],
+                    },
+                    {
+                      $multiply: [
+                        { $ln: { $add: ["$totalComments", 1] } },
+                        0.2,
+                      ],
+                    },
+                    { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: sort,
+            },
+            {
+              $facet: {
+                properties: [
+                  {
+                    $skip: (queries.page - 1) * queries.limit,
+                  },
+                  { $limit: queries.limit },
+                ],
+                metaCounter: [{ $count: "total" }],
+              },
+            },
+          ]);
+
+    if (!result[0].properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result[0];
@@ -128,17 +239,8 @@ class PropertyService {
 
   // SHAPE THE QUERY
   private shapeMatchQuery(match: T, queries: T): void {
-    const {
-      amenities,
-      bedrooms,
-      address,
-      mood,
-      price,
-      title,
-      propertySuperAgent,
-      propertyType,
-      propertyVerified,
-    } = queries;
+    const { amenities, bedrooms, address, mood, price, title, propertyType } =
+      queries;
 
     if (title) {
       match.title = { $regex: new RegExp(title, "i") };
@@ -172,31 +274,6 @@ class PropertyService {
         .filter(([_, value]) => value)
         .map(([key, value]) => ({ [`amenities.${key}`]: value }));
     }
-  }
-
-  // SORT PROPERTIS ACCORDING TO THEIR PRICE
-  private async sortPropertiesAccordingPrice(
-    order: "asc" | "desc",
-    inquery: PropertyInquery,
-    match: T
-  ): Promise<Property[]> {
-    const properties = await this.propertyModel.aggregate([
-      { $match: match },
-      {
-        $addFields: {
-          priceValue: {
-            $ifNull: [
-              "$sellingOption.optionRent.overalAmount",
-              "$sellingOption.optionSell.overalAmunt",
-            ],
-          },
-        },
-      },
-      { $sort: { priceValue: order === "asc" ? 1 : -1 } },
-      { $skip: (inquery.page - 1) * inquery.limit },
-      { $limit: inquery.limit },
-    ]);
-    return properties;
   }
 }
 export default PropertyService;

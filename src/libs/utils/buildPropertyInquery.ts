@@ -36,8 +36,8 @@ export const buildPropertyInquery = (queries: PropertyInquery) => {
   if (search.propertySearch) {
     query.title = search.propertySearch;
   }
-  if (search.propertySuperAgent) {
-    query.propertySuperAgent = search.propertySuperAgent;
+  if (search.propertyAgentLevel) {
+    query.rank = search.propertyAgentLevel;
   }
   if (search.propertyType) {
     query.propertyType = search.propertyType;
@@ -45,6 +45,7 @@ export const buildPropertyInquery = (queries: PropertyInquery) => {
   if (search.propertyVerified) {
     query.propertyVerified = search.propertyVerified;
   }
+
   return query;
 };
 export default buildPropertyInquery;

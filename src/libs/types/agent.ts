@@ -23,6 +23,7 @@ export interface MemberAgentInput {
   totalLikes?: number;
   averageRating?: number;
   featuredScore?: number;
+  rank?: string;
   ///////////
   avatar?: string;
   points?: number;
@@ -55,6 +56,7 @@ export interface Agent {
   totalLikes: number;
   averageRating: number;
   featuredScore: number;
+  rank: string;
   ///////////
   currentStatus: AgentStatus;
   properties?: ObjectId[];

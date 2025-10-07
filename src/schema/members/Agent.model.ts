@@ -136,6 +136,9 @@ const AgentSchema = new Schema<Agent>(
       type: Boolean,
       default: false,
     },
+    rank: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
@@ -174,7 +177,15 @@ AgentSchema.pre("save", async function (next) {
       Math.log(totalComments + 1) * 0.1 +
       Math.log(views + 1) * 0.1 +
       Math.log(totalLikes + 1) * 0.1 +
-      points * 0.3;
+      Math.log(points + 1) * 0.3;
+
+    if (this.featuredScore >= 8 && this.isVerified === true) {
+      user.rank = "superAgent";
+    } else if (this.featuredScore >= 5 && this.isVerified === true) {
+      user.rank = "trustedAgent";
+    } else {
+      user.rank = "regularAgent";
+    }
     next();
   }
 });

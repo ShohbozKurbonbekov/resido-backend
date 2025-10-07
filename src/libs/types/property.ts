@@ -138,7 +138,7 @@ export interface RecentPropertyResult {
 export interface PropertySearchFeatures {
   propertySearch?: string;
   propertyVerified?: boolean;
-  propertySuperAgent?: boolean;
+  propertyAgentLevel?: boolean;
   propertyLocation?: MajorCites;
   propertyType?: PropertyType;
   propertyBedrooms?: number;
