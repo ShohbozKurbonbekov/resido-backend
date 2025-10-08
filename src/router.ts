@@ -54,7 +54,16 @@ router.post(
   "/property/featured-property",
   propertyController.getFeaturedProperty
 );
+
+// GET ALL PROPERTIES
 router.get("/property/all", propertyController.getAllProducts);
+
+// GET A CERTAIN PRODUCT
+router.get(
+  "/property/:id",
+  memberController.verifyMember,
+  propertyController.getProperty
+);
 
 // CREATE COMMENTS
 router.post(

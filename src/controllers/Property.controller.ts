@@ -11,6 +11,7 @@ import {
 } from "../libs/types/property";
 import makeUploader from "../libs/utils/uploader";
 import buildPropertyInquery from "../libs/utils/buildPropertyInquery";
+import { shapeIntoMongooseObjectId } from "../libs/config";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -116,6 +117,29 @@ propertyController.getAllProducts = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getAllProducts process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////////// -------------- GET A CERTAIN PROPERTY ------------- ////////////
+propertyController.getProperty = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("getPropertyProcess");
+    const productId = shapeIntoMongooseObjectId(req.params.id);
+    const memberId = shapeIntoMongooseObjectId(req.member?._id) ?? null;
+
+    const result = await propertyService.getProduct(memberId, productId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getProperty process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

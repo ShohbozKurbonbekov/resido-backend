@@ -13,10 +13,17 @@ import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
 import { T } from "../libs/types/common";
 import { text } from "stream/consumers";
 import { priceValueField, famousIndicatorField } from "../libs/config";
+import { ObjectId } from "mongoose";
+import { View, ViewInput } from "../libs/types/view";
+import { ViewGroup } from "../libs/enums/view.enum";
+import ViewService from "./View.service";
 class PropertyService {
   private readonly propertyModel;
+  public viewService;
+
   constructor() {
     this.propertyModel = PropertyModel;
+    this.viewService = new ViewService();
   }
 
   // CREATE PROPERTY
@@ -200,6 +207,56 @@ class PropertyService {
         .filter(([_, value]) => value)
         .map(([key, value]) => ({ [`amenities.${key}`]: value }));
     }
+  }
+
+  public async getProduct(
+    memberId: null | ObjectId,
+    productId: ObjectId
+  ): Promise<PropertyDocument> {
+    let result = await this.propertyModel
+      .findOne({
+        _id: productId,
+        status: PropertyStatus.AVAILABLE,
+      })
+      .lean()
+      .exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    if (memberId) {
+      const input: ViewInput = {
+        viewTargetId: productId,
+        userId: memberId,
+        viewGroup: ViewGroup.PROPERTY,
+      };
+
+      const existView: View | null = await this.viewService.checkViewExistance(
+        input
+      );
+      console.log("exist: ", !!existView);
+
+      result;
+      if (!existView) {
+        const viewResult = await this.viewService.insertUserView(input);
+
+        result = await this.propertyModel
+          .findOneAndUpdate(
+            { _id: productId },
+            {
+              $inc: { views: +1 },
+            },
+            {
+              new: true,
+            }
+          )
+          .lean()
+          .exec();
+      }
+    }
+
+    return result as PropertyDocument;
   }
 }
 export default PropertyService;
