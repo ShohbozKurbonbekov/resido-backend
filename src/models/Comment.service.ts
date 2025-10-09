@@ -22,7 +22,6 @@ class CommentService {
     input: CommentInput,
     member: any
   ): Promise<CommentDocs> {
-    console.log(member);
     try {
       const id = shapeIntoMongooseObjectId(input.targetId);
       if (input.targetType === CommentTargetType.AGENT) {
@@ -41,11 +40,12 @@ class CommentService {
       input.userId = shapeIntoMongooseObjectId(member._id);
       input.userInfo = {
         name: member.memberName,
-        avatar: member.avatar ?? "example.jpg",
+        avatar: member.avatar ?? "no avatar",
         email: member.memberEmail,
         phone: member.memberPhone,
         userAddress: member.userAddress,
         userDescription: member.userDescription,
+        occupation: member.occupation,
       };
 
       const result = await this.commentModel.create(input);

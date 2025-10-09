@@ -6,8 +6,7 @@ const CommentSchema = new Schema<CommentInput>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: "users",
     },
     targetType: {
       type: String,
@@ -42,6 +41,10 @@ const CommentSchema = new Schema<CommentInput>(
         },
         phone: {
           type: String,
+        },
+        occupation: {
+          type: String,
+          required: true,
         },
         email: {
           type: String,

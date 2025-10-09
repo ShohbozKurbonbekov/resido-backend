@@ -210,16 +210,105 @@ class PropertyService {
   }
 
   public async getProduct(
-    memberId: null | ObjectId,
+    memberId: ObjectId,
     productId: ObjectId
   ): Promise<PropertyDocument> {
-    let result = await this.propertyModel
-      .findOne({
-        _id: productId,
-        status: PropertyStatus.AVAILABLE,
-      })
-      .lean()
+    const match = {
+      _id: productId,
+      status: PropertyStatus.AVAILABLE,
+    };
+    await this.propertyModel
+      .aggregate([
+        {
+          $match: match,
+        },
+        {
+          $lookup: {
+            from: "comments",
+            localField: "_id",
+            foreignField: "targetId",
+            as: "comments",
+          },
+        },
+        {
+          $addFields: {
+            totalComments: {
+              $size: {
+                $ifNull: [
+                  { $cond: [{ $isArray: "$comments" }, "$comments", []] },
+                  [],
+                ],
+              },
+            },
+            averageRating: {
+              $avg: "$comments.rating",
+            },
+          },
+        },
+        {
+          $addFields: {
+            totalLikes: {
+              $ifNull: ["$totalLikes", 0],
+            },
+            daysSinceCreated: {
+              $floor: {
+                $divide: [
+                  { $subtract: [new Date(), "$createdAt"] },
+                  1000 * 60 * 60 * 24,
+                ],
+              },
+            },
+          },
+        },
+
+        {
+          $addFields: {
+            recentBoost: {
+              $cond: [{ $lte: ["$daysSinceCreated", 7] }, 1, 0],
+            },
+            featuredScore: {
+              $add: [
+                {
+                  $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4],
+                },
+                {
+                  $multiply: [
+                    { $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] } },
+                    0.25,
+                  ],
+                },
+                {
+                  $multiply: [
+                    { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
+                    0.2,
+                  ],
+                },
+                {
+                  $multiply: [
+                    { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+                    0.1,
+                  ],
+                },
+                {
+                  $multiply: [{ $ifNull: ["$recentBoost", 0] }, 0.05],
+                },
+              ],
+            },
+          },
+        },
+        {
+          $merge: {
+            into: "properties",
+            whenMatched: "merge",
+            whenNotMatched: "discard",
+          },
+        },
+      ])
       .exec();
+
+    let result = await this.propertyModel.findOne({
+      ...match,
+    });
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
@@ -235,11 +324,9 @@ class PropertyService {
       const existView: View | null = await this.viewService.checkViewExistance(
         input
       );
-      console.log("exist: ", !!existView);
 
-      result;
       if (!existView) {
-        const viewResult = await this.viewService.insertUserView(input);
+        await this.viewService.insertUserView(input);
 
         result = await this.propertyModel
           .findOneAndUpdate(
@@ -251,7 +338,6 @@ class PropertyService {
               new: true,
             }
           )
-          .lean()
           .exec();
       }
     }

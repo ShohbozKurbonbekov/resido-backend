@@ -174,9 +174,11 @@ const PropertySchema = new Schema(
     },
     totalComments: {
       type: Number,
+      default: 0,
     },
     featuredScore: {
       type: Number,
+      default: 0,
     },
     averageRating: {
       type: Number,
@@ -191,43 +193,23 @@ const PropertySchema = new Schema(
       enum: PropertyMood,
     },
     firePlace: { type: Boolean, default: false },
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     videos: {
       type: [String],
       default: [],
+    },
+    recentBoost: {
+      type: Number,
+      default: 0,
+    },
+    daysSinceCreated: {
+      type: Number,
+      default: 0,
     },
   },
 
   { timestamps: true }
 );
 
-PropertySchema.pre("save", async function (next) {
-  this.totalComments = this.comments.length ? this.comments.length : 0;
-
-  const ratings = this.comments.map((c: any) => c.rating || 0) || [];
-  this.averageRating = ratings.length
-    ? ratings.reduce((acc, val) => acc + val, 0) / ratings.length
-    : 0;
-
-  if (!this.createdAt) this.createdAt = new Date();
-  const daysSinceCreated = Math.floor(
-    (Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const recencyBoost = daysSinceCreated <= 7 ? 1 : 0;
-
-  const views = this.views || 0;
-  const avgRating = this.averageRating || 0;
-  const totalComments = this.totalComments || 0;
-  const totalLikes = this.totalLikes || 0;
-
-  this.featuredScore =
-    avgRating * 0.4 +
-    Math.log(totalComments + 1) * 0.25 +
-    Math.log(views + 1) * 0.2 +
-    Math.log(totalLikes + 1) * 0.1 +
-    recencyBoost * 0.05;
-  next();
-});
 PropertySchema.index({
   featuredScore: -1,
   status: 1,

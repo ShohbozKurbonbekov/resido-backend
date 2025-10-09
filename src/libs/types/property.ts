@@ -83,8 +83,9 @@ export interface PropertyInput {
   averageRating?: number;
   status?: PropertyStatus;
   totalLikes?: number;
+  recentBoost?: number;
+  daysSinceCreated?: number;
   firePlace?: boolean;
-  comments?: ObjectId[];
   videos?: string[];
 }
 
@@ -118,8 +119,9 @@ export interface Property {
   nearBySchools: boolean;
   nearByTransports: boolean;
   firePlace: boolean;
-  comments: ObjectId[];
   videos: string[];
+  recentBoost: number;
+  daysSinceCreated: number;
   mood?: PropertyMood;
 }
 
@@ -154,11 +156,11 @@ export interface PropertyInquery {
   search?: PropertySearchFeatures;
 }
 
-interface TotalCounter {
+export interface TotalCounter {
   total?: number;
 }
 
 export interface Properties {
-  properties: Property[];
+  properties?: Property[];
   metaCounter?: TotalCounter[];
 }
