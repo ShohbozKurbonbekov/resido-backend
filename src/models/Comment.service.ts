@@ -6,6 +6,7 @@ import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { T } from "../libs/types/common";
 
 class CommentService {
   private readonly commentModel;
@@ -20,7 +21,7 @@ class CommentService {
   ///////////////////////// CREATE A COMMENT /////////////
   public async createComment(
     input: CommentInput,
-    member: any
+    member: T
   ): Promise<CommentDocs> {
     try {
       const id = shapeIntoMongooseObjectId(input.targetId);
@@ -37,6 +38,7 @@ class CommentService {
           // Check from the blog collection
         }
       }
+
       input.userId = shapeIntoMongooseObjectId(member._id);
       input.userInfo = {
         name: member.memberName,
@@ -45,7 +47,7 @@ class CommentService {
         phone: member.memberPhone,
         userAddress: member.userAddress,
         userDescription: member.userDescription,
-        occupation: member.occupation,
+        occupation: member.occupation ?? "none",
       };
 
       const result = await this.commentModel.create(input);

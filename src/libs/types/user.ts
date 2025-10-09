@@ -21,6 +21,7 @@ export interface UserMemberInput {
   userAddress?: string;
   userDescription?: string;
   avatar?: string;
+  occuption?: string;
 }
 
 export interface User {
@@ -31,6 +32,7 @@ export interface User {
   memberPassword: string;
   role: MemberType;
   memberStatus: MemberStatus;
+  occupation: string;
   userFullname?: string;
   userAddress?: string;
   userDescription?: string;
@@ -48,6 +50,7 @@ export interface UserInputUpdate {
   memberPassword?: string;
   userFullname?: string;
   userAddress?: string;
+  occuption?: string;
   userDescription?: string;
   avatar?: string;
 }

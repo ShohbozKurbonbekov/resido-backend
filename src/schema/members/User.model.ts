@@ -73,6 +73,10 @@ const UserSchema = new Schema<User>(
     userFullname: {
       type: String,
     },
+    occupation: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
