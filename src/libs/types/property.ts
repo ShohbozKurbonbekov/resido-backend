@@ -12,7 +12,7 @@ import {
   SellingTypeEnum,
 } from "../enums/property.enum";
 import { Document } from "mongoose";
-import { PropertyDoc } from "../schema/Property.model";
+import { PropertyDoc } from "../../schema/Property.model";
 
 export interface PropertyAddress {
   street?: string;

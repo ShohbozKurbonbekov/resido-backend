@@ -135,7 +135,7 @@ propertyController.getProperty = async (
     const productId = shapeIntoMongooseObjectId(req.params.id);
     const memberId = shapeIntoMongooseObjectId(req.member?._id);
 
-    const result = await propertyService.getProduct(memberId, productId);
+    const result = await propertyService.getProperty(memberId, productId);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

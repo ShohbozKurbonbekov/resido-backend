@@ -273,7 +273,7 @@ class PropertyService {
     }
   }
 
-  public async getProduct(
+  public async getProperty(
     memberId: ObjectId,
     productId: ObjectId
   ): Promise<PropertyDoc> {
