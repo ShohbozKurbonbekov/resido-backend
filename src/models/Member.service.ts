@@ -1,3 +1,4 @@
+import mongoose, { ObjectId } from "mongoose";
 import Errors, { Message } from "../libs/Errors";
 import {
   UserMemberInput,
@@ -8,6 +9,7 @@ import {
 import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
 import AgencyModel from "../schema/members/Agency.model";
+
 import {
   Agency,
   AgencyInputUpdate,
@@ -21,21 +23,24 @@ import {
 } from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import bcrypt from "bcrypt";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { RecentPropertyForRent } from "../libs/types/property";
-import { RecentPropertyResult } from "../libs/types/property";
 import { AgentStatus } from "../libs/enums/agent.enum";
+import MessageModel, { MessageDoc } from "../schema/Message.model";
+import { MessageInput } from "../libs/types/message";
 
 class MemberService {
   private readonly userModel;
   private readonly agencyModel;
   private readonly agentModel;
+  private readonly messageModel;
+
   constructor() {
     this.userModel = UserModel;
     this.agencyModel = AgencyModel;
     this.agentModel = AgentModel;
+    this.messageModel = MessageModel;
   }
 
   public async signup(
@@ -190,6 +195,63 @@ class MemberService {
     return result;
   }
 
+  // WRITE A MESSAGE TO USER
+  public async WriteMessageToMember(
+    userId: ObjectId,
+    input: MessageInput
+  ): Promise<MessageDoc> {
+    let receiver;
+    try {
+      switch (input.receiverType) {
+        case "USER":
+          receiver = await this.userModel.findOne({
+            _id: input.receiverId,
+            memberStatus: MemberStatus.ACTIVE,
+          });
+          break;
+        case "AGENT":
+          receiver = await this.agentModel.findOne({
+            _id: input.receiverId,
+            memberStatus: MemberStatus.ACTIVE,
+          });
+          break;
+        case "AGENCY":
+          receiver = await this.agencyModel.findOne({
+            _id: input.receiverId,
+            memberStatus: MemberStatus.ACTIVE,
+          });
+          break;
+        case "REAL_ESTATE_ADMIN":
+          receiver = await this.userModel.findOne({
+            role: MemberType.REAL_ESTATE_ADMIN,
+            memberStatus: MemberStatus.ACTIVE,
+          });
+          break;
+        default:
+          throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      }
+
+      if (!receiver) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      }
+
+      if (!input.senderId) {
+        input = {
+          ...input,
+          senderId: userId,
+        };
+      }
+
+      const result = await this.messageModel.create(input);
+
+      return result;
+    } catch (error) {
+      console.log("Error in WriteMessageToMember service: ", error);
+      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+    }
+  }
+
+  /// UPDATE A MEMBER
   public async updateMember(
     member: User | Agency | Agent,
     input: UserInputUpdate | AgencyInputUpdate | AgentInputUpdate

@@ -29,12 +29,21 @@ router.post(
 );
 
 router.post("/member/featured-agents", memberController.getFeaturedAgents);
+
 // LOGOUT
 router.post(
   "/member/logout",
   memberController.verifyMember,
   memberController.logout
 );
+
+// WRITE A MESSAGE TO MEMBER
+router.post(
+  "/member/write/message",
+  memberController.verifyMember,
+  memberController.WriteMessageToMember
+);
+
 /////////////////// ------ PROPERTY ---------- ///////////
 // CREATE PROPERTY
 router.post(

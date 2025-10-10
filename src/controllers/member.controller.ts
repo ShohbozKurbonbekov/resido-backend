@@ -11,7 +11,7 @@ import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
 import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
-import { jwtTime } from "../libs/config";
+import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 
 import {
   Agency,
@@ -26,6 +26,7 @@ import {
 } from "../libs/types/agent";
 import makeUploader from "../libs/utils/uploader";
 import { RecentPropertyForRent } from "../libs/types/property";
+import { MessageInput } from "../libs/types/message";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -170,6 +171,29 @@ memberController.logout = async (req: Request, res: Response) => {
   }
 };
 
+/////////////////// ---- WRITE A MESSAGE TO MEMBER ------////////////////////
+memberController.WriteMessageToMember = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("WriteMessageToMember process");
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const input: MessageInput = req.body;
+
+    const result = await memberService.WriteMessageToMember(userId, input);
+
+    res.status(HttpCode.CREATED).json(result);
+  } catch (error) {
+    console.log("Error in WriteMessageToMember process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 //////////////////// VERIFY MEMBER ////////////////
 memberController.verifyMember = async (
   req: ExtendedRequest,
@@ -184,6 +208,7 @@ memberController.verifyMember = async (
     if (!req.member) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.NOT_AUTHENTICATED);
     }
+
     next();
   } catch (error) {
     console.log("Error in veryAuth: ", error);
