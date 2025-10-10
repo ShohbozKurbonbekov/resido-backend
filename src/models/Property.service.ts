@@ -7,27 +7,91 @@ import {
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
-import PropertyModel from "../schema/Property.model";
+import PropertyModel, { PropertyDoc } from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
-import { T } from "../libs/types/common";
-import { text } from "stream/consumers";
+import { StatisticsModifier, T } from "../libs/types/common";
 import { priceValueField, famousIndicatorField } from "../libs/config";
 import { ObjectId } from "mongoose";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
+import { LikeInput } from "../libs/types/like";
+import { LikeGroup } from "../libs/enums/like.enum";
+import LikeService from "./Like.service";
 class PropertyService {
   private readonly propertyModel;
   public viewService;
+  public likeService;
 
   constructor() {
     this.propertyModel = PropertyModel;
     this.viewService = new ViewService();
+    this.likeService = new LikeService();
+  }
+
+  // LIKE PROPERTY
+
+  public async likeTargetProperty(
+    userId: ObjectId,
+    propertyId: ObjectId
+  ): Promise<PropertyDoc> {
+    const target = await this.propertyModel
+      .findOne({
+        _id: propertyId,
+        status: PropertyStatus.AVAILABLE,
+      })
+      .lean()
+      .exec();
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const input: LikeInput = {
+      targetId: propertyId,
+      userId: userId,
+      likeGroup: LikeGroup.PROPERTY,
+    };
+
+    const modifier: number = await this.likeService.toggleLike(input);
+
+    const result = await this.propertyStatsEditor({
+      _id: propertyId,
+      targetKey: "totalLikes",
+      modifier,
+    });
+
+    if (!result) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
+    }
+    return result;
+  }
+
+  private async propertyStatsEditor(
+    input: StatisticsModifier
+  ): Promise<PropertyDoc | null> {
+    const { targetKey, _id, modifier } = input;
+
+    const result = await this.propertyModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          $inc: {
+            [targetKey]: modifier,
+          },
+        },
+        {
+          new: true,
+        }
+      )
+      .exec();
+
+    return result;
   }
 
   // CREATE PROPERTY
-  public async createProperty(input: PropertyInput): Promise<PropertyDocument> {
+  public async createProperty(input: PropertyInput): Promise<PropertyDoc> {
     try {
       const result = await this.propertyModel.create(input);
       return result;
@@ -212,7 +276,7 @@ class PropertyService {
   public async getProduct(
     memberId: ObjectId,
     productId: ObjectId
-  ): Promise<PropertyDocument> {
+  ): Promise<PropertyDoc> {
     const match = {
       _id: productId,
       status: PropertyStatus.AVAILABLE,
@@ -342,7 +406,7 @@ class PropertyService {
       }
     }
 
-    return result as PropertyDocument;
+    return result as PropertyDoc;
   }
 }
 export default PropertyService;

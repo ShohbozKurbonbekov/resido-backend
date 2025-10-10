@@ -147,4 +147,29 @@ propertyController.getProperty = async (
     }
   }
 };
+
+/////////////////// ------ LIKE PROPERTY ---------- ///////////
+
+propertyController.likeTargetProperty = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("LikeTargetProperty process");
+
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const propertyId = req.body.input;
+
+    const result = await propertyService.likeTargetProperty(userId, propertyId);
+
+    res.status(HttpCode.CREATED).json(result);
+  } catch (error) {
+    console.log("Error in LiketargetProperty process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default propertyController;

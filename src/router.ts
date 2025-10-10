@@ -5,6 +5,8 @@ import commentController from "./controllers/Comment.controller";
 
 const router = express.Router();
 
+/////////////////// ------ MEMBER ---------- ///////////
+
 // SIGNUP
 router.post("/member/signup", memberController.getSignup);
 
@@ -33,7 +35,7 @@ router.post(
   memberController.verifyMember,
   memberController.logout
 );
-
+/////////////////// ------ PROPERTY ---------- ///////////
 // CREATE PROPERTY
 router.post(
   "/property/create",
@@ -64,6 +66,14 @@ router.get(
   memberController.verifyMember,
   propertyController.getProperty
 );
+
+router.post(
+  "/property/liked",
+  memberController.verifyMember,
+  propertyController.likeTargetProperty
+);
+
+/////////////////// ------ COMMENT ---------- ///////////
 
 // CREATE COMMENTS
 router.post(

@@ -1,4 +1,4 @@
-import { Schema, ObjectId } from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 
@@ -30,3 +30,7 @@ LikeSchema.index(
   },
   { unique: true }
 );
+
+export type LikeDoc = InferSchemaType<typeof LikeSchema>;
+
+export default mongoose.model<LikeDoc>("Like", LikeSchema);

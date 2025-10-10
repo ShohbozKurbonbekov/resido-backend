@@ -12,6 +12,7 @@ import {
   SellingTypeEnum,
 } from "../enums/property.enum";
 import { Document } from "mongoose";
+import { PropertyDoc } from "../schema/Property.model";
 
 export interface PropertyAddress {
   street?: string;
@@ -133,7 +134,7 @@ export interface RecentPropertyForRent {
 }
 
 export interface RecentPropertyResult {
-  properties: Property[];
+  properties: PropertyDoc[];
   totalPropertiesNumber: number;
 }
 

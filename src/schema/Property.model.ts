@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { Property, PropertyDocument } from "../libs/types/property";
 import {
   PropertyCooling,
@@ -214,4 +214,6 @@ PropertySchema.index({
   featuredScore: -1,
   status: 1,
 });
-export default mongoose.model<PropertyDocument>("Property", PropertySchema);
+
+export type PropertyDoc = InferSchemaType<typeof PropertySchema>;
+export default mongoose.model<PropertyDoc>("Property", PropertySchema);
