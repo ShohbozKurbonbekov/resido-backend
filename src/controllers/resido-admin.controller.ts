@@ -41,6 +41,30 @@ residoAdminController.getLogin = async function (req: Request, res: Response) {
   }
 };
 
+residoAdminController.processLogin = async (
+  req: AdminRequest,
+  res: Response
+) => {
+  try {
+    console.log("admin process login");
+    const input = req.body;
+    const result = await adminService.processLogin(input);
+
+    //Session
+    req.session.member = result;
+    req.session.save(function () {
+      res.redirect("/admin/dashboard");
+    });
+  } catch (error) {
+    console.log("Error in admin login: ", error);
+    const message =
+      error instanceof Errors ? error.message : Message.SOMETHING_WENT_WRONG;
+
+    res.send(`<script> alert("${message}"); window.location.replace("/admin/login")
+        </script>`);
+  }
+};
+
 residoAdminController.getSignup = async function (res: Response, req: Request) {
   try {
     res.send("You have just signed up");

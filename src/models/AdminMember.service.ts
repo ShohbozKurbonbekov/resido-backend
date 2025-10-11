@@ -5,7 +5,8 @@ import UserModel from "../schema/members/User.model";
 import PropertyModel from "../schema/Property.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
-import { User, UserMemberInput } from "../libs/types/user";
+import bcrypt from "bcrypt";
+import { LoginInput, User, UserMemberInput } from "../libs/types/user";
 import { MemberType } from "../libs/enums/member.enum";
 
 class AdminService {
@@ -43,6 +44,32 @@ class AdminService {
       console.log("Error in process admin signup: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
+  }
+
+  public async processLogin(input: LoginInput): Promise<User> {
+    const member = await this.userModel.findOne(
+      {
+        memberEmail: input.memberEmail,
+      },
+      {
+        memberName: 1,
+        memberPassword: 1,
+      }
+    );
+
+    if (!member) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
+    }
+
+    const isMatch: boolean = await bcrypt.compare(
+      input.memberPassword,
+      member.memberPassword
+    );
+
+    if (!isMatch) {
+      throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
+    }
+    return (await this.userModel.findById(member._id).exec()) as User;
   }
 }
 

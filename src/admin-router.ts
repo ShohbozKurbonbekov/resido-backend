@@ -10,7 +10,7 @@ adminRouter.get("/", residoAdminController.goHome);
 adminRouter.get("/dashboard", residoAdminController.getDashboard);
 // Login
 adminRouter.get("/login", residoAdminController.getLogin);
-
+adminRouter.post("/login", residoAdminController.processLogin);
 // Signup
 adminRouter.get("/signup", residoAdminController.getSignup);
 
