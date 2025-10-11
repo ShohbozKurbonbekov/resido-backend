@@ -27,6 +27,7 @@ import {
 import makeUploader from "../libs/utils/uploader";
 import { RecentPropertyForRent } from "../libs/types/property";
 import { MessageInput } from "../libs/types/message";
+import residoAdminController from "./resido-admin.controller";
 
 const memberController: T = {};
 const memberService = new MemberService();

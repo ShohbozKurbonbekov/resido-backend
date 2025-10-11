@@ -2,6 +2,7 @@ import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Request } from "express";
 import { Agent } from "./agent";
+import { Social } from "./common";
 
 export interface ExtendedRequest extends Request {
   file: Express.Multer.File;
@@ -16,10 +17,10 @@ export interface UserMemberInput {
   memberPassword: string;
   role: MemberType;
   memberStatus?: MemberStatus;
+  memberAddress?: string;
+  memberDescription?: string;
+  memberSocials?: Social;
   userFullname?: string;
-  isDeleted?: boolean;
-  userAddress?: string;
-  userDescription?: string;
   avatar?: string;
   occuption?: string;
 }
@@ -32,12 +33,12 @@ export interface User {
   memberPassword: string;
   role: MemberType;
   memberStatus: MemberStatus;
-  occupation: string;
+  memberSocials: Social;
+  occupation?: string;
   userFullname?: string;
-  userAddress?: string;
-  userDescription?: string;
+  memberAddress?: string;
+  memberDescription?: string;
   avatar?: string;
-  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

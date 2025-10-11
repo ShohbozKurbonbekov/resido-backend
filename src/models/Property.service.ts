@@ -70,7 +70,7 @@ class PropertyService {
 
   private async propertyStatsEditor(
     input: StatisticsModifier
-  ): Promise<PropertyDoc | null> {
+  ): Promise<PropertyDoc> {
     const { targetKey, _id, modifier } = input;
 
     const result = await this.propertyModel
@@ -87,7 +87,7 @@ class PropertyService {
       )
       .exec();
 
-    return result;
+    return result as PropertyDoc;
   }
 
   // CREATE PROPERTY
@@ -370,7 +370,7 @@ class PropertyService {
       ])
       .exec();
 
-    let result = await this.propertyModel.findOne({
+    let result: null | PropertyDoc = await this.propertyModel.findOne({
       ...match,
     });
 
@@ -392,17 +392,11 @@ class PropertyService {
       if (!existView) {
         await this.viewService.insertUserView(input);
 
-        result = await this.propertyModel
-          .findOneAndUpdate(
-            { _id: productId },
-            {
-              $inc: { views: +1 },
-            },
-            {
-              new: true,
-            }
-          )
-          .exec();
+        result = await this.propertyStatsEditor({
+          _id: productId,
+          targetKey: "views",
+          modifier: 1,
+        });
       }
     }
 

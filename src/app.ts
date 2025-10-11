@@ -6,6 +6,15 @@ import cors from "cors";
 import morgan from "morgan";
 import { MORGAN_FORMAT } from "./libs/config";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+import ConnectMongoDBSession from "connect-mongodb-session";
+import { T } from "./libs/types/common";
+// SESSION STORE
+const MongoDbStore = ConnectMongoDBSession(session);
+const store = new MongoDbStore({
+  uri: String(process.env.MONGO_URL),
+  collection: "session",
+});
 
 // PATHs
 const publicPath = path.join(__dirname, "public");
@@ -28,6 +37,23 @@ app.use(cookieParser());
 app.use(morgan(MORGAN_FORMAT));
 
 // SESSIONS
+app.use(
+  session({
+    secret: String(process.env.SECRET_SESSION),
+    cookie: {
+      maxAge: 1000 * 60 * 60,
+    },
+    store: store,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+app.use(function (req, res, next) {
+  const sessionInstance = req.session as T;
+  res.locals.member = sessionInstance;
+  next();
+});
 
 // VIEWS
 app.set("views", viewPath);

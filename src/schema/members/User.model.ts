@@ -4,6 +4,34 @@ import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
 import { User } from "../../libs/types/user";
 
+const Socials = new Schema(
+  {
+    facebook: {
+      type: String,
+      default: null,
+    },
+    twitter: {
+      type: String,
+      default: null,
+    },
+    instagram: {
+      type: String,
+      default: null,
+    },
+    linkedin: {
+      type: String,
+      default: null,
+    },
+    emial: {
+      type: String,
+      default: null,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const UserSchema = new Schema<User>(
   {
     role: {
@@ -56,15 +84,14 @@ const UserSchema = new Schema<User>(
         message: `Type a strong password`,
       },
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-    userAddress: {
+    memberAddress: {
       type: String,
     },
-    userDescription: {
+    memberDescription: {
       type: String,
+    },
+    memberSocials: {
+      type: Socials,
     },
     avatar: {
       type: String,
@@ -75,7 +102,6 @@ const UserSchema = new Schema<User>(
     },
     occupation: {
       type: String,
-      default: null,
     },
   },
   {
