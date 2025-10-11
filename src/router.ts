@@ -2,6 +2,7 @@ import express from "express";
 import memberController from "./controllers/member.controller";
 import propertyController from "./controllers/Property.controller";
 import commentController from "./controllers/Comment.controller";
+import agentController from "./controllers/Agent.controller";
 
 const router = express.Router();
 
@@ -93,3 +94,6 @@ router.post(
 
 //  GET 10 LATEST COMMENTS
 router.get("/member/comments/latest", commentController.getLatestComments);
+
+////////////////////// ---- AGENT ---------- //////////////
+router.post("/member/search/agent", agentController.getAgentByLocation);

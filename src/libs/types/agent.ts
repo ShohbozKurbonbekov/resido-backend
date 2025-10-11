@@ -83,7 +83,13 @@ export interface FeaturedAgentsInput {
   limit: number;
 }
 
-export interface FeaturedAgentsResult {
-  properties: Agent[];
-  totalPropertiesNumber: number;
+export interface AgentResults {
+  agents: Agent[];
+  totalAgentsNumber: number;
+}
+
+export interface AgentLocation {
+  page: number;
+  limit: number;
+  location: string;
 }

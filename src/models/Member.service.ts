@@ -18,7 +18,7 @@ import {
 import {
   AgentInputUpdate,
   FeaturedAgentsInput,
-  FeaturedAgentsResult,
+  AgentResults,
   MemberAgentInput,
 } from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
@@ -284,8 +284,8 @@ class MemberService {
   // GET FEATURED AGENTS
   public async getFeaturedAgents(
     input: FeaturedAgentsInput
-  ): Promise<FeaturedAgentsResult> {
-    const [properties, totalPropertiesNumber] = await Promise.all([
+  ): Promise<AgentResults> {
+    const [agents, totalAgentsNumber] = await Promise.all([
       this.agentModel
         .find({
           currentStatus: AgentStatus.AVAILABLE,
@@ -309,9 +309,9 @@ class MemberService {
         })
         .exec(),
     ]);
-    if (!properties.length) {
+    if (!agents.length) {
     }
-    return { properties, totalPropertiesNumber };
+    return { agents, totalAgentsNumber };
   }
 }
 

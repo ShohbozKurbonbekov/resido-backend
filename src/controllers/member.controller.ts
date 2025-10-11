@@ -21,7 +21,7 @@ import {
 import {
   Agent,
   AgentInputUpdate,
-  FeaturedAgentsResult,
+  AgentResults,
   MemberAgentInput,
 } from "../libs/types/agent";
 import makeUploader from "../libs/utils/uploader";
@@ -140,9 +140,7 @@ memberController.getFeaturedAgents = async (req: Request, res: Response) => {
     console.log("getFeaturedAgents process");
     const input: RecentPropertyForRent = req.body;
 
-    const result: FeaturedAgentsResult = await memberService.getFeaturedAgents(
-      input
-    );
+    const result: AgentResults = await memberService.getFeaturedAgents(input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getFeaturedAgents process: ", error);
