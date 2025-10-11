@@ -23,6 +23,7 @@ export enum Message {
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
   NO_MEMBER = "No member with that email",
   INVALID_ROLE = "there is no such role found",
+  NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
 }
 
 class Errors extends Error {

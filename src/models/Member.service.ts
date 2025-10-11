@@ -29,6 +29,7 @@ import { shapeIntoMongooseObjectId } from "../libs/config";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
 import { MessageInput } from "../libs/types/message";
+import { PropertyType } from "../libs/enums/property.enum";
 
 class MemberService {
   private readonly userModel;
@@ -200,50 +201,42 @@ class MemberService {
     userId: ObjectId,
     input: MessageInput
   ): Promise<MessageDoc> {
-    let receiver;
-    try {
-      switch (input.receiverType) {
-        case "USER":
-          receiver = await this.userModel.findOne({
-            _id: input.receiverId,
-            memberStatus: MemberStatus.ACTIVE,
-          });
-          break;
-        case "AGENT":
-          receiver = await this.agentModel.findOne({
-            _id: input.receiverId,
-            memberStatus: MemberStatus.ACTIVE,
-          });
-          break;
-        case "AGENCY":
-          receiver = await this.agencyModel.findOne({
-            _id: input.receiverId,
-            memberStatus: MemberStatus.ACTIVE,
-          });
-          break;
-        case "REAL_ESTATE_ADMIN":
-          receiver = await this.userModel.findOne({
+    const { receiverId, receiverType } = input;
+
+    const receiverModel: Record<string, any> = {
+      USER: this.userModel,
+      AGENT: this.agentModel,
+      AGENCY: this.agencyModel,
+      REAL_ESTATE_ADMIN: this.userModel,
+    };
+
+    const modelClass = receiverModel[receiverType];
+
+    if (!modelClass) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
+    }
+
+    const query =
+      receiverType === (MemberType.REAL_ESTATE_ADMIN as string)
+        ? {
             role: MemberType.REAL_ESTATE_ADMIN,
             memberStatus: MemberStatus.ACTIVE,
-          });
-          break;
-        default:
-          throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-      }
+          }
+        : { _id: receiverId, memberStatus: MemberStatus.ACTIVE };
 
-      if (!receiver) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-      }
+    const receiver = await modelClass.findOne(query);
 
-      if (!input.senderId) {
-        input = {
-          ...input,
-          senderId: userId,
-        };
-      }
+    if (!receiver) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
+    }
 
-      const result = await this.messageModel.create(input);
+    try {
+      const data: MessageInput = {
+        ...input,
+        senderId: input.senderId ?? userId,
+      };
 
+      const result = await this.messageModel.create(data);
       return result;
     } catch (error) {
       console.log("Error in WriteMessageToMember service: ", error);

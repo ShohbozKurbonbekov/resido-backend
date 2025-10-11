@@ -3,18 +3,20 @@ import { MessageReceiverType, MessageSenderType } from "../enums/message.enum";
 
 export interface MessageInput {
   //sender
-  senderId: ObjectId;
+  senderId?: ObjectId;
   senderType: MessageSenderType;
-  deletedBySender: boolean;
+  deletedBySender?: boolean;
 
   // receiver
-  receiverId: ObjectId;
+  receiverId?: ObjectId;
   receiverType: MessageReceiverType;
-  deletedByReceiver: boolean;
+  deletedByReceiver?: boolean;
 
   // content
-  isRead: boolean;
-  whenIsRead: Date;
+  isRead?: boolean;
+  whenIsRead?: Date;
   content: string;
   subject: string;
+  email: string;
+  phone: string;
 }

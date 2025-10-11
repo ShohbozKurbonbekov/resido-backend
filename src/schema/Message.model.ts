@@ -4,6 +4,28 @@ import {
   MessageSenderType,
   MessageReceiverType,
 } from "../libs/enums/message.enum";
+const SenderInfoSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    address: {
+      type: String,
+    },
+  },
+  {
+    _id: false,
+  }
+);
 
 const MessageSchema = new Schema<MessageInput>(
   {
@@ -23,11 +45,11 @@ const MessageSchema = new Schema<MessageInput>(
 
     receiverId: {
       type: Schema.Types.ObjectId,
-      required: true,
     },
     receiverType: {
       type: String,
       enum: MessageReceiverType,
+      required: true,
     },
     deletedByReceiver: {
       type: Boolean,
@@ -51,7 +73,16 @@ const MessageSchema = new Schema<MessageInput>(
       type: Date,
       default: null,
     },
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
   },
+
   {
     timestamps: true,
   }
