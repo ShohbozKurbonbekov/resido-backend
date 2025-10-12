@@ -28,7 +28,6 @@ export interface MemberAgentInput {
   avatar?: string;
   points?: number;
   properties?: ObjectId[];
-  comments?: ObjectId[];
   socialLinks?: Social;
   isVerified?: boolean;
 }
@@ -60,7 +59,6 @@ export interface Agent {
   ///////////
   currentStatus: AgentStatus;
   properties?: ObjectId[];
-  comments?: ObjectId[];
   avatar?: string;
 }
 

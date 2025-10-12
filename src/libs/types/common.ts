@@ -1,4 +1,7 @@
 import { ObjectId } from "mongoose";
+import { Agency } from "./agency";
+import { Agent } from "./agent";
+import { User } from "./user";
 
 export interface T {
   [key: string]: any;
@@ -17,3 +20,4 @@ export interface StatisticsModifier {
   targetKey: string;
   modifier: number;
 }
+export type CommonUsers = Agency | Agent | User;

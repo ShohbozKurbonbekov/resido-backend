@@ -97,3 +97,4 @@ router.get("/member/comments/latest", commentController.getLatestComments);
 
 ////////////////////// ---- AGENT ---------- //////////////
 router.post("/member/search/agent", agentController.getAgentByLocation);
+router.get("/agent/:id", agentController.getAgentDetail);

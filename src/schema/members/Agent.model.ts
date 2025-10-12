@@ -115,7 +115,6 @@ const AgentSchema = new Schema<Agent>(
       default: 0,
     },
     properties: [{ type: Schema.Types.ObjectId, ref: "Property" }],
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     socialLinks: {
       instagram: { type: String, default: null },
       twitter: { type: String, default: null },
@@ -158,34 +157,6 @@ AgentSchema.pre("save", async function (next) {
     const salt: string = await bcrypt.genSalt();
     user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
 
-    // CREATING FEATURED PROPERTY
-    user.totalComments = user.comments.length ? user.comments.length : 0;
-
-    const ratings = user.comments.map((c: any) => c.rating || 0) || [];
-    user.averageRating = ratings.length
-      ? ratings.reduce((acc: number, val: any) => acc + val, 0) / ratings.length
-      : 0;
-
-    const points = user.points || 0;
-    const views = user.views || 0;
-    const avgRating = user.averageRating || 0;
-    const totalComments = user.totalComments || 0;
-    const totalLikes = user.totalLikes || 0;
-
-    user.featuredScore =
-      avgRating * 0.4 +
-      Math.log(totalComments + 1) * 0.1 +
-      Math.log(views + 1) * 0.1 +
-      Math.log(totalLikes + 1) * 0.1 +
-      Math.log(points + 1) * 0.3;
-
-    if (this.featuredScore >= 8 && this.isVerified === true) {
-      user.rank = "superAgent";
-    } else if (this.featuredScore >= 5 && this.isVerified === true) {
-      user.rank = "trustedAgent";
-    } else {
-      user.rank = "regularAgent";
-    }
     next();
   }
 });

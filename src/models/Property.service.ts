@@ -11,7 +11,12 @@ import PropertyModel, { PropertyDoc } from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
 import { StatisticsModifier, T } from "../libs/types/common";
-import { priceValueField, famousIndicatorField } from "../libs/config";
+import {
+  priceValueField,
+  famousIndicatorField,
+  commentLookup,
+  addTotCommentsAvRatingFields,
+} from "../libs/config";
 import { ObjectId } from "mongoose";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
@@ -273,6 +278,7 @@ class PropertyService {
     }
   }
 
+  // GET A PROPERTY
   public async getProperty(
     memberId: ObjectId,
     productId: ObjectId
@@ -281,34 +287,14 @@ class PropertyService {
       _id: productId,
       status: PropertyStatus.AVAILABLE,
     };
+
     await this.propertyModel
       .aggregate([
         {
           $match: match,
         },
-        {
-          $lookup: {
-            from: "comments",
-            localField: "_id",
-            foreignField: "targetId",
-            as: "comments",
-          },
-        },
-        {
-          $addFields: {
-            totalComments: {
-              $size: {
-                $ifNull: [
-                  { $cond: [{ $isArray: "$comments" }, "$comments", []] },
-                  [],
-                ],
-              },
-            },
-            averageRating: {
-              $avg: "$comments.rating",
-            },
-          },
-        },
+        commentLookup,
+        addTotCommentsAvRatingFields,
         {
           $addFields: {
             totalLikes: {

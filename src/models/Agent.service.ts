@@ -1,15 +1,25 @@
-import { AgentLocation, AgentResults } from "../libs/types/agent";
+import { Agent, AgentLocation, AgentResults } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
-import { T } from "../libs/types/common";
+import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
 import { MemberStatus } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
+import { ObjectId } from "mongoose";
+import { addTotCommentsAvRatingFields, commentLookup } from "../libs/config";
+import { ViewInput } from "../libs/types/view";
+import { ViewGroup } from "../libs/enums/view.enum";
+import ViewService from "./View.service";
+import { ViewDocs } from "../schema/View.model";
 
 class AgentService {
   private readonly agentModel;
+  public readonly viewService;
   constructor() {
     this.agentModel = AgentModel;
+    this.viewService = new ViewService();
   }
+
+  // GET AGENTS BY LOCATION
 
   public async getAgentByLocation(input: AgentLocation): Promise<AgentResults> {
     const filter: T = {
@@ -48,6 +58,160 @@ class AgentService {
       agents: result.agents,
       totalAgentsNumber: result.metaCounter[0].total || 0,
     };
+  }
+
+  public async getAgentDetail(
+    agentId: ObjectId,
+    member: CommonUsers
+  ): Promise<Agent> {
+    const match: T = {
+      _id: agentId,
+      memberStatus: MemberStatus.ACTIVE,
+    };
+
+    await this.agentModel.aggregate([
+      {
+        $match: match,
+      },
+      commentLookup,
+      addTotCommentsAvRatingFields,
+      {
+        $addFields: {
+          totalLikes: {
+            $ifNull: ["$totalLikes", 0],
+          },
+          featuredScore: {
+            $add: [
+              {
+                $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$points", 0] }, 1] } },
+                  0.25,
+                ],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+                  0.2,
+                ],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] } },
+                  0.1,
+                ],
+              },
+              {
+                $multiply: [{ $ifNull: ["$views", 0] }, 0.05],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          rank: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $and: [
+                      {
+                        $gte: ["$featuredScore", 8],
+                      },
+                      {
+                        $eq: ["$isVerified", true],
+                      },
+                    ],
+                  },
+                  then: "superAgent",
+                },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ["$featuredScore", 5] },
+                      {
+                        $eq: ["$isVerified", true],
+                      },
+                    ],
+                  },
+                  then: "trustedAgent",
+                },
+              ],
+              default: "regularAgent",
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          comments: 0,
+        },
+      },
+      {
+        $merge: {
+          into: "agents",
+          whenMatched: "merge",
+          whenNotMatched: "discard",
+        },
+      },
+    ]);
+
+    let [result] = await this.agentModel.aggregate([
+      { $match: match },
+      commentLookup,
+    ]);
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    if (member) {
+      const input: ViewInput = {
+        userId: member._id,
+        viewGroup: ViewGroup.AGENT,
+        viewTargetId: agentId,
+      };
+
+      const exist: null | ViewDocs = await this.viewService.checkViewExistance(
+        input
+      );
+
+      if (!exist) {
+        await this.viewService.insertUserView(input);
+
+        result = await this.agentStatsEditor({
+          _id: agentId,
+          targetKey: "views",
+          modifier: 1,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  private async agentStatsEditor(input: StatisticsModifier): Promise<Agent> {
+    const { targetKey, _id, modifier } = input;
+
+    const result = await this.agentModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          $inc: {
+            [targetKey]: modifier,
+          },
+        },
+        {
+          new: true,
+        }
+      )
+      .exec();
+
+    return result as Agent;
   }
 }
 export default AgentService;

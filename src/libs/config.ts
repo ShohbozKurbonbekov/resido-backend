@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { T } from "./types/common";
 
 export const MORGAN_FORMAT = `:method :url :response-time [:status] \n`;
 export const jwtTime = 6;
@@ -33,6 +34,28 @@ export const famousIndicatorField = {
         },
         { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
       ],
+    },
+  },
+};
+
+export const commentLookup = {
+  $lookup: {
+    from: "comments",
+    localField: "_id",
+    foreignField: "targetId",
+    as: "comments",
+  },
+};
+
+export const addTotCommentsAvRatingFields = {
+  $addFields: {
+    totalComments: {
+      $size: {
+        $ifNull: [{ $cond: [{ $isArray: "$comments" }, "$comments", []] }, []],
+      },
+    },
+    averageRating: {
+      $avg: "$comments.rating",
     },
   },
 };
