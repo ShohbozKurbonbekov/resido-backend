@@ -114,7 +114,6 @@ const AgentSchema = new Schema<Agent>(
       type: Number,
       default: 0,
     },
-    properties: [{ type: Schema.Types.ObjectId, ref: "Property" }],
     socialLinks: {
       instagram: { type: String, default: null },
       twitter: { type: String, default: null },

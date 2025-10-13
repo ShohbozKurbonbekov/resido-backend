@@ -51,11 +51,17 @@ export const addTotCommentsAvRatingFields = {
   $addFields: {
     totalComments: {
       $size: {
-        $ifNull: [{ $cond: [{ $isArray: "$comments" }, "$comments", []] }, []],
+        $ifNull: ["$comments", []],
       },
     },
     averageRating: {
-      $avg: "$comments.rating",
+      $avg: {
+        $map: {
+          input: "$comments",
+          as: "c",
+          in: { $ifNull: ["$$c.rating", 0] },
+        },
+      },
     },
   },
 };

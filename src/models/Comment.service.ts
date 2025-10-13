@@ -41,7 +41,7 @@ class CommentService {
 
       input.userId = shapeIntoMongooseObjectId(member._id);
       input.userInfo = {
-        name: member.memberName,
+        name: member.memberName ?? member.fullName ?? member.nickname,
         avatar: member.avatar ?? "no avatar",
         email: member.memberEmail,
         phone: member.memberPhone,

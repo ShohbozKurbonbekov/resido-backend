@@ -361,12 +361,12 @@ class PropertyService {
       ])
       .exec();
 
-    let result: null | PropertyDoc = await this.propertyModel.findOne(
+    let [result] = await this.propertyModel.aggregate([
       {
-        ...match,
+        $match: match,
       },
-      commentLookup
-    );
+      commentLookup,
+    ]);
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
