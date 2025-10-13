@@ -347,6 +347,11 @@ class PropertyService {
           },
         },
         {
+          $project: {
+            comments: 0,
+          },
+        },
+        {
           $merge: {
             into: "properties",
             whenMatched: "merge",
@@ -356,9 +361,12 @@ class PropertyService {
       ])
       .exec();
 
-    let result: null | PropertyDoc = await this.propertyModel.findOne({
-      ...match,
-    });
+    let result: null | PropertyDoc = await this.propertyModel.findOne(
+      {
+        ...match,
+      },
+      commentLookup
+    );
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
