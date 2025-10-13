@@ -58,6 +58,7 @@ export interface Agent {
   ///////////
   currentStatus: AgentStatus;
   avatar?: string;
+  // comments?: [];
 }
 
 export interface AgentInputUpdate {

@@ -30,6 +30,7 @@ import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
 import { MessageInput } from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
+import { CommonUsers } from "../libs/types/common";
 
 class MemberService {
   private readonly userModel;
@@ -46,7 +47,7 @@ class MemberService {
 
   public async signup(
     input: UserMemberInput | AgencyMemberInput | MemberAgentInput
-  ): Promise<User | Agency | Agent> {
+  ): Promise<CommonUsers> {
     try {
       let result;
       if (input.role === "USER") {

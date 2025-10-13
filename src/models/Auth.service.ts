@@ -4,6 +4,7 @@ import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { Agency } from "../libs/types/agency";
 import { Agent } from "../libs/types/agent";
+import { CommonUsers } from "../libs/types/common";
 
 class AuthService {
   private readonly secretToken;
@@ -11,9 +12,8 @@ class AuthService {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: User | Agency | Agent): Promise<string> {
+  public async createToken(payload: CommonUsers): Promise<string> {
     return new Promise((resolve, reject) => {
-      console.log("token", this.secretToken);
       jwt.sign(
         payload,
         this.secretToken,
@@ -33,9 +33,9 @@ class AuthService {
     });
   }
 
-  public async checkAuth(token: string): Promise<Agent> {
-    const decoded: Agent = (await jwt.verify(token, this.secretToken)) as Agent;
-    return decoded;
+  public async checkAuth(token: string): Promise<CommonUsers> {
+    const decoded = await jwt.verify(token, this.secretToken);
+    return decoded as CommonUsers;
   }
 }
 

@@ -5,7 +5,7 @@ import {
   ExtendedRequest,
   UserInputUpdate,
 } from "../libs/types/user";
-import { T } from "../libs/types/common";
+import { CommonUsers, T } from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
@@ -39,7 +39,7 @@ memberController.getSignup = async (req: Request, res: Response) => {
     console.log("signup access completed");
     const input: UserMemberInput | AgencyMemberInput | MemberAgentInput =
       req.body;
-    let result: User | Agency | Agent = await memberService.signup(input);
+    let result: CommonUsers = await memberService.signup(input);
     // create token
     const token = await authService.createToken(result);
     res.cookie("accessToken", token, {
@@ -219,6 +219,22 @@ memberController.verifyMember = async (
   }
 };
 
+memberController.checkMemberAuth = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token: string = await req.cookies?.accessToken;
+    if (token) {
+      req.member = await authService.checkAuth(token);
+    }
+    next();
+  } catch (error) {
+    console.log("Error in CheckMemberAuth: ", error);
+    next();
+  }
+};
 //////////////////// -------- UPLOAD IMAGE ------------- //////////////////////
 memberController.uploadMemberImage = (
   req: Request,

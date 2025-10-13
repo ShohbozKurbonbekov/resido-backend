@@ -371,7 +371,6 @@ class PropertyService {
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-
     if (memberId) {
       const input: ViewInput = {
         viewTargetId: productId,

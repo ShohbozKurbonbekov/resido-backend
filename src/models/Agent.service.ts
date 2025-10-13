@@ -160,15 +160,6 @@ class AgentService {
       },
     ]);
 
-    let [result] = await this.agentModel.aggregate([
-      { $match: match },
-      commentLookup,
-    ]);
-
-    if (!result) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-
     if (member) {
       const input: ViewInput = {
         userId: member._id,
@@ -183,13 +174,18 @@ class AgentService {
       if (!exist) {
         await this.viewService.insertUserView(input);
 
-        result = await this.agentStatsEditor({
+        await this.agentStatsEditor({
           _id: agentId,
           targetKey: "views",
           modifier: 1,
         });
       }
     }
+
+    let [result] = await this.agentModel.aggregate([
+      { $match: match },
+      commentLookup,
+    ]);
 
     return result;
   }
@@ -209,6 +205,7 @@ class AgentService {
           new: true,
         }
       )
+
       .exec();
 
     return result as Agent;
