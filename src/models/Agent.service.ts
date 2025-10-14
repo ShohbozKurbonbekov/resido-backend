@@ -200,6 +200,15 @@ class AgentService {
       },
       {
         $addFields: {
+          totalProperties: {
+            $size: {
+              $ifNull: ["$allProperties", []],
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
           properties: {
             sale: {
               $filter: {
