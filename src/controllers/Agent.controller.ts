@@ -61,10 +61,11 @@ agentController.likeTargetAgent = async (
   try {
     console.log("likeTargetAgent process");
 
-    const member = req.member;
-    const input = shapeIntoMongooseObjectId(req.body);
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const agentId = shapeIntoMongooseObjectId(req.body.input);
 
-    res.status(HttpCode.OK).json({ ok: true });
+    const result = await agentService.likeTargetAgent(userId, agentId);
+    res.status(HttpCode.CREATED).json(result);
   } catch (error) {
     console.log("Error in likeTargetAgent: ", error);
     if (error instanceof Errors) {

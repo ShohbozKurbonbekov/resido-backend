@@ -10,13 +10,19 @@ import { ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
 import { ViewDocs } from "../schema/View.model";
+import { LikeInput } from "../libs/types/like";
+import { LikeGroup } from "../libs/enums/like.enum";
+import LikeService from "./Like.service";
 
 class AgentService {
   private readonly agentModel;
   public readonly viewService;
+  public readonly likeService;
+
   constructor() {
     this.agentModel = AgentModel;
     this.viewService = new ViewService();
+    this.likeService = new LikeService();
   }
 
   // GET AGENTS BY LOCATION
@@ -256,11 +262,38 @@ class AgentService {
     return result as Agent;
   }
 
-  // public async likeTargetAgent(
-  //   member: CommonUsers,
-  //   input: ObjectId
-  // ): Promise<CommonUsers> {
-  //   return;
-  // }
+  public async likeTargetAgent(
+    userId: ObjectId,
+    agentId: ObjectId
+  ): Promise<Agent> {
+    const target = await this.agentModel.findOne({
+      _id: agentId,
+      memberStatus: MemberStatus.ACTIVE,
+    });
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const input: LikeInput = {
+      targetId: agentId,
+      likeGroup: LikeGroup.AGENT,
+      userId,
+    };
+
+    const modifier: number = await this.likeService.toggleLike(input);
+
+    const result = this.agentStatsEditor({
+      _id: agentId,
+      targetKey: "totalLikes",
+      modifier,
+    });
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
+  }
 }
 export default AgentService;

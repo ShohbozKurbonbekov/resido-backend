@@ -79,7 +79,8 @@ router.get(
 
 router.post(
   "/property/liked",
-  memberController.verifyMember,
+  memberController.checkMemberAuth,
+  memberController.allowOnlyUsers,
   propertyController.likeTargetProperty
 );
 
@@ -88,7 +89,8 @@ router.post(
 // CREATE COMMENTS
 router.post(
   "/member/create-comment",
-  memberController.verifyMember,
+  memberController.checkMemberAuth,
+  memberController.allowOnlyUsers,
   commentController.createComment
 );
 

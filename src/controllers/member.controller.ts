@@ -262,6 +262,7 @@ memberController.allowOnlyUsers = async (
   next: NextFunction
 ) => {
   try {
+    console.log("member data: ", req.member);
     console.log("only users are allowed into the next page");
     const memberType = req.member?.role;
 
