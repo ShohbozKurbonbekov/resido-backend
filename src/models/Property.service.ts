@@ -361,16 +361,6 @@ class PropertyService {
       ])
       .exec();
 
-    let [result] = await this.propertyModel.aggregate([
-      {
-        $match: match,
-      },
-      commentLookup,
-    ]);
-
-    if (!result) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
     if (memberId) {
       const input: ViewInput = {
         viewTargetId: productId,
@@ -385,13 +375,20 @@ class PropertyService {
       if (!existView) {
         await this.viewService.insertUserView(input);
 
-        result = await this.propertyStatsEditor({
+        await this.propertyStatsEditor({
           _id: productId,
           targetKey: "views",
           modifier: 1,
         });
       }
     }
+
+    let [result] = await this.propertyModel.aggregate([
+      {
+        $match: match,
+      },
+      commentLookup,
+    ]);
 
     return result as PropertyDoc;
   }
