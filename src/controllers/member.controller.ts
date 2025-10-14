@@ -28,6 +28,7 @@ import makeUploader from "../libs/utils/uploader";
 import { RecentPropertyForRent } from "../libs/types/property";
 import { MessageInput } from "../libs/types/message";
 import residoAdminController from "./resido-admin.controller";
+import { MemberType } from "../libs/enums/member.enum";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -252,5 +253,30 @@ memberController.uploadMemberImage = (
 
     next();
   });
+};
+
+///////////////// ALLOW ONLY USERS /////////////////
+memberController.allowOnlyUsers = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("only users are allowed into the next page");
+    const memberType = req.member?.role;
+
+    if (memberType === MemberType.USER) {
+      next();
+    } else {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ONLY_USERS);
+    }
+  } catch (error) {
+    console.log("Error in allowOnlyUsers process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
 };
 export default memberController;

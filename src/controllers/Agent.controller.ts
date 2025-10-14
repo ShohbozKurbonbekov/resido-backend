@@ -51,4 +51,27 @@ agentController.getAgentDetail = async (
     }
   }
 };
+
+// LIKE TARGET AGENT
+
+agentController.likeTargetAgent = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("likeTargetAgent process");
+
+    const member = req.member;
+    const input = shapeIntoMongooseObjectId(req.body);
+
+    res.status(HttpCode.OK).json({ ok: true });
+  } catch (error) {
+    console.log("Error in likeTargetAgent: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agentController;

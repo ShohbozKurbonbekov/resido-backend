@@ -24,6 +24,7 @@ export enum Message {
   NO_MEMBER = "No member with that email",
   INVALID_ROLE = "there is no such role found",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
+  ONLY_USERS = "Sorry, only common users are allowed to like it",
 }
 
 class Errors extends Error {

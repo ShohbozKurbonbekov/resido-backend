@@ -184,9 +184,54 @@ class AgentService {
 
     let [result] = await this.agentModel.aggregate([
       { $match: match },
-      commentLookup,
+      {
+        $lookup: {
+          from: "properties",
+          localField: "_id",
+          foreignField: "agentId",
+          as: "allProperties",
+        },
+      },
+      {
+        $addFields: {
+          properties: {
+            sale: {
+              $filter: {
+                input: "$allProperties",
+                as: "prop",
+                cond: {
+                  $eq: [
+                    {
+                      $ifNull: ["$$prop.sellingOption.optionSell.type", ""],
+                    },
+                    "SALE",
+                  ],
+                },
+              },
+            },
+            rent: {
+              $filter: {
+                input: "$allProperties",
+                as: "prop",
+                cond: {
+                  $eq: [
+                    {
+                      $ifNull: ["$$prop.sellingOption.optionSell.type", ""],
+                    },
+                    "RENT",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          allProperties: 0,
+        },
+      },
     ]);
-
     return result;
   }
 
@@ -210,5 +255,12 @@ class AgentService {
 
     return result as Agent;
   }
+
+  // public async likeTargetAgent(
+  //   member: CommonUsers,
+  //   input: ObjectId
+  // ): Promise<CommonUsers> {
+  //   return;
+  // }
 }
 export default AgentService;

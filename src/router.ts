@@ -102,3 +102,11 @@ router.get(
   memberController.checkMemberAuth,
   agentController.getAgentDetail
 );
+
+////////////////// LIKE TARGET AGENT /////////////////
+router.post(
+  "/agent/liked",
+  memberController.checkMemberAuth,
+  memberController.allowOnlyUsers,
+  agentController.likeTargetAgent
+);
