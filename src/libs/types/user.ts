@@ -56,12 +56,6 @@ export interface UserInputUpdate {
   avatar?: string;
 }
 
-export interface BillingDetails {
-  planName: string;
-  subscriptionDate: Date;
-  subscriptionStatus: String;
-}
-
 export interface LoginInput {
   memberEmail: string;
   memberPassword: string;

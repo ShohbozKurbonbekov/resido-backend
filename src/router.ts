@@ -3,6 +3,7 @@ import memberController from "./controllers/member.controller";
 import propertyController from "./controllers/Property.controller";
 import commentController from "./controllers/Comment.controller";
 import agentController from "./controllers/Agent.controller";
+import agencyController from "./controllers/Agency.controller";
 
 const router = express.Router();
 
@@ -112,3 +113,6 @@ router.post(
   memberController.allowOnlyUsers,
   agentController.likeTargetAgent
 );
+
+///////////////// GET AGENCY BY LOCATION ///////////////
+router.post("/agency/search/location", agencyController.getAgencyByLocation);

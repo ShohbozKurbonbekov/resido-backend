@@ -2,7 +2,6 @@ import { User } from "../libs/types/user";
 import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { Agency } from "../libs/types/agency";
 import { Agent } from "../libs/types/agent";
 import { CommonUsers } from "../libs/types/common";
 

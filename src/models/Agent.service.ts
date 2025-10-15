@@ -168,7 +168,7 @@ class AgentService {
 
     if (member) {
       const input: ViewInput = {
-        userId: member._id,
+        userId: member._id!,
         viewGroup: ViewGroup.AGENT,
         viewTargetId: agentId,
       };

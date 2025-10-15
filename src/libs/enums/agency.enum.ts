@@ -4,3 +4,15 @@ export enum AgencyCurrentBadge {
   SUPER_AGENCY = "SUPER AGENCY",
   ELITE_AGENCY = "ELITE AGENCY",
 }
+
+export enum SubscriptionStatus {
+  INACTIVE = "INACTIVE",
+  ACTIVE = "ACTIVE",
+  CANCELLED = "CANCELLED",
+}
+
+export enum SubscriptionTarrif {
+  FREE = "FREE",
+  STANDART = "STANDART",
+  PREMIUM = "PREMIUM",
+}

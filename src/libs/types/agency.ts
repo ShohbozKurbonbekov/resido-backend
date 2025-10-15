@@ -1,60 +1,68 @@
 import { ObjectId } from "mongoose";
-import { AgencyCurrentBadge } from "../enums/agency.enum";
+import {
+  AgencyCurrentBadge,
+  SubscriptionStatus,
+  SubscriptionTarrif,
+} from "../enums/agency.enum";
 import { MemberStatus, MemberType } from "../enums/member.enum";
-import Social, { T } from "./common";
-import { BillingDetails } from "./user";
+import { Social } from "./common";
+import { Agent } from "./agent";
+import { TotalCounter } from "./property";
 
+export interface BillingDetails {
+  planName: SubscriptionTarrif;
+  subscriptionDate: Date;
+  subscriptionStatus: SubscriptionStatus;
+}
 export interface AgencyMemberInput {
   memberName: string;
   memberEmail: string;
   memberPhone: string;
   memberPassword: string;
   role: MemberType;
-  memberStatus?: MemberStatus;
-  agencyOwner?: string;
-  country?: string;
-  city?: string;
-  address?: string;
+  agencyOwner: string;
+  country: string;
+  city: string;
+  address: string;
+  bioInfo: string;
+  billingInfo: BillingDetails;
+  socialLinks: Social;
+  views?: number;
+  agencyBadge?: AgencyCurrentBadge;
+  isVerified?: boolean;
   avatar?: string;
   registrationNumber?: string;
-  memberSince?: number;
-  properties?: ObjectId[];
-  agents?: ObjectId[];
-  bioInfo?: string;
-  billingInfo?: BillingDetails;
-  viewedBy?: ObjectId[];
-  socialLinks?: Social;
-  views?: number;
-  agenycBadge?: AgencyCurrentBadge;
+  memberSince?: Date;
+  permittedProperties?: number;
+  _id?: ObjectId;
+  memberStatus?: MemberStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export interface Agency {
-  _id: ObjectId;
-  memberName: string;
-  memberEmail: string;
-  memberPhone: string;
-  memberPassword: string;
-  memberStatus: MemberStatus;
-  role: MemberType;
-  agencyOwner?: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  avatar?: string;
-  registrationNumber?: string;
-  memberSince?: number;
-  properties?: ObjectId[];
-  agents?: ObjectId[];
-  bioInfo?: string;
-  billingInfo?: BillingDetails;
-  socialLinks?: Social;
-  viewedBy?: ObjectId[];
-  agencyBadge?: AgencyCurrentBadge;
-  createdAt: Date;
-  updatedAt: Date;
-  verified: boolean;
-  isDeleted: boolean;
-}
+// export interface Agency {
+//   _id: ObjectId;
+//   memberName: string;
+//   memberEmail: string;
+//   memberPhone: string;
+//   memberPassword: string;
+//   role: MemberType;
+//   memberStatus: MemberStatus;
+//   address?: string;
+//   bioInfo?: string;
+//   agencyOwner?: string;
+//   avatar?: string;
+//   country?: string;
+//   city?: string;
+//   registrationNumber: string;
+//   memberSince: Date;
+//   permittedProperties: number;
+//   billingInfo: BillingDetails;
+//   agenycBadge: AgencyCurrentBadge;
+//   socialLinks: Social;
+//   isVerified: boolean;
+//   views: number;
+// }
 
 export interface AgencyInputUpdate {
   _id: ObjectId;
@@ -69,4 +77,15 @@ export interface AgencyInputUpdate {
   socialLinks?: Social;
   city?: string;
   avatar?: string;
+}
+
+export interface AgencyLocation {
+  limit: number;
+  page: number;
+  location: string;
+}
+
+export interface AgencyResults {
+  agents: Agent[];
+  totalAgenciesNumber: TotalCounter[];
 }

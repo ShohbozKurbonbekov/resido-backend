@@ -13,11 +13,7 @@ import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 
-import {
-  Agency,
-  AgencyInputUpdate,
-  AgencyMemberInput,
-} from "../libs/types/agency";
+import { AgencyInputUpdate, AgencyMemberInput } from "../libs/types/agency";
 import {
   Agent,
   AgentInputUpdate,
@@ -29,6 +25,7 @@ import { RecentPropertyForRent } from "../libs/types/property";
 import { MessageInput } from "../libs/types/message";
 import residoAdminController from "./resido-admin.controller";
 import { MemberType } from "../libs/enums/member.enum";
+import { Agency } from "../schema/members/Agency.model";
 
 const memberController: T = {};
 const memberService = new MemberService();

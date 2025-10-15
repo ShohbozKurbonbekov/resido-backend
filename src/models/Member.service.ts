@@ -8,13 +8,9 @@ import {
 } from "../libs/types/user";
 import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
-import AgencyModel from "../schema/members/Agency.model";
+import AgencyModel, { Agency } from "../schema/members/Agency.model";
 
-import {
-  Agency,
-  AgencyInputUpdate,
-  AgencyMemberInput,
-} from "../libs/types/agency";
+import { AgencyInputUpdate, AgencyMemberInput } from "../libs/types/agency";
 import {
   AgentInputUpdate,
   FeaturedAgentsInput,

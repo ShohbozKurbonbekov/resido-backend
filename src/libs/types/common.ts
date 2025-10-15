@@ -1,8 +1,7 @@
 import { ObjectId } from "mongoose";
-import { Agency } from "./agency";
 import { Agent } from "./agent";
 import { User } from "./user";
-
+import { Agency } from "../../schema/members/Agency.model";
 export interface T {
   [key: string]: any;
 }
@@ -12,7 +11,7 @@ export interface Social {
   twitter: string;
   instagram: string;
   linkedin: string;
-  emial: string;
+  email: string;
 }
 
 export interface StatisticsModifier {

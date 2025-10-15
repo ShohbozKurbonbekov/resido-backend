@@ -1,31 +1,46 @@
-import mongoose, { now, Schema } from "mongoose";
+import mongoose, { InferSchemaType, now, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
-import { AgencyCurrentBadge } from "../../libs/enums/agency.enum";
-import { Agency } from "../../libs/types/agency";
+import {
+  AgencyCurrentBadge,
+  SubscriptionStatus,
+  SubscriptionTarrif,
+} from "../../libs/enums/agency.enum";
+import { AgencyMemberInput, BillingDetails } from "../../libs/types/agency";
+import { defineLocale } from "moment/ts3.1-typings/moment";
+
+const AgencySocials = new Schema(
+  {
+    facebook: { type: String, default: null },
+    twitter: { type: String, default: null },
+    instagram: { type: String, default: null },
+    linkedin: { type: String, default: null },
+    email: { type: String, default: null },
+  },
+  { _id: false }
+);
 
 const BillingSchema = new Schema(
   {
     planName: {
       type: String,
-      enum: ["Free", "Standard", "Premium"],
-      required: true,
-      default: "Free",
+      enum: SubscriptionTarrif,
+      default: SubscriptionTarrif.FREE,
     },
     subscriptionDate: { type: Date, default: Date.now },
     subscriptionStatus: {
       type: String,
-      enum: ["active", "inactive", "cancelled"],
-      required: true,
-      default: "inactive",
+      enum: SubscriptionStatus,
+      default: SubscriptionStatus.INACTIVE,
     },
   },
   { _id: false }
 );
 
-const AgencySchema = new Schema<Agency>(
+const AgencySchema = new Schema<AgencyMemberInput>(
   {
+    // REQUIRED DATA SETS
     role: {
       type: String,
       enum: MemberType,
@@ -59,7 +74,6 @@ const AgencySchema = new Schema<Agency>(
 
     memberPhone: {
       type: String,
-      index: true,
       unique: true,
       required: true,
     },
@@ -67,6 +81,7 @@ const AgencySchema = new Schema<Agency>(
     memberPassword: {
       type: String,
       select: false,
+      index: true,
       required: true,
       minlength: 7,
       trim: true,
@@ -74,17 +89,18 @@ const AgencySchema = new Schema<Agency>(
         validator(value: string) {
           return !value.includes("password");
         },
-        message: `Type a strong password`,
+        message: `Don't include  key password`,
       },
     },
 
     address: {
       type: String,
-      default: null,
+      required: true,
+      index: true,
     },
     bioInfo: {
       type: String,
-      default: null,
+      required: true,
     },
     avatar: {
       type: String,
@@ -92,67 +108,54 @@ const AgencySchema = new Schema<Agency>(
 
     agencyOwner: {
       type: String,
-      default: null,
-    },
-    registrationNumber: {
-      type: String,
-      default: null,
-    },
-    agents: [{ type: Schema.Types.ObjectId, ref: "Agent" }],
-    properties: [{ type: Schema.Types.ObjectId, ref: "Property" }],
-    agencyBadge: {
-      type: String,
-      enum: AgencyCurrentBadge,
-      default: AgencyCurrentBadge.VERIFIED_AGENCY,
-    },
-    billingInfo: {
-      type: BillingSchema,
-      default: () => ({
-        planName: "Free",
-        subscriptionDate: Date.now(),
-        subscriptionStatus: "inactive",
-      }),
-    },
-    city: {
-      type: String,
-      default: null,
+      required: true,
     },
     country: {
       type: String,
-      default: null,
+      required: true,
     },
+    city: {
+      type: String,
+      required: true,
+    },
+
+    //THEY ARE GONNA SET IN DB
     memberSince: {
       type: Date,
       default: Date.now,
     },
 
+    permittedProperties: {
+      type: Number,
+      default: 0,
+    },
+
+    // THEY ARE GONNA SET AFTER ADMIN APPROVAL
+    agencyBadge: {
+      type: String,
+      enum: AgencyCurrentBadge,
+    },
+    registrationNumber: {
+      type: String,
+    },
+
+    /// OTHERS
+    billingInfo: {
+      type: BillingSchema,
+      required: true,
+    },
+
     socialLinks: {
-      instagram: { type: String, default: null },
-      twitter: { type: String, default: null },
-      facebook: {
-        type: String,
-        default: null,
-      },
-      linkedin: {
-        type: String,
-        default: null,
-      },
-      email: {
-        type: String,
-        default: null,
-      },
+      type: AgencySocials,
+      required: true,
     },
-    viewedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "View",
-    },
-    verified: {
+    isVerified: {
       type: Boolean,
       default: false,
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
+    views: {
+      type: Number,
+      default: 0,
     },
   },
 
@@ -174,8 +177,11 @@ AgencySchema.pre("save", async function (next) {
   if (user.isModified("memberPassword")) {
     const salt: string = await bcrypt.genSalt();
     user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
-    next();
   }
+
+  next();
 });
 
-export default mongoose.model("Agency", AgencySchema);
+export type Agency = InferSchemaType<typeof AgencySchema>;
+
+export default mongoose.model<Agency>("Agency", AgencySchema);
