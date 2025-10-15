@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import app from "./app";
+import chalk from "chalk";
 
 mongoose
   .connect(process.env.MONGO_URL as string, {})
   .then((data) => {
-    console.log("connected to the database successfully 👏");
+    console.log(chalk.bgBlue("connected to the database successfully 👏"));
 
     const PORT = process.env.PORT ?? 3005;
 
@@ -13,5 +14,5 @@ mongoose
     });
   })
   .catch((error) => {
-    console.log("Error🆘 in connection to Database: ", error);
+    console.log(chalk.red("Error🆘 in connection to Database: "), error);
   });

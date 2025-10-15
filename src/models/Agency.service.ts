@@ -2,9 +2,10 @@ import { T } from "../libs/types/common";
 import { MemberStatus } from "../libs/enums/member.enum";
 import { AgencyLocation, AgencyResults } from "../libs/types/agency";
 import ViewModel from "../schema/View.model";
-import AgencyModel from "../schema/members/Agency.model";
+import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
+import { ObjectId } from "mongoose";
 
 class AgencyService {
   private readonly agencyModel;
@@ -58,6 +59,22 @@ class AgencyService {
       agencies: result.agencies,
       totalAgenciesNumber: result.metaCounter[0]?.total || 0,
     };
+  }
+
+  public async getAgencyDetail(
+    memberId: ObjectId,
+    agencyId: ObjectId
+  ): Promise<Agency> {
+    const match: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agencyId,
+    };
+    const target = await this.agencyModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return target;
   }
 }
 

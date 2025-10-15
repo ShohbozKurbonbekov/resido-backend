@@ -12,6 +12,7 @@
   "description": "this is a fullstack real estate Resido portfolio",
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/chalk": "^0.4.31",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
@@ -34,6 +35,7 @@
     "@types/connect-mongodb-session": "^2.4.8",
     "@types/express-session": "^1.18.2",
     "bcrypt": "^6.0.0",
+    "chalk": "^4.1.2",
     "connect-mongodb-session": "^5.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
