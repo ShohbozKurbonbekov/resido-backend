@@ -65,3 +65,21 @@ export const addTotCommentsAvRatingFields = {
     },
   },
 };
+
+export const agentsLookupByAgencyId = {
+  $lookup: {
+    from: "agents",
+    foreignField: "agencyId",
+    localField: "_id",
+    as: "agentsList",
+  },
+};
+
+export const propertiesLookupByAgencyId = {
+  $lookup: {
+    from: "properties",
+    foreignField: "agencyId",
+    localField: "_id",
+    as: "propertiesList",
+  },
+};

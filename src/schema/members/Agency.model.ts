@@ -140,6 +140,18 @@ const AgencySchema = new Schema<AgencyMemberInput>(
     },
 
     /// OTHERS
+    agentsTotalNumber: {
+      type: Number,
+      default: 0,
+    },
+    propertiesTotalNumber: {
+      type: Number,
+      default: 0,
+    },
+    featuredScore: {
+      type: Number,
+      default: 0,
+    },
     billingInfo: {
       type: BillingSchema,
       required: true,

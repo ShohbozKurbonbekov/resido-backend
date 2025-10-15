@@ -42,9 +42,9 @@ agencyController.getAgencyDetail = async (
     console.log(chalk.bgGreen("getAgencyDetail process"));
     const { id } = req.params;
     const agencyId = shapeIntoMongooseObjectId(id);
-    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const member = req.member;
 
-    const result = await agencyService.getAgencyDetail(memberId, agencyId);
+    const result = await agencyService.getAgencyDetail(member, agencyId);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

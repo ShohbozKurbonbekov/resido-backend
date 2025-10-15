@@ -119,6 +119,6 @@ router.post("/agency/search/location", agencyController.getAgencyByLocation);
 
 router.get(
   "/agency/:id",
-  memberController.verifyMember,
+  memberController.checkMemberAuth,
   agencyController.getAgencyDetail
 );

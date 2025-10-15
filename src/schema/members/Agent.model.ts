@@ -1,5 +1,5 @@
 import validator, { isStrongPassword } from "validator";
-import mongoose, { model, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { Agent } from "../../libs/types/agent";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import bcrypt from "bcrypt";
@@ -7,7 +7,7 @@ import { AgentStatus } from "../../libs/enums/agent.enum";
 
 const AgentSchema = new Schema<Agent>(
   {
-    agencyId: { type: String, required: true },
+    agencyId: { type: mongoose.Schema.Types.ObjectId, required: true },
     nickname: {
       type: String,
       unique: true,

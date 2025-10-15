@@ -75,6 +75,12 @@ class AgentService {
       memberStatus: MemberStatus.ACTIVE,
     };
 
+    const target = await this.agentModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
     await this.agentModel.aggregate([
       {
         $match: match,
@@ -110,7 +116,10 @@ class AgentService {
                 ],
               },
               {
-                $multiply: [{ $ifNull: ["$views", 0] }, 0.05],
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
+                  0.05,
+                ],
               },
             ],
           },

@@ -32,6 +32,9 @@ export interface AgencyMemberInput {
   isVerified?: boolean;
   avatar?: string;
   registrationNumber?: string;
+  agentsTotalNumber?: number;
+  propertiesTotalNumber?: number;
+  featuredScore?: number;
   memberSince?: Date;
   permittedProperties?: number;
   _id?: ObjectId;
