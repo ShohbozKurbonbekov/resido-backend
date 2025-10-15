@@ -3,6 +3,8 @@ import { MemberStatus } from "../libs/enums/member.enum";
 import { AgencyLocation, AgencyResults } from "../libs/types/agency";
 import ViewModel from "../schema/View.model";
 import AgencyModel from "../schema/members/Agency.model";
+import Errors, { Message } from "../libs/Errors";
+import { HttpCode } from "../libs/Errors";
 
 class AgencyService {
   private readonly agencyModel;
@@ -23,11 +25,11 @@ class AgencyService {
         $regex: location,
         $options: "i",
       },
-      varified: -1,
     };
 
     const sort: T = {
       createdAt: -1,
+      isVerified: -1,
     };
 
     const [result] = await this.agencyModel.aggregate([
@@ -47,9 +49,14 @@ class AgencyService {
         },
       },
     ]);
+
+    console.log("result", result);
+    if (!result.agencies) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
     return {
-      agents: result.agents,
-      totalAgenciesNumber: result?.metaCounter?.total || 0,
+      agencies: result.agencies,
+      totalAgenciesNumber: result.metaCounter[0]?.total || 0,
     };
   }
 }

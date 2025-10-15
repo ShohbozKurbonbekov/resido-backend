@@ -86,6 +86,6 @@ export interface AgencyLocation {
 }
 
 export interface AgencyResults {
-  agents: Agent[];
+  agencies: Agent[];
   totalAgenciesNumber: TotalCounter[];
 }
