@@ -96,6 +96,6 @@ BlogSchema.index({
   blogTags: 1,
 });
 
-type BlogDoc = InferSchemaType<typeof BlogSchema>;
+export type BlogDoc = InferSchemaType<typeof BlogSchema>;
 
 export default mongoose.model<BlogDoc>("Blog", BlogSchema);

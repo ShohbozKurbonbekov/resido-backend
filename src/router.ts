@@ -4,6 +4,9 @@ import propertyController from "./controllers/Property.controller";
 import commentController from "./controllers/Comment.controller";
 import agentController from "./controllers/Agent.controller";
 import agencyController from "./controllers/Agency.controller";
+import blogController from "./controllers/Blog.controller";
+import { allowRoles } from "./libs/config";
+import { MemberType } from "./libs/enums/member.enum";
 
 const router = express.Router();
 
@@ -121,4 +124,16 @@ router.get(
   "/agency/:id",
   memberController.checkMemberAuth,
   agencyController.getAgencyDetail
+);
+
+router.post(
+  "/author/post/blog",
+  memberController.verifyMember,
+  allowRoles(
+    undefined,
+    MemberType.AGENCY,
+    MemberType.AGENT,
+    MemberType.REAL_ESTATE_ADMIN
+  ),
+  blogController.postBlog
 );
