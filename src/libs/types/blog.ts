@@ -1,5 +1,7 @@
 import { ObjectId } from "mongoose";
 import { BlogAuthorType, BlogCategory, BlogStatus } from "../enums/blog.enum";
+import { TotalCounter } from "./property";
+import { BlogDoc } from "../../schema/Blog.model";
 
 export interface BlogInput {
   _id?: ObjectId;
@@ -20,4 +22,20 @@ export interface BlogInput {
   createdAt?: Date;
   updatedAt?: Date;
   isFeatured?: boolean;
+}
+
+export interface BlogSearchType {
+  title?: string;
+  category?: BlogCategory;
+}
+export interface BlogSearchInput {
+  page: number;
+  limit: number;
+  sort: ["DESC", "ASC"];
+  search: BlogSearchType;
+}
+
+export interface Blogs {
+  blogs: BlogDoc[];
+  totalBlogsNumber: TotalCounter[];
 }

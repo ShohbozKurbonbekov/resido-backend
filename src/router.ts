@@ -137,3 +137,5 @@ router.post(
   ),
   blogController.postBlog
 );
+
+router.post("/get/all/blogs", blogController.getAllBlogs);

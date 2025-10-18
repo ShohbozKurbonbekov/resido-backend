@@ -1,10 +1,11 @@
 import { CommonUsers, T } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import ViewService from "./View.service";
-import { BlogInput } from "../libs/types/blog";
+import { BlogInput, Blogs } from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
 import AgentModel from "../schema/members/Agent.model";
 import AgencyModel from "../schema/members/Agency.model";
+import { BlogStatus } from "../libs/enums/blog.enum";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { HttpCode } from "../libs/Errors";
 import Errors, { Message } from "../libs/Errors";
@@ -67,6 +68,54 @@ class BlogService {
       console.log("Error in postBlog: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
+  }
+
+  public async getAllBlogs(query: T): Promise<Blogs> {
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+    };
+
+    if (query?.category) {
+      match.blogCategory = query.category;
+    }
+    if (query?.title) {
+      match.blogTitle = {
+        $regex: query.title,
+        $options: "i",
+      };
+    }
+
+    const sort: T = {
+      createdAt: query.sort === "DESC" ? -1 : 1,
+    };
+
+    const [result] = await this.blogModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (query.page - 1) * query.limit,
+            },
+            {
+              $limit: query.limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
   }
 }
 
