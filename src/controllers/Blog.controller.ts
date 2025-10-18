@@ -34,9 +34,9 @@ blogController.getAllBlogs = async (req: Request, res: Response) => {
     const { page, limit, search, sort } = input;
 
     const query: T = {
-      page: +page,
-      limit: +limit,
-      sort,
+      page: Number(page) || 1,
+      limit: Number(limit) || 6,
+      sort: sort || "DESC",
     };
 
     if (search?.title) query.title = search.title;
