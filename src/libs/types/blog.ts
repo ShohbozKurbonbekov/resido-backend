@@ -17,11 +17,10 @@ export interface BlogInput {
   views?: number;
   totalLikes?: number;
   totalComments?: number;
-  blogTrending?: boolean;
   blogCategory: BlogCategory;
   createdAt?: Date;
   updatedAt?: Date;
-  isFeatured?: boolean;
+  averageRating?: number;
 }
 
 export interface BlogSearchType {
@@ -38,4 +37,9 @@ export interface BlogSearchInput {
 export interface Blogs {
   blogs: BlogDoc[];
   totalBlogsNumber: TotalCounter[];
+}
+
+export interface BlogDetailOutput {
+  mainBlog: BlogDoc;
+  trendingBlogs: BlogDoc[];
 }

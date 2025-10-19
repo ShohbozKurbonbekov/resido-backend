@@ -59,9 +59,9 @@ const BlogSchema = new Schema<BlogInput>(
       type: Number,
       default: 0,
     },
-    blogTrending: {
-      type: Boolean,
-      default: false,
+    averageRating: {
+      type: Number,
+      default: 0,
     },
     blogCategory: {
       type: String,
@@ -71,10 +71,6 @@ const BlogSchema = new Schema<BlogInput>(
     blogShortInfo: {
       type: String,
       required: true,
-    },
-    isFeatured: {
-      type: Boolean,
-      default: false,
     },
   },
   {

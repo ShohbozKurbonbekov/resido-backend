@@ -1,7 +1,7 @@
 import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import ViewService from "./View.service";
-import { BlogInput, Blogs } from "../libs/types/blog";
+import { BlogDetailOutput, BlogInput, Blogs } from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
 import AgentModel from "../schema/members/Agent.model";
 import AgencyModel from "../schema/members/Agency.model";
@@ -191,11 +191,13 @@ class BlogService {
     return result as BlogDoc;
   }
 
+  // TODO - Optimize updating blog fields automatically at night like 0:40 o'clock
+
   // GET A BLOG DETAIL
   public async getBlogDetail(
     member: CommonUsers,
     blogId: ObjectId
-  ): Promise<BlogDoc> {
+  ): Promise<BlogDetailOutput> {
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
       _id: blogId,
@@ -233,7 +235,7 @@ class BlogService {
         ? "agencies"
         : target.blogAuthorType.toLowerCase() + "s";
 
-    const [result] = await this.blogModel.aggregate([
+    await this.blogModel.aggregate([
       { $match: match },
       commentLookup,
       {
@@ -246,19 +248,103 @@ class BlogService {
       },
       { $unwind: "$author" },
       addTotCommentsAvRatingFields,
-
       {
         $addFields: {
-          totalComments: {
-            $size: {
-              $ifNull: ["$comments", []],
+          featuredScore: {
+            $min: [
+              {
+                $add: [
+                  {
+                    $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.35],
+                  },
+                  {
+                    $multiply: [
+                      { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+                      0.35,
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      {
+                        $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] },
+                      },
+                      0.15,
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
+                      0.15,
+                    ],
+                  },
+                ],
+              },
+              10,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          isTrending: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $gte: ["$featuredScore", 6],
+                  },
+                  then: true,
+                },
+              ],
+              default: false,
             },
           },
         },
       },
+      {
+        $project: {
+          comments: 0,
+          author: 0,
+          featuredScore: 0,
+        },
+      },
+      {
+        $merge: {
+          into: "blogs",
+          whenMatched: "merge",
+          whenNotMatched: "discard",
+        },
+      },
     ]);
 
-    if (!result) {
+    const [result] = await this.blogModel.aggregate([
+      {
+        $facet: {
+          mainBlog: [
+            {
+              $match: match,
+            },
+            commentLookup,
+          ],
+          trendingBlogs: [
+            {
+              $match: { blogStatus: BlogStatus.ACTIVE, isTrending: true },
+            },
+            {
+              $sort: { createdAt: -1 },
+            },
+            {
+              $skip: 0,
+            },
+            {
+              $limit: 10,
+            },
+          ],
+        },
+      },
+    ]);
+
+    if (!result.mainBlog[0]) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
 
