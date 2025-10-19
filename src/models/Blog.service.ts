@@ -5,16 +5,22 @@ import { BlogInput, Blogs } from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
 import AgentModel from "../schema/members/Agent.model";
 import AgencyModel from "../schema/members/Agency.model";
-import { BlogStatus } from "../libs/enums/blog.enum";
+import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { HttpCode } from "../libs/Errors";
 import Errors, { Message } from "../libs/Errors";
-import { shapeIntoMongooseObjectId } from "../libs/config";
+import {
+  addTotCommentsAvRatingFields,
+  commentLookup,
+  shapeIntoMongooseObjectId,
+} from "../libs/config";
 import { User } from "../libs/types/user";
 import { ObjectId } from "mongoose";
 import { LikeInput } from "../libs/types/like";
 import LikeService from "./Like.service";
 import { LikeGroup } from "../libs/enums/like.enum";
+import { View, ViewInput } from "../libs/types/view";
+import { ViewGroup } from "../libs/enums/view.enum";
 
 class BlogService {
   private readonly blogModel;
@@ -33,6 +39,7 @@ class BlogService {
     this.likeService = new LikeService();
   }
 
+  // POST BLOG
   public async postBlog(
     member: CommonUsers,
     input: BlogInput
@@ -77,6 +84,7 @@ class BlogService {
     }
   }
 
+  // GET ALL BLOGS
   public async getAllBlogs(query: T): Promise<Blogs> {
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -125,6 +133,7 @@ class BlogService {
     return result;
   }
 
+  // LIKE A BLOG
   public async likeTargetBlog(
     member: CommonUsers,
     id: ObjectId
@@ -160,6 +169,7 @@ class BlogService {
     return result;
   }
 
+  // UPDATE BLOG FIELD STATISTICS
   private async blogStatsEditor(input: StatisticsModifier): Promise<BlogDoc> {
     const { targetKey, _id, modifier } = input;
 
@@ -179,6 +189,80 @@ class BlogService {
       .exec();
 
     return result as BlogDoc;
+  }
+
+  // GET A BLOG DETAIL
+  public async getBlogDetail(
+    member: CommonUsers,
+    blogId: ObjectId
+  ): Promise<BlogDoc> {
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+      _id: blogId,
+    };
+    const target = await this.blogModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    if (member) {
+      const input: ViewInput = {
+        viewTargetId: blogId,
+        userId: member._id!,
+        viewGroup: ViewGroup.BLOG,
+      };
+
+      const existView: View | null = await this.viewService.checkViewExistance(
+        input
+      );
+
+      if (!existView) {
+        await this.viewService.insertUserView(input);
+
+        await this.blogStatsEditor({
+          _id: blogId,
+          targetKey: "views",
+          modifier: 1,
+        });
+      }
+    }
+
+    const collectionName =
+      target.blogAuthorType === BlogAuthorType.AGENCY
+        ? "agencies"
+        : target.blogAuthorType.toLowerCase() + "s";
+
+    const [result] = await this.blogModel.aggregate([
+      { $match: match },
+      commentLookup,
+      {
+        $lookup: {
+          from: collectionName,
+          localField: "blogAuthorId",
+          foreignField: "_id",
+          as: "author",
+        },
+      },
+      { $unwind: "$author" },
+      addTotCommentsAvRatingFields,
+
+      {
+        $addFields: {
+          totalComments: {
+            $size: {
+              $ifNull: ["$comments", []],
+            },
+          },
+        },
+      },
+    ]);
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
   }
 }
 

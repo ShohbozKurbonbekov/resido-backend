@@ -9,6 +9,7 @@ import { shapeIntoMongooseObjectId } from "../libs/config";
 const blogController: T = {};
 const blogService = new BlogService();
 
+///////////// ---- POST BLOG ------------- ////////////
 blogController.postBlog = async (req: ExtendedRequest, res: Response) => {
   try {
     const input: BlogInput = req.body;
@@ -27,6 +28,7 @@ blogController.postBlog = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
+////////////////// ---- GET ALL BLOGS ------- //////////////
 blogController.getAllBlogs = async (req: Request, res: Response) => {
   try {
     console.log("getAllBlogs process");
@@ -55,6 +57,7 @@ blogController.getAllBlogs = async (req: Request, res: Response) => {
   }
 };
 
+//////////////// ----- LIKE TARGET BLOG ------//////////////
 blogController.likeTargetBlog = async (req: ExtendedRequest, res: Response) => {
   try {
     console.log("LikeTargetBlog process");
@@ -66,6 +69,26 @@ blogController.likeTargetBlog = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in likeTargetBlog: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("getBlogDetail process");
+    const { id } = req.params;
+    const member = req.member;
+    const blogId = shapeIntoMongooseObjectId(id);
+
+    const result = await blogService.getBlogDetail(member, blogId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getBlogDetail: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

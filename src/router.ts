@@ -147,3 +147,9 @@ router.post(
   allowRoles(Message.ONLY_USERS, MemberType.USER),
   blogController.likeTargetBlog
 );
+
+router.get(
+  "/blog/:id",
+  memberController.checkMemberAuth,
+  blogController.getBlogDetail
+);

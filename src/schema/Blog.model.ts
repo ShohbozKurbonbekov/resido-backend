@@ -15,7 +15,7 @@ const BlogSchema = new Schema<BlogInput>(
     blogAuthorId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      refPath: "blogAuthorType",
+      // refPath: "blogAuthorType",
       index: true,
     },
     blogAuthorType: {
@@ -82,12 +82,12 @@ const BlogSchema = new Schema<BlogInput>(
   }
 );
 
-BlogSchema.virtual("author", {
-  refPath: "blogAuthorType",
-  localField: "blogAuthorId",
-  foreignField: "_id",
-  justOne: true,
-});
+// BlogSchema.virtual("author", {
+//   refPath: "blogAuthorType",
+//   localField: "blogAuthorId",
+//   foreignField: "_id",
+//   justOne: true,
+// });
 
 BlogSchema.index({
   blogAuthorId: 1,
