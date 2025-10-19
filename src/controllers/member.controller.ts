@@ -278,30 +278,4 @@ memberController.allowOnlyUsers = async (
   }
 };
 
-memberController.allowOnlyAgentAgencyAdmin = (
-  req: ExtendedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const role = req.member?.role;
-    if (
-      role === MemberType.AGENCY ||
-      role === MemberType.AGENT ||
-      role === MemberType.REAL_ESTATE_ADMIN
-    ) {
-      return next();
-    }
-
-    throw new Errors(HttpCode.UNAUTHORIZED, Message.ONLY_AGENCY_ADMIN_AGENT);
-  } catch (error) {
-    console.log("Error in allowOnlyAgentAgencyAdmin: ", error);
-
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
 export default memberController;

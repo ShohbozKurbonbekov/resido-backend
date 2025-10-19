@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
-import { T } from "./types/common";
 import { MemberType } from "./enums/member.enum";
 import { ExtendedRequest } from "./types/user";
 import { NextFunction, RequestHandler, Response } from "express";
 import Errors, { HttpCode, Message } from "./Errors";
+import chalk from "chalk";
 
-export const MORGAN_FORMAT = `:method :url :response-time [:status] \n`;
+export const MORGAN_FORMAT = chalk.bgGreen(
+  `:method :url :response-time [:status] \n`
+);
 export const jwtTime = 6;
 
 export const shapeIntoMongooseObjectId = (target: any) => {

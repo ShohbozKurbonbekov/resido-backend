@@ -7,15 +7,20 @@ import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { T } from "../libs/types/common";
+import BlogModel from "../schema/Blog.model";
+import { Model } from "mongoose";
 
 class CommentService {
-  private readonly commentModel;
-  private readonly agentModel;
-  private readonly propertyModel;
+  public readonly commentModel;
+  public readonly agentModel;
+  public readonly propertyModel;
+  public readonly blogModel;
+
   constructor() {
     this.commentModel = CommentModel;
     this.agentModel = AgentModel;
     this.propertyModel = PropertyModel;
+    this.blogModel = BlogModel;
   }
 
   ///////////////////////// CREATE A COMMENT /////////////
@@ -24,37 +29,45 @@ class CommentService {
     member: T
   ): Promise<CommentDocs> {
     try {
-      const id = shapeIntoMongooseObjectId(input.targetId);
-      if (input.targetType === CommentTargetType.AGENT) {
-        const agent = await this.agentModel.findById(id);
-        if (!agent) {
-          throw new Error();
-        }
-      } else if (input.targetType === CommentTargetType.PROPERTY) {
-        const property = await this.propertyModel.findById(id);
-        if (!property) {
-          throw new Error();
-        } else {
-          // Check from the blog collection
-        }
+      const Models: Record<string, any> = {
+        agent: this.agentModel,
+        blog: this.blogModel,
+        property: this.propertyModel,
+      };
+
+      const CurrentModel = Models[input.targetType];
+
+      if (!CurrentModel) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
       }
 
-      input.userId = shapeIntoMongooseObjectId(member._id);
+      const id = shapeIntoMongooseObjectId(input.targetId);
+      const target = await CurrentModel.findById(id);
+
+      if (!target) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      }
+
+      input.userId = member?._id;
       input.userInfo = {
-        name: member.memberName ?? member.fullName ?? member.nickname,
+        name: member.memberName ?? member.userFullname,
         avatar: member.avatar ?? "no avatar",
         email: member.memberEmail,
         phone: member.memberPhone,
-        userAddress: member.userAddress,
-        userDescription: member.userDescription,
-        occupation: member.occupation ?? "none",
+        userAddress: member.memberAddress ?? "No address",
+        userDescription: member.memberDescription ?? "No description",
+        occupation: member.occupation ?? "no occupation",
       };
 
       const result = await this.commentModel.create(input);
-
       return result;
     } catch (error) {
-      console.log("Error in  createComment service: ", error);
+      console.log("Error in createComment service: ", error);
+
+      if (error instanceof Errors) {
+        throw error;
+      }
+
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
   }

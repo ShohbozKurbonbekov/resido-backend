@@ -7,6 +7,7 @@ import agencyController from "./controllers/Agency.controller";
 import blogController from "./controllers/Blog.controller";
 import { allowRoles } from "./libs/config";
 import { MemberType } from "./libs/enums/member.enum";
+import { Message } from "./libs/Errors";
 
 const router = express.Router();
 
@@ -93,8 +94,8 @@ router.post(
 // CREATE COMMENTS
 router.post(
   "/member/create-comment",
-  memberController.checkMemberAuth,
-  memberController.allowOnlyUsers,
+  memberController.verifyMember,
+  allowRoles(Message.ALLOW_USER_COMMENT, MemberType.USER),
   commentController.createComment
 );
 
