@@ -4,6 +4,7 @@ import { ExtendedRequest } from "../libs/types/user";
 import { BlogInput, BlogSearchInput } from "../libs/types/blog";
 import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
+import { shapeIntoMongooseObjectId } from "../libs/config";
 
 const blogController: T = {};
 const blogService = new BlogService();
@@ -46,6 +47,25 @@ blogController.getAllBlogs = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getAllBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+blogController.likeTargetBlog = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("LikeTargetBlog process");
+    const id = shapeIntoMongooseObjectId(req.body.input);
+    const member = req.member;
+
+    const result = await blogService.likeTargetBlog(member, id);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in likeTargetBlog: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

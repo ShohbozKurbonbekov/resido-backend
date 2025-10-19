@@ -127,6 +127,7 @@ router.get(
   agencyController.getAgencyDetail
 );
 
+/////////////////////// BLOG  ENDPOINTS ////////////////////
 router.post(
   "/author/post/blog",
   memberController.verifyMember,
@@ -140,3 +141,9 @@ router.post(
 );
 
 router.post("/get/all/blogs", blogController.getAllBlogs);
+router.post(
+  "/blog/liked",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS, MemberType.USER),
+  blogController.likeTargetBlog
+);
