@@ -153,3 +153,5 @@ router.get(
   memberController.checkMemberAuth,
   blogController.getBlogDetail
 );
+
+router.get("/blog/tags/:tag/blogs", blogController.blogSearchTag);

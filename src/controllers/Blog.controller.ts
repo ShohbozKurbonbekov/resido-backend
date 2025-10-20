@@ -77,6 +77,7 @@ blogController.likeTargetBlog = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
+///////////////////// ----  GET BLOG DETAIL -----/////////
 blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
   try {
     console.log("getBlogDetail process");
@@ -89,6 +90,32 @@ blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getBlogDetail: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////// --- SEARCH BLOG BY TAG ----- /////////////
+blogController.blogSearchTag = async (req: Request, res: Response) => {
+  try {
+    console.log("blogSearchTag process");
+
+    const { tag } = req.params;
+    const { limit, page } = req.query;
+    const query: T = {
+      limit: Number(limit),
+      page: Number(page),
+      tag,
+    };
+
+    const result = await blogService.getSearchTag(query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in BlogSearchTag: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

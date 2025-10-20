@@ -350,6 +350,42 @@ class BlogService {
 
     return result;
   }
+
+  public async getSearchTag(query: T): Promise<Blogs> {
+    const { page, limit, tag } = query;
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+      blogTags: { $in: [tag] },
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.blogModel.aggregate([
+      { $match: match },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
 }
 
 export default BlogService;
