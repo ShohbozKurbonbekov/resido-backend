@@ -106,8 +106,8 @@ blogController.blogSearchTag = async (req: Request, res: Response) => {
     const { tag } = req.params;
     const { limit, page } = req.query;
     const query: T = {
-      limit: Number(limit),
-      page: Number(page),
+      limit: Number(limit) || 1,
+      page: Number(page) || 6,
       tag,
     };
 
