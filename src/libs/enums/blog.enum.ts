@@ -16,3 +16,8 @@ export enum BlogAuthorType {
   AGENCY = "Agency",
   ADMIN = "User",
 }
+
+export enum BlogDirection {
+  NEXT = "NEXT",
+  PREV = "PREV",
+}

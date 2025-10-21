@@ -5,7 +5,11 @@ import { BlogDetailOutput, BlogInput, Blogs } from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
 import AgentModel from "../schema/members/Agent.model";
 import AgencyModel from "../schema/members/Agency.model";
-import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
+import {
+  BlogAuthorType,
+  BlogDirection,
+  BlogStatus,
+} from "../libs/enums/blog.enum";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { HttpCode } from "../libs/Errors";
 import Errors, { Message } from "../libs/Errors";
@@ -382,6 +386,55 @@ class BlogService {
     ]);
 
     if (!result.blogs.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
+
+  public async getNeighbouringBlog(query: T): Promise<BlogDoc> {
+    const { blogId, direction } = query;
+
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+      _id: blogId,
+    };
+    const target = await this.blogModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    const neighbouringMatch: T = {
+      blogStatus: BlogStatus.ACTIVE,
+    };
+    const sort: T = {
+      createdAt: 1,
+    };
+
+    if (direction === BlogDirection.PREV) {
+      neighbouringMatch.createdAt = {
+        $lt: target.createdAt,
+      };
+      sort.createdAt = -1;
+    }
+    if (direction === BlogDirection.NEXT) {
+      neighbouringMatch.createdAt = {
+        $gt: target.createdAt,
+      };
+      sort.createdAt = 1;
+    }
+
+    const [result] = await this.blogModel
+      .aggregate([
+        {
+          $match: neighbouringMatch,
+        },
+        {
+          $limit: 1,
+        },
+      ])
+      .exec();
+
+    if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result;

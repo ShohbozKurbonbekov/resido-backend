@@ -80,7 +80,6 @@ blogController.likeTargetBlog = async (req: ExtendedRequest, res: Response) => {
 ///////////////////// ----  GET BLOG DETAIL -----/////////
 blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
   try {
-    console.log("getBlogDetail process");
     const { id } = req.params;
     const member = req.member;
     const blogId = shapeIntoMongooseObjectId(id);
@@ -102,7 +101,6 @@ blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
 blogController.blogSearchTag = async (req: Request, res: Response) => {
   try {
     console.log("blogSearchTag process");
-
     const { tag } = req.params;
     const { limit, page } = req.query;
     const query: T = {
@@ -124,4 +122,29 @@ blogController.blogSearchTag = async (req: Request, res: Response) => {
   }
 };
 
+///////////// ----- GET NEIGHBOURIG BLOG ------- /////////
+blogController.getNeighbouringBlog = async (req: Request, res: Response) => {
+  try {
+    console.log("getNeighbouringBlog process");
+    const { id } = req.params;
+    const { direction } = req.query;
+    const blogId = shapeIntoMongooseObjectId(id);
+
+    const query: T = {
+      blogId,
+      direction,
+    };
+
+    const result = await blogService.getNeighbouringBlog(query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getNeighbouringBlog :", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default blogController;

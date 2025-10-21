@@ -153,5 +153,6 @@ router.get(
   memberController.checkMemberAuth,
   blogController.getBlogDetail
 );
+router.get("/blog/:id/neighbour", blogController.getNeighbouringBlog);
 
 router.get("/blog/tags/:tag/blogs", blogController.blogSearchTag);
