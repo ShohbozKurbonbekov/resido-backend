@@ -5,17 +5,28 @@ import { NextFunction, RequestHandler, Response } from "express";
 import Errors, { HttpCode, Message } from "./Errors";
 import chalk from "chalk";
 
+// MORGAN SETUP
 export const MORGAN_FORMAT = chalk.bgGreen(
   `:method :url :response-time [:status] \n`
 );
+
+// AGENDA CONFIG
+
+export const agendaConfig = {
+  mongoUri: process.env.MONGO_URL as string,
+  agendaCollectionName: "agendaJobs",
+  cron: "01 17 * * *",
+};
 export const jwtTime = 6;
 
+// CHANGE INTO DB ID
 export const shapeIntoMongooseObjectId = (target: any) => {
   return typeof target === "string"
     ? new mongoose.Types.ObjectId(target)
     : target;
 };
 
+///////////////// LOOKUPS /////////////////
 export const priceValueField = {
   $addFields: {
     priceValue: {
@@ -90,6 +101,7 @@ export const propertiesLookupByAgencyId = {
   },
 };
 
+// ALLOW CERTAIN ROLES
 export const allowRoles = (
   message = Message.ONLY_AGENCY_ADMIN_AGENT,
   ...roles: MemberType[]

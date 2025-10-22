@@ -25,6 +25,7 @@ import LikeService from "./Like.service";
 import { LikeGroup } from "../libs/enums/like.enum";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
+import chalk from "chalk";
 
 class BlogService {
   private readonly blogModel;
@@ -41,6 +42,85 @@ class BlogService {
     this.agentModel = AgentModel;
     this.agencyModel = AgencyModel;
     this.likeService = new LikeService();
+  }
+
+  // CALCULATE BLOG FIELD WITH HELPER
+  static async updateBlogFields() {
+    console.log(chalk.green("✅ Working with updateBlogField static method"));
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+    };
+    await BlogModel.aggregate([
+      { $match: match },
+      commentLookup,
+      addTotCommentsAvRatingFields,
+      {
+        $addFields: {
+          featuredScore: {
+            $min: [
+              {
+                $add: [
+                  {
+                    $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.35],
+                  },
+                  {
+                    $multiply: [
+                      { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+                      0.35,
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      {
+                        $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] },
+                      },
+                      0.15,
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
+                      0.15,
+                    ],
+                  },
+                ],
+              },
+              10,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          isTrending: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $gte: ["$featuredScore", 6],
+                  },
+                  then: true,
+                },
+              ],
+              default: false,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          comments: 0,
+          featuredScore: 0,
+        },
+      },
+      {
+        $merge: {
+          into: "blogs",
+          whenMatched: "merge",
+          whenNotMatched: "discard",
+        },
+      },
+    ]);
   }
 
   // POST BLOG
@@ -239,88 +319,6 @@ class BlogService {
         ? "agencies"
         : target.blogAuthorType.toLowerCase() + "s";
 
-    await this.blogModel.aggregate([
-      { $match: match },
-      commentLookup,
-      {
-        $lookup: {
-          from: collectionName,
-          localField: "blogAuthorId",
-          foreignField: "_id",
-          as: "author",
-        },
-      },
-      { $unwind: "$author" },
-      addTotCommentsAvRatingFields,
-      {
-        $addFields: {
-          featuredScore: {
-            $min: [
-              {
-                $add: [
-                  {
-                    $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.35],
-                  },
-                  {
-                    $multiply: [
-                      { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
-                      0.35,
-                    ],
-                  },
-                  {
-                    $multiply: [
-                      {
-                        $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] },
-                      },
-                      0.15,
-                    ],
-                  },
-                  {
-                    $multiply: [
-                      { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
-                      0.15,
-                    ],
-                  },
-                ],
-              },
-              10,
-            ],
-          },
-        },
-      },
-      {
-        $addFields: {
-          isTrending: {
-            $switch: {
-              branches: [
-                {
-                  case: {
-                    $gte: ["$featuredScore", 6],
-                  },
-                  then: true,
-                },
-              ],
-              default: false,
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          comments: 0,
-          author: 0,
-          featuredScore: 0,
-        },
-      },
-      {
-        $merge: {
-          into: "blogs",
-          whenMatched: "merge",
-          whenNotMatched: "discard",
-        },
-      },
-    ]);
-
     const [result] = await this.blogModel.aggregate([
       {
         $facet: {
@@ -328,6 +326,15 @@ class BlogService {
             {
               $match: match,
             },
+            {
+              $lookup: {
+                from: collectionName,
+                localField: "blogAuthorId",
+                foreignField: "_id",
+                as: "author",
+              },
+            },
+            { $unwind: "$author" },
             commentLookup,
           ],
           trendingBlogs: [

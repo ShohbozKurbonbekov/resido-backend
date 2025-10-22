@@ -7,8 +7,8 @@ mongoose
   .then((data) => {
     console.log(chalk.bgBlue("connected to the database successfully 👏"));
 
+    // CREATING PORT AND TELLING EXPRESS TO LISTEN THAT PORT
     const PORT = process.env.PORT ?? 3005;
-
     app.listen(PORT, () => {
       console.log(`server is sucessfully running on port localhost:${PORT}`);
     });

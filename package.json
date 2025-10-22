@@ -4,7 +4,8 @@
   "main": "src/server.ts",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "start:dev": " env-cmd -f ./config/dev.env nodemon  --exec ts-node src/server.ts",
+    "start:dev": "env-cmd -f ./config/dev.env nodemon  --exec ts-node src/server.ts",
+    "start:agenda": "env-cmd -f ./config/dev.env nodemon   --exec ts-node src/agenda/index.ts",
     "build": "tsc"
   },
   "author": "MIT24_DANIEL",
@@ -34,6 +35,7 @@
   "dependencies": {
     "@types/connect-mongodb-session": "^2.4.8",
     "@types/express-session": "^1.18.2",
+    "agenda": "^5.0.0",
     "bcrypt": "^6.0.0",
     "chalk": "^4.1.2",
     "connect-mongodb-session": "^5.0.0",
