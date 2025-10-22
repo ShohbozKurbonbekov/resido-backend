@@ -1,7 +1,8 @@
 import { ObjectId } from "mongoose";
-import { Agent } from "./agent";
-import { User } from "./user";
+import { Agent, AgentInputUpdate } from "./agent";
+import { User, UserInputUpdate } from "./user";
 import { Agency } from "../../schema/members/Agency.model";
+import { AgencyInputUpdate } from "./agency";
 export interface T {
   [key: string]: any;
 }
@@ -20,3 +21,7 @@ export interface StatisticsModifier {
   modifier: number;
 }
 export type CommonUsers = Agency | Agent | User;
+export type CommonUsersUpdateInput =
+  | AgencyInputUpdate
+  | UserInputUpdate
+  | AgentInputUpdate;

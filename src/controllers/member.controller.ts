@@ -5,7 +5,7 @@ import {
   ExtendedRequest,
   UserInputUpdate,
 } from "../libs/types/user";
-import { CommonUsers, T } from "../libs/types/common";
+import { CommonUsers, CommonUsersUpdateInput, T } from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
@@ -110,16 +110,13 @@ memberController.getMemberDetail = async (
 memberController.updateMember = async (req: ExtendedRequest, res: Response) => {
   try {
     console.log("memberUpdate controller");
-    const input: UserInputUpdate | AgencyInputUpdate | AgentInputUpdate =
-      req.body;
+    const member = req.member;
+    const input: CommonUsersUpdateInput = req.body;
 
     if (req.file) {
       input.avatar = req.file.path.replace(/\\/g, "/");
     }
-    const result: Agency | Agent | User = await memberService.updateMember(
-      req.member,
-      input
-    );
+    const result = await memberService.updateMember(member, input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in updateMember procees: ", error);

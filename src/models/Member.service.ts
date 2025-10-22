@@ -26,7 +26,7 @@ import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
 import { MessageInput } from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
-import { CommonUsers, T } from "../libs/types/common";
+import { CommonUsers, CommonUsersUpdateInput, T } from "../libs/types/common";
 
 class MemberService {
   private readonly userModel;
@@ -230,37 +230,36 @@ class MemberService {
 
   /// UPDATE A MEMBER
   public async updateMember(
-    member: User | Agency | Agent,
-    input: UserInputUpdate | AgencyInputUpdate | AgentInputUpdate
-  ): Promise<User | Agent | Agency> {
+    member: CommonUsers,
+    input: CommonUsersUpdateInput
+  ): Promise<CommonUsers> {
     const memberId = shapeIntoMongooseObjectId(member._id);
-    let result;
 
-    switch (member.role) {
-      case "AGENT":
-        result = await this.agentModel
-          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
-          .lean()
-          .exec();
-        break;
-      case "AGENCY":
-        result = await this.agencyModel
-          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
-          .lean()
-          .exec();
-        break;
-      case "USER":
-        result = await this.userModel
-          .findByIdAndUpdate({ _id: memberId }, input, { new: true })
-          .lean()
-          .exec();
-        break;
-      default:
-        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    const Models: T = {
+      USER: this.userModel,
+      REAL_ESTATE_ADMIN: this.userModel,
+      AGENT: this.agentModel,
+      AGENCY: this.agencyModel,
+    };
+
+    const Model = Models[member.role];
+
+    if (!Model) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
     }
 
+    const query: T =
+      member.role === MemberType.REAL_ESTATE_ADMIN
+        ? {
+            role: MemberType.REAL_ESTATE_ADMIN,
+            memberStatus: MemberStatus.ACTIVE,
+          }
+        : { _id: member._id!, memberStatus: MemberStatus.ACTIVE };
+
+    const result = await Model.findOneAndUpdate(query, input, { new: true });
+
     if (!result) {
-      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result;
   }
