@@ -1,4 +1,4 @@
-import mongoose, { ObjectId } from "mongoose";
+import mongoose, { model, ObjectId } from "mongoose";
 import Errors, { Message } from "../libs/Errors";
 import {
   UserMemberInput,
@@ -26,7 +26,7 @@ import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
 import { MessageInput } from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
-import { CommonUsers } from "../libs/types/common";
+import { CommonUsers, T } from "../libs/types/common";
 
 class MemberService {
   private readonly userModel;
@@ -149,44 +149,31 @@ class MemberService {
     return result;
   }
 
-  public async getMemberDetail(
-    member: Agency | Agent | User
-  ): Promise<Agency | Agent | User> {
+  public async getMemberDetail(member: CommonUsers): Promise<CommonUsers> {
+    // style 1
     const memberId = shapeIntoMongooseObjectId(member._id);
-    let result;
 
-    switch (member.role) {
-      case "USER":
-        result = await this.userModel
-          .findOne({
-            _id: memberId,
-            memberStatus: MemberStatus.ACTIVE,
-          })
-          .lean()
-          .exec();
-        break;
-      case "AGENT":
-        result = await this.agentModel
-          .findOne({
-            _id: memberId,
-            memberStatus: MemberStatus.ACTIVE,
-          })
-          .lean()
-          .exec();
-        break;
-      case "AGENCY":
-        result = await this.agencyModel
-          .findOne({
-            _id: memberId,
-            memberStatus: MemberStatus.ACTIVE,
-          })
-          .lean()
-          .exec();
-        break;
-      default:
-        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    const Models: T = {
+      USER: this.userModel,
+      REAL_ESTATE_ADMIN: this.userModel,
+      AGENT: this.agentModel,
+      AGENCY: this.agencyModel,
+    };
+
+    const Model = Models[member.role];
+    if (!Model) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
     }
 
+    const query: T =
+      member.role === MemberType.REAL_ESTATE_ADMIN
+        ? {
+            role: MemberType.REAL_ESTATE_ADMIN,
+            memberStatus: MemberStatus.ACTIVE,
+          }
+        : { _id: member._id!, memberStatus: MemberStatus.ACTIVE };
+
+    const result = await Model.findOne(query);
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }

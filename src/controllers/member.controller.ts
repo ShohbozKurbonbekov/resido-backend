@@ -92,9 +92,8 @@ memberController.getMemberDetail = async (
 ) => {
   console.log("getting a specific member detail");
   try {
-    const result: User | Agent | Agency = await memberService.getMemberDetail(
-      req.member
-    );
+    const member = req.member;
+    const result = await memberService.getMemberDetail(member);
 
     res.status(HttpCode.OK).json({ member: result });
   } catch (error) {
