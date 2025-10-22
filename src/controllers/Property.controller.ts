@@ -4,6 +4,8 @@ import { NextFunction, Request, Response } from "express";
 import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import {
+  FeaturedPropertyInput,
+  FeaturedPropertyResult,
   PropertyInput,
   PropertyInquery,
   RecentPropertyForRent,
@@ -90,9 +92,9 @@ propertyController.getFeaturedProperty = async (
 ) => {
   try {
     console.log("getFeaturedProperty process");
-    const input: RecentPropertyForRent = req.body;
+    const input: FeaturedPropertyInput = req.body;
 
-    const result: RecentPropertyResult =
+    const result: FeaturedPropertyResult =
       await propertyService.getFeaturedProperty(input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {

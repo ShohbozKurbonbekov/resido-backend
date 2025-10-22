@@ -1,4 +1,6 @@
 import {
+  FeaturedPropertyInput,
+  FeaturedPropertyResult,
   Properties,
   Property,
   PropertyDocument,
@@ -135,39 +137,48 @@ class PropertyService {
 
   // GET FEATURED PROPERTY
   public async getFeaturedProperty(
-    input: RecentPropertyForRent
-  ): Promise<RecentPropertyResult> {
-    const [properties, totalPropertiesNumber] = await Promise.all([
-      this.propertyModel
-        .find({
-          status: PropertyStatus.AVAILABLE,
-          featuredScore: {
-            $gte: 0.5,
-          },
-        })
-        .sort({
-          featuredScore: -1,
-        })
-        .skip((input.page - 1) * input.limit)
-        .limit(input.limit)
-        .lean()
-        .exec(),
-      this.propertyModel
-        .countDocuments({
-          status: PropertyStatus.AVAILABLE,
-          featuredScore: {
-            $gte: 0.5,
-          },
-        })
-        .exec(),
+    input: FeaturedPropertyInput
+  ): Promise<FeaturedPropertyResult> {
+    const match: T = {
+      status: PropertyStatus.AVAILABLE,
+      featuredScore: {
+        $gte: 5,
+      },
+    };
+
+    const { limit, page } = input;
+    const sort: T = {
+      featuredScore: -1,
+    };
+    const [result] = await this.propertyModel.aggregate([
+      { $match: match },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          properties: [
+            { $skip: (page - 1) * limit },
+
+            {
+              $limit: limit,
+            },
+          ],
+          totalPropertiesNumber: [
+            {
+              $count: "total",
+            },
+          ],
+        },
+      },
     ]);
 
-    if (!properties.length) {
+    if (!result.properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return {
-      properties,
-      totalPropertiesNumber,
+      properties: result.properties,
+      totalPropertiesNumber: result.totalPropertiesNumber[0]?.total ?? 0,
     };
   }
 

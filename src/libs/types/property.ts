@@ -133,10 +133,14 @@ export interface RecentPropertyForRent {
   limit: number;
 }
 
+export type FeaturedPropertyInput = RecentPropertyForRent;
+
 export interface RecentPropertyResult {
   properties: PropertyDoc[];
-  totalPropertiesNumber: number;
+  totalPropertiesNumber: TotalCounter[];
 }
+
+export type FeaturedPropertyResult = RecentPropertyResult;
 
 export interface PropertySearchFeatures {
   propertySearch?: string;
