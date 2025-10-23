@@ -1,0 +1,20 @@
+import express from "express";
+import memberController from "../controllers/member.controller";
+import { allowRoles } from "../libs/config";
+import { MemberType } from "../libs/enums/member.enum";
+import commentController from "../controllers/Comment.controller";
+import { Message } from "../libs/Errors";
+const comment = express.Router();
+
+/////////////////// -- WRITE COMMENT -- //////////////////
+comment.post(
+  "/write-comment",
+  memberController.verifyMember,
+  allowRoles(Message.ALLOW_USER_COMMENT, MemberType.USER),
+  commentController.createComment
+);
+
+/////////////// --  GET 10 LATEST COMMENTS -- ////////////
+comment.get("/get/latest", commentController.getLatestComments);
+
+export default comment;

@@ -7,7 +7,6 @@ import {
   FeaturedPropertyInput,
   FeaturedPropertyResult,
   PropertyInput,
-  PropertyInquery,
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
@@ -51,11 +50,11 @@ propertyController.createProperty = async (
 
 /////////////////// ---------- UPLOAD PROPERTIES ---------------- /////////////////////////////////
 propertyController.uploadProperties = (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const upload = makeUploader("properties").array("images");
+  const upload = makeUploader("properties").array("images", 3);
 
   upload(req, res, (error: any) => {
     if (error) {
@@ -113,7 +112,6 @@ propertyController.getAllProducts = async (req: Request, res: Response) => {
     console.log("GetAllProducts process");
 
     const queries: T = buildPropertyInquery(req.body);
-
     const result = await propertyService.getAllProperties(queries);
 
     res.status(HttpCode.OK).json(result);
@@ -127,7 +125,7 @@ propertyController.getAllProducts = async (req: Request, res: Response) => {
   }
 };
 
-//////////////////// -------------- GET A CERTAIN PROPERTY ------------- ////////////
+//////////////////// --- GET A CERTAIN PROPERTY ////////////
 propertyController.getProperty = async (
   req: ExtendedRequest,
   res: Response

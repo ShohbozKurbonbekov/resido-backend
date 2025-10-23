@@ -15,7 +15,7 @@ export const MORGAN_FORMAT = chalk.bgGreen(
 export const agendaConfig = {
   mongoUri: process.env.MONGO_URL as string,
   agendaCollectionName: "agendaJobs",
-  cron: "01 17 * * *",
+  cron: "40 0 * * *",
 };
 export const jwtTime = 6;
 
@@ -43,13 +43,22 @@ export const famousIndicatorField = {
     famousIndicator: {
       $add: [
         { $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4] },
+
         {
-          $multiply: [{ $ln: { $add: ["$totalLikes", 1] } }, 0.3],
+          $multiply: [
+            { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+            0.3,
+          ],
         },
         {
-          $multiply: [{ $ln: { $add: ["$totalComments", 1] } }, 0.2],
+          $multiply: [
+            { $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] } },
+            0.2,
+          ],
         },
-        { $multiply: [{ $ln: { $add: ["$views", 1] } }, 0.1] },
+        {
+          $multiply: [{ $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } }, 0.1],
+        },
       ],
     },
   },

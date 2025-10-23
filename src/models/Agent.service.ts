@@ -25,63 +25,13 @@ class AgentService {
     this.likeService = new LikeService();
   }
 
-  // GET AGENTS BY LOCATION
-
-  public async getAgentByLocation(input: AgentLocation): Promise<AgentResults> {
-    const filter: T = {
-      memberStatus: MemberStatus.ACTIVE,
-      address: { $regex: input.location, $options: "i" },
-    };
-    const sort: T = {
-      featuredScore: -1,
-      isVerified: -1,
-    };
-
-    const [result] = await this.agentModel.aggregate([
-      {
-        $match: filter,
-      },
-      { $sort: sort },
-      {
-        $facet: {
-          agents: [
-            {
-              $skip: (input.page - 1) * input.limit,
-            },
-            { $limit: input.limit },
-          ],
-          metaCounter: [{ $count: "total" }],
-        },
-      },
-    ]);
-
-    if (!result.agents.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-
-    console.log("result", result);
-    return {
-      agents: result.agents,
-      totalAgentsNumber: result.metaCounter[0].total || 0,
-    };
-  }
-
-  public async getAgentDetail(
-    agentId: ObjectId,
-    member: CommonUsers
-  ): Promise<Agent> {
+  // UPDATE AGENT FIELDS
+  static async updateAgentFields() {
     const match: T = {
-      _id: agentId,
       memberStatus: MemberStatus.ACTIVE,
     };
 
-    const target = await this.agentModel.findOne(match);
-
-    if (!target) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-
-    await this.agentModel.aggregate([
+    await AgentModel.aggregate([
       {
         $match: match,
       },
@@ -174,6 +124,62 @@ class AgentService {
         },
       },
     ]);
+  }
+
+  // GET AGENTS BY LOCATION
+  public async getAgentByLocation(input: AgentLocation): Promise<AgentResults> {
+    const filter: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      address: { $regex: input.location, $options: "i" },
+    };
+    const sort: T = {
+      featuredScore: -1,
+      isVerified: -1,
+    };
+
+    const [result] = await this.agentModel.aggregate([
+      {
+        $match: filter,
+      },
+      { $sort: sort },
+      {
+        $facet: {
+          agents: [
+            {
+              $skip: (input.page - 1) * input.limit,
+            },
+            { $limit: input.limit },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.agents.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    console.log("result", result);
+    return {
+      agents: result.agents,
+      totalAgentsNumber: result.metaCounter[0].total || 0,
+    };
+  }
+
+  public async getAgentDetail(
+    agentId: ObjectId,
+    member: CommonUsers
+  ): Promise<Agent> {
+    const match: T = {
+      _id: agentId,
+      memberStatus: MemberStatus.ACTIVE,
+    };
+
+    const target = await this.agentModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
 
     if (member) {
       const input: ViewInput = {
@@ -240,7 +246,7 @@ class AgentService {
                 cond: {
                   $eq: [
                     {
-                      $ifNull: ["$$prop.sellingOption.optionSell.type", ""],
+                      $ifNull: ["$$prop.sellingOption.optionRent.type", ""],
                     },
                     "RENT",
                   ],
@@ -256,6 +262,7 @@ class AgentService {
         },
       },
     ]);
+
     return result;
   }
 

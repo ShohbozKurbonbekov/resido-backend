@@ -26,6 +26,7 @@ import ViewService from "./View.service";
 import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
+import chalk from "chalk";
 class PropertyService {
   private readonly propertyModel;
   public viewService;
@@ -37,8 +38,91 @@ class PropertyService {
     this.likeService = new LikeService();
   }
 
-  // LIKE PROPERTY
+  // UPDATE PROPERTY
+  static async updatePropertyFields() {
+    console.log(
+      chalk.green("✅ Working with updatePropertyFields statis method")
+    );
+    const match: T = {
+      status: PropertyStatus.AVAILABLE,
+    };
 
+    await PropertyModel.aggregate([
+      {
+        $match: match,
+      },
+      commentLookup,
+      addTotCommentsAvRatingFields,
+
+      {
+        $addFields: {
+          totalLikes: {
+            $ifNull: ["$totalLikes", 0],
+          },
+          daysSinceCreated: {
+            $floor: {
+              $divide: [
+                { $subtract: [new Date(), "$createdAt"] },
+                1000 * 60 * 60 * 24,
+              ],
+            },
+          },
+        },
+      },
+
+      {
+        $addFields: {
+          recentBoost: {
+            $cond: [{ $lte: ["$daysSinceCreated", 7] }, 1, 0],
+          },
+          featuredScore: {
+            $add: [
+              {
+                $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] } },
+                  0.25,
+                ],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
+                  0.2,
+                ],
+              },
+              {
+                $multiply: [
+                  { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
+                  0.1,
+                ],
+              },
+              {
+                $multiply: [{ $ifNull: ["$recentBoost", 0] }, 0.05],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          comments: 0,
+          daysSinceCreated: 0,
+          recentBoost: 0,
+        },
+      },
+      {
+        $merge: {
+          into: "properties",
+          whenMatched: "merge",
+          whenNotMatched: "discard",
+        },
+      },
+    ]).exec();
+  }
+
+  // LIKE PROPERTY
   public async likeTargetProperty(
     userId: ObjectId,
     propertyId: ObjectId
@@ -112,27 +196,44 @@ class PropertyService {
   public async getRecentPropertiesForRent(
     input: RecentPropertyForRent
   ): Promise<RecentPropertyResult> {
-    const [properties, totalPropertiesNumber]: any[] = await Promise.all([
-      this.propertyModel
-        .find({ "sellingOption.optionRent.type": "RENT" })
-        .sort({
-          createdAt: -1,
-        })
-        .skip((input.page - 1) * input.limit)
-        .limit(input.limit)
-        .lean()
-        .exec(),
-      this.propertyModel
-        .countDocuments({
-          "sellingOption.optionRent.type": "RENT",
-        })
-        .lean()
-        .exec(),
+    const { page, limit } = input;
+
+    const match: T = {
+      status: PropertyStatus.AVAILABLE,
+      "sellingOption.optionRent.type": "RENT",
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+    const [result] = await this.propertyModel.aggregate([
+      {
+        $match: match,
+      },
+      { $sort: sort },
+
+      {
+        $facet: {
+          properties: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalPropertiesNumber: [
+            {
+              $count: "total",
+            },
+          ],
+        },
+      },
     ]);
-    if (!properties.length) {
+
+    if (!result.properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-    return { properties, totalPropertiesNumber };
+    return result;
   }
 
   // GET FEATURED PROPERTY
@@ -242,12 +343,14 @@ class PropertyService {
         },
       }
     );
-    const result = await this.propertyModel.aggregate(pipeline);
 
-    if (!result[0].properties.length) {
+    const [result] = await this.propertyModel.aggregate(pipeline);
+    console.log(result.metaCounter[0]?.total);
+
+    if (!result.properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-    return result[0];
+    return result;
   }
 
   // SHAPE THE QUERY
@@ -298,79 +401,6 @@ class PropertyService {
       _id: productId,
       status: PropertyStatus.AVAILABLE,
     };
-
-    await this.propertyModel
-      .aggregate([
-        {
-          $match: match,
-        },
-        commentLookup,
-        addTotCommentsAvRatingFields,
-        {
-          $addFields: {
-            totalLikes: {
-              $ifNull: ["$totalLikes", 0],
-            },
-            daysSinceCreated: {
-              $floor: {
-                $divide: [
-                  { $subtract: [new Date(), "$createdAt"] },
-                  1000 * 60 * 60 * 24,
-                ],
-              },
-            },
-          },
-        },
-
-        {
-          $addFields: {
-            recentBoost: {
-              $cond: [{ $lte: ["$daysSinceCreated", 7] }, 1, 0],
-            },
-            featuredScore: {
-              $add: [
-                {
-                  $multiply: [{ $ifNull: ["$averageRating", 0] }, 0.4],
-                },
-                {
-                  $multiply: [
-                    { $ln: { $add: [{ $ifNull: ["$totalComments", 0] }, 1] } },
-                    0.25,
-                  ],
-                },
-                {
-                  $multiply: [
-                    { $ln: { $add: [{ $ifNull: ["$views", 0] }, 1] } },
-                    0.2,
-                  ],
-                },
-                {
-                  $multiply: [
-                    { $ln: { $add: [{ $ifNull: ["$totalLikes", 0] }, 1] } },
-                    0.1,
-                  ],
-                },
-                {
-                  $multiply: [{ $ifNull: ["$recentBoost", 0] }, 0.05],
-                },
-              ],
-            },
-          },
-        },
-        {
-          $project: {
-            comments: 0,
-          },
-        },
-        {
-          $merge: {
-            into: "properties",
-            whenMatched: "merge",
-            whenNotMatched: "discard",
-          },
-        },
-      ])
-      .exec();
 
     if (memberId) {
       const input: ViewInput = {

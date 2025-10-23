@@ -80,7 +80,7 @@ class CommentService {
       .sort({
         createdAt: -1,
       })
-      .limit(10)
+      .limit(5)
       .exec();
     if (!result.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);

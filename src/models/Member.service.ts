@@ -187,17 +187,17 @@ class MemberService {
   ): Promise<MessageDoc> {
     const { receiverId, receiverType } = input;
 
-    const receiverModel: Record<string, any> = {
+    const receiverModel: T = {
       USER: this.userModel,
       AGENT: this.agentModel,
       AGENCY: this.agencyModel,
       REAL_ESTATE_ADMIN: this.userModel,
     };
 
-    const modelClass = receiverModel[receiverType];
+    const Model = receiverModel[receiverType];
 
-    if (!modelClass) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
+    if (!Model) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
     }
 
     const query =
@@ -208,7 +208,7 @@ class MemberService {
           }
         : { _id: receiverId, memberStatus: MemberStatus.ACTIVE };
 
-    const receiver = await modelClass.findOne(query);
+    const receiver = await Model.findOne(query);
 
     if (!receiver) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);

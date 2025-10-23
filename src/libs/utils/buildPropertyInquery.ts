@@ -2,7 +2,7 @@ import { T } from "../types/common";
 import { PropertyInquery, PropertySearchFeatures } from "../types/property";
 
 export const buildPropertyInquery = (queries: PropertyInquery) => {
-  const query: Record<string, any> = {};
+  const query: T = {};
 
   const { page, limit, order, search } = queries;
 

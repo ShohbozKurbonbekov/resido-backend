@@ -30,7 +30,7 @@ const PropertySellingOptionSchema = new Schema(
     optionRent: {
       type: {
         type: String,
-        enum: SellingTypeEnum,
+        enum: SellingTypeEnum.RENT,
       },
       monthlyPayment: { type: Number },
       overalAmount: { type: Number },
@@ -39,7 +39,7 @@ const PropertySellingOptionSchema = new Schema(
     optionSell: {
       type: {
         type: String,
-        enum: SellingTypeEnum,
+        enum: SellingTypeEnum.SALE,
       },
       overalAmunt: { type: Number },
       discount: { type: Number },

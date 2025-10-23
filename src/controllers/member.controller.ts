@@ -95,7 +95,7 @@ memberController.getMemberDetail = async (
     const member = req.member;
     const result = await memberService.getMemberDetail(member);
 
-    res.status(HttpCode.OK).json({ member: result });
+    res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getMemberDetail controller: ", error);
     if (error instanceof Errors) {

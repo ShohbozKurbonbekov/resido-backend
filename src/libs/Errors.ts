@@ -28,6 +28,7 @@ export enum Message {
   ONLY_AGENCY_ADMIN_AGENT = "Only Admin, Agency or Agent are authorized to post a blog",
   NO_MEMBER_FOUND = "No member is found",
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",
+  PROPERTY_CREATE_AGENTS = "Only agents are authorized to create a property",
 }
 
 class Errors extends Error {

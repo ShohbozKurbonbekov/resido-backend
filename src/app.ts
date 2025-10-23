@@ -9,6 +9,10 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import ConnectMongoDBSession from "connect-mongodb-session";
 import { T } from "./libs/types/common";
+import member from "./routers/member.router";
+import property from "./routers/property.router";
+import comment from "./routers/comment.router";
+import agent from "./routers/agent.router";
 // SESSION STORE
 const MongoDbStore = ConnectMongoDBSession(session);
 const store = new MongoDbStore({
@@ -62,5 +66,8 @@ app.set("view engine", "ejs");
 // ROUTERS
 app.use("/admin", adminRouter);
 app.use("/", router);
-
+app.use("/member", member);
+app.use("/property", property);
+app.use("/comment", comment);
+app.use("/agent", agent);
 export default app;
