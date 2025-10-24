@@ -2,6 +2,8 @@ import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Social } from "./common";
 import { AgentStatus } from "../enums/agent.enum";
+import { RecentPropertyForRent, TotalCounter } from "./property";
+import { Agency } from "../../schema/members/Agency.model";
 
 export interface MemberAgentInput {
   agencyId: string;
@@ -75,18 +77,17 @@ export interface AgentInputUpdate {
   avatar?: string;
 }
 
-export interface FeaturedAgentsInput {
-  page: number;
-  limit: number;
-}
-
 export interface AgentResults {
   agents: Agent[];
-  totalAgentsNumber: number;
+  totalNumbers: TotalCounter[];
 }
 
-export interface AgentLocation {
+export type FeaturedAgentsInput = RecentPropertyForRent;
+export type FeaturedAgentsResult = AgentResults;
+
+export interface SearchByLocationInput {
   page: number;
   limit: number;
   location: string;
 }
+export type SearchByLocationResult = AgentResults;

@@ -4,6 +4,7 @@ import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import { allowRoles } from "../libs/config";
 import commentController from "../controllers/Comment.controller";
+import blogController from "../controllers/Blog.controller";
 const member = express.Router();
 
 //////////////////// -- SIGNUP --//////////////////////////
@@ -36,4 +37,17 @@ member.post(
   "/write/message",
   memberController.verifyMember,
   memberController.WriteMessageToMember
+);
+
+/////////////////////// BLOG  ENDPOINTS ////////////////////
+member.post(
+  "/post/blog",
+  memberController.verifyMember,
+  allowRoles(
+    undefined,
+    MemberType.AGENCY,
+    MemberType.AGENT,
+    MemberType.REAL_ESTATE_ADMIN
+  ),
+  blogController.postBlog
 );

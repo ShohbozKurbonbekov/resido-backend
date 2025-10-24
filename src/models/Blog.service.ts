@@ -26,6 +26,7 @@ import { LikeGroup } from "../libs/enums/like.enum";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import chalk from "chalk";
+import { BulkWriteResult } from "mongodb/mongodb";
 
 class BlogService {
   private readonly blogModel;
@@ -170,22 +171,23 @@ class BlogService {
 
   // GET ALL BLOGS
   public async getAllBlogs(query: T): Promise<Blogs> {
+    const { page, limit, title, category, sort } = query;
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
     };
 
-    if (query?.category) {
-      match.blogCategory = query.category;
+    if (category) {
+      match.blogCategory = category;
     }
-    if (query?.title) {
+    if (title) {
       match.blogTitle = {
-        $regex: query.title,
+        $regex: title,
         $options: "i",
       };
     }
 
-    const sort: T = {
-      createdAt: query.sort === "DESC" ? -1 : 1,
+    const sortBlog: T = {
+      createdAt: sort === "DESC" ? -1 : 1,
     };
 
     const [result] = await this.blogModel.aggregate([
@@ -193,16 +195,16 @@ class BlogService {
         $match: match,
       },
       {
-        $sort: sort,
+        $sort: sortBlog,
       },
       {
         $facet: {
           blogs: [
             {
-              $skip: (query.page - 1) * query.limit,
+              $skip: (page - 1) * limit,
             },
             {
-              $limit: query.limit,
+              $limit: limit,
             },
           ],
           totalBlogsNumber: [{ $count: "total" }],
@@ -236,7 +238,7 @@ class BlogService {
     const input: LikeInput = {
       likeGroup: LikeGroup.BLOG,
       targetId: id,
-      userId: member?._id!,
+      userId: member._id!,
     };
 
     const modifier = <number>await this.likeService.toggleLike(input);
@@ -247,9 +249,6 @@ class BlogService {
       targetKey: "totalLikes",
     });
 
-    if (!result) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
-    }
     return result;
   }
 
@@ -287,7 +286,6 @@ class BlogService {
       _id: blogId,
     };
     const target = await this.blogModel.findOne(match);
-
     if (!target) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
@@ -323,9 +321,7 @@ class BlogService {
       {
         $facet: {
           mainBlog: [
-            {
-              $match: match,
-            },
+            { $match: match },
             {
               $lookup: {
                 from: collectionName,
@@ -334,12 +330,20 @@ class BlogService {
                 as: "author",
               },
             },
-            { $unwind: "$author" },
+            {
+              $unwind: {
+                path: "$author",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
             commentLookup,
           ],
           trendingBlogs: [
             {
-              $match: { blogStatus: BlogStatus.ACTIVE, isTrending: true },
+              $match: {
+                isTrending: true,
+              },
             },
             {
               $sort: { createdAt: -1 },
@@ -348,21 +352,21 @@ class BlogService {
               $skip: 0,
             },
             {
-              $limit: 10,
+              $limit: 5,
             },
           ],
         },
       },
     ]);
-
-    if (!result.mainBlog[0]) {
+    console.log("result", result);
+    if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-
     return result;
   }
 
   public async getSearchTag(query: T): Promise<Blogs> {
+    console.log("Query", query);
     const { page, limit, tag } = query;
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -410,6 +414,7 @@ class BlogService {
     if (!target) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
+
     const neighbouringMatch: T = {
       blogStatus: BlogStatus.ACTIVE,
     };
@@ -435,6 +440,7 @@ class BlogService {
         {
           $match: neighbouringMatch,
         },
+        { $sort: sort },
         {
           $limit: 1,
         },

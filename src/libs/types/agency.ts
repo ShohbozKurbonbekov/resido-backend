@@ -8,6 +8,7 @@ import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Social } from "./common";
 import { Agent } from "./agent";
 import { TotalCounter } from "./property";
+import { Agency } from "../../schema/members/Agency.model";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -82,13 +83,8 @@ export interface AgencyInputUpdate {
   avatar?: string;
 }
 
-export interface AgencyLocation {
-  limit: number;
-  page: number;
-  location: string;
-}
-
 export interface AgencyResults {
-  agencies: Agent[];
-  totalAgenciesNumber: TotalCounter[];
+  agencies: Agency[];
+  totalNumbers: TotalCounter[];
 }
+export type SearchByLocationAgency = AgencyResults;

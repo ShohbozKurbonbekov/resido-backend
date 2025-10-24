@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import router from "./router";
 import adminRouter from "./admin-router";
 import cors from "cors";
 import morgan from "morgan";
@@ -13,6 +12,8 @@ import member from "./routers/member.router";
 import property from "./routers/property.router";
 import comment from "./routers/comment.router";
 import agent from "./routers/agent.router";
+import agency from "./routers/agency.router";
+import blog from "./routers/blog.router";
 // SESSION STORE
 const MongoDbStore = ConnectMongoDBSession(session);
 const store = new MongoDbStore({
@@ -65,9 +66,10 @@ app.set("view engine", "ejs");
 
 // ROUTERS
 app.use("/admin", adminRouter);
-app.use("/", router);
 app.use("/member", member);
 app.use("/property", property);
 app.use("/comment", comment);
 app.use("/agent", agent);
+app.use("/agency", agency);
+app.use("/blog", blog);
 export default app;

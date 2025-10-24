@@ -2,6 +2,7 @@ import { Job } from "agenda";
 import BlogService from "../models/Blog.service";
 import PropertyService from "../models/Property.service";
 import AgentService from "../models/Agent.service";
+import AgencyService from "../models/Agency.service";
 
 export const defineUpdateBlogFieldsJob = (agenda: any) => {
   agenda.define("update blog fields", async (job: Job) => {
@@ -33,6 +34,17 @@ export const defineUpdateAgentFields = (agenda: any) => {
     try {
       await AgentService.updateAgentFields();
       console.log("✅ Job completed: update agent fields");
+    } catch (error) {
+      console.error("❌ Job failed:", error);
+    }
+  });
+};
+
+export const defineUpdateAgencyFields = (agenda: any) => {
+  agenda.define("update agency fields", async (job: Job) => {
+    try {
+      await AgencyService.updateAgencyFields();
+      console.log("✅ Job completed: update agency fields");
     } catch (error) {
       console.error("❌ Job failed:", error);
     }

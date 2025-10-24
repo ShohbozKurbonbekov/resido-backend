@@ -16,6 +16,7 @@ import {
   FeaturedAgentsInput,
   AgentResults,
   MemberAgentInput,
+  FeaturedAgentsResult,
 } from "../libs/types/agent";
 import { Agent } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
@@ -262,39 +263,6 @@ class MemberService {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result;
-  }
-
-  // GET FEATURED AGENTS
-  public async getFeaturedAgents(
-    input: FeaturedAgentsInput
-  ): Promise<AgentResults> {
-    const [agents, totalAgentsNumber] = await Promise.all([
-      this.agentModel
-        .find({
-          currentStatus: AgentStatus.AVAILABLE,
-          memberStatus: MemberStatus.ACTIVE,
-          featuredScore: { $gte: 0.8 },
-        })
-        .sort({
-          featuredScore: -1,
-        })
-        .skip((input.page - 1) * input.limit)
-        .limit(input.limit)
-        .lean()
-        .exec(),
-      this.agentModel
-        .countDocuments({
-          memberStatus: MemberStatus.ACTIVE,
-          currentStatus: AgentStatus.AVAILABLE,
-          featuredScore: {
-            $gte: 0.8,
-          },
-        })
-        .exec(),
-    ]);
-    if (!agents.length) {
-    }
-    return { agents, totalAgentsNumber };
   }
 }
 

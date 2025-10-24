@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import chalk from "chalk";
 
 import Errors, { Message, HttpCode } from "../libs/Errors";
-import { T } from "../libs/types/common";
-import { AgentLocation } from "../libs/types/agent";
+import { CommonUsers, T } from "../libs/types/common";
 import AgencyService from "../models/Agency.service";
 import { ExtendedRequest } from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { SearchByLocationInput } from "../libs/types/agent";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -17,7 +17,7 @@ agencyController.getAgencyByLocation = async (req: Request, res: Response) => {
     // Checking input
     console.log(chalk.blue("getAgencyByLocation process"));
 
-    const input: AgentLocation = req.body;
+    const input: SearchByLocationInput = req.body;
 
     // getting data
     const result = await agencyService.getAgencyByLocation(input);
@@ -42,7 +42,7 @@ agencyController.getAgencyDetail = async (
     console.log(chalk.bgGreen("getAgencyDetail process"));
     const { id } = req.params;
     const agencyId = shapeIntoMongooseObjectId(id);
-    const member = req.member;
+    const member = <CommonUsers | null>req.member;
 
     const result = await agencyService.getAgencyDetail(member, agencyId);
 

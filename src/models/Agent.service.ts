@@ -1,4 +1,10 @@
-import { Agent, AgentLocation, AgentResults } from "../libs/types/agent";
+import {
+  Agent,
+  FeaturedAgentsInput,
+  FeaturedAgentsResult,
+  SearchByLocationInput,
+  SearchByLocationResult,
+} from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
 import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
 import { MemberStatus } from "../libs/enums/member.enum";
@@ -13,6 +19,7 @@ import { ViewDocs } from "../schema/View.model";
 import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
+import { AgentStatus } from "../libs/enums/agent.enum";
 
 class AgentService {
   private readonly agentModel;
@@ -127,11 +134,15 @@ class AgentService {
   }
 
   // GET AGENTS BY LOCATION
-  public async getAgentByLocation(input: AgentLocation): Promise<AgentResults> {
-    const filter: T = {
+  public async getAgentByLocation(
+    input: SearchByLocationInput
+  ): Promise<SearchByLocationResult> {
+    const { limit, page } = input;
+    const match: T = {
       memberStatus: MemberStatus.ACTIVE,
       address: { $regex: input.location, $options: "i" },
     };
+
     const sort: T = {
       featuredScore: -1,
       isVerified: -1,
@@ -139,18 +150,18 @@ class AgentService {
 
     const [result] = await this.agentModel.aggregate([
       {
-        $match: filter,
+        $match: match,
       },
       { $sort: sort },
       {
         $facet: {
           agents: [
             {
-              $skip: (input.page - 1) * input.limit,
+              $skip: (page - 1) * limit,
             },
-            { $limit: input.limit },
+            { $limit: limit },
           ],
-          metaCounter: [{ $count: "total" }],
+          totalNumbers: [{ $count: "total" }],
         },
       },
     ]);
@@ -159,11 +170,7 @@ class AgentService {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
 
-    console.log("result", result);
-    return {
-      agents: result.agents,
-      totalAgentsNumber: result.metaCounter[0].total || 0,
-    };
+    return result;
   }
 
   public async getAgentDetail(
@@ -291,10 +298,12 @@ class AgentService {
     userId: ObjectId,
     agentId: ObjectId
   ): Promise<Agent> {
-    const target = await this.agentModel.findOne({
+    const match: T = {
       _id: agentId,
       memberStatus: MemberStatus.ACTIVE,
-    });
+    };
+
+    const target = await this.agentModel.findOne(match);
 
     if (!target) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
@@ -314,7 +323,43 @@ class AgentService {
       modifier,
     });
 
-    if (!result) {
+    return result;
+  }
+
+  // GET FEATURED AGENTS
+  public async getFeaturedAgents(
+    input: FeaturedAgentsInput
+  ): Promise<FeaturedAgentsResult> {
+    const { page, limit } = input;
+    const match: T = {
+      currentStatus: AgentStatus.AVAILABLE,
+      memberStatus: MemberStatus.ACTIVE,
+      featuredScore: { $gte: 8 },
+    };
+
+    const sort: T = {
+      featuredScore: -1,
+    };
+
+    const [result] = await this.agentModel.aggregate([
+      { $match: match },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          agents: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            { $limit: limit },
+          ],
+          totalNumbers: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.agents.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
 
