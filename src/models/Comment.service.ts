@@ -50,13 +50,13 @@ class CommentService {
 
       input.userId = member?._id;
       input.userInfo = {
-        name: member.memberName ?? member.userFullname,
-        avatar: member.avatar ?? "no avatar",
-        email: member.memberEmail,
-        phone: member.memberPhone,
-        userAddress: member.memberAddress ?? "No address",
-        userDescription: member.memberDescription ?? "No description",
-        occupation: member.occupation ?? "no occupation",
+        name: member?.memberName ?? member?.userFullname,
+        avatar: member?.avatar,
+        email: member?.memberEmail,
+        phone: member?.memberPhone,
+        userAddress: member?.memberAddress ?? "No address",
+        userDescription: member?.memberDescription ?? "No description",
+        occupation: member?.occupation,
       };
 
       const result = await this.commentModel.create(input);
@@ -80,7 +80,7 @@ class CommentService {
       .sort({
         createdAt: -1,
       })
-      .limit(5)
+      .limit(10)
       .exec();
     if (!result.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);

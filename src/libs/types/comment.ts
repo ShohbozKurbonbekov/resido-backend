@@ -21,18 +21,6 @@ export interface CommentInput {
   rating?: number;
   status?: CommentStatus;
 }
-export interface Comment {
-  _id: ObjectId;
-  userId: ObjectId;
-  targetType: CommentTargetType;
-  targetId: ObjectId;
-  content: string;
-  rating: number;
-  status: CommentStatus;
-  userInfo: ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface Comments {
   comments?: Comment[];

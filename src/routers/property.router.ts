@@ -14,6 +14,15 @@ property.post(
   propertyController.createProperty
 );
 
+//////////////////// -- PROPERTY UPDATE -- ////////////////////
+property.post(
+  "/update/:id",
+  memberController.verifyMember,
+  allowRoles(Message.PROPERTY_UPDATE_AGENTS, MemberType.AGENT),
+  propertyController.uploadProperties,
+  propertyController.updateProperty
+);
+
 ///////////// --  GET RECENTLY ADDED PROPERTIES -- //////////
 property.post(
   "/property-recent-rent",
@@ -25,7 +34,11 @@ property.post("/featured-property", propertyController.getFeaturedProperty);
 
 /////////////////// --  GET ALL PROPERTIES -- //////////////
 
-property.get("/getAll", propertyController.getAllProducts);
+property.post(
+  "/getAll",
+  memberController.checkMemberAuth,
+  propertyController.getAllProducts
+);
 
 ////////////////// --  GET A CERTAIN PRODUCT -- /////////////
 property.get(

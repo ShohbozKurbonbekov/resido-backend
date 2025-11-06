@@ -334,7 +334,7 @@ class AgentService {
     const match: T = {
       currentStatus: AgentStatus.AVAILABLE,
       memberStatus: MemberStatus.ACTIVE,
-      featuredScore: { $gte: 8 },
+      featuredScore: { $gte: 5 },
     };
 
     const sort: T = {
@@ -343,6 +343,28 @@ class AgentService {
 
     const [result] = await this.agentModel.aggregate([
       { $match: match },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "_id",
+          foreignField: "agentId",
+          as: "comments",
+        },
+      },
+      {
+        $addFields: {
+          totalProperties: {
+            $size: {
+              $ifNull: ["$comments", []],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          comments: 0,
+        },
+      },
       {
         $sort: sort,
       },

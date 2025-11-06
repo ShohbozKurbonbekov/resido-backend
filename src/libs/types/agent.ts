@@ -6,7 +6,7 @@ import { RecentPropertyForRent, TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 
 export interface MemberAgentInput {
-  agencyId: string;
+  agencyId: ObjectId;
   nickname: string;
   fullName: string;
   memberEmail: string;
@@ -19,14 +19,12 @@ export interface MemberAgentInput {
   bioInfo: string;
   licenseNumber: string;
   currentStatus?: AgentStatus;
-  // featuresScore
   totalComments?: number;
   views?: number;
   totalLikes?: number;
   averageRating?: number;
   featuredScore?: number;
   rank?: string;
-  ///////////
   avatar?: string;
   points?: number;
   socialLinks?: Social;
@@ -50,13 +48,12 @@ export interface Agent {
   points: number; // set in the schema
   socialLinks: Social; // set in the schema
   isVerified: boolean; // set in the schema
-  // featuresScore
   totalComments: number;
   views: number;
   totalLikes: number;
   averageRating: number;
-  featuredScore: number;
-  rank: string;
+  featuredScore?: number;
+  rank?: string;
   ///////////
   currentStatus: AgentStatus;
   avatar?: string;

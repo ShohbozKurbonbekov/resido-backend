@@ -102,6 +102,7 @@ const UserSchema = new Schema<User>(
     },
     occupation: {
       type: String,
+      required: true,
     },
   },
   {

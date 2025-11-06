@@ -9,6 +9,7 @@ import {
 } from "../libs/types/agent";
 import { ExtendedRequest } from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { ObjectId } from "mongoose";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -43,7 +44,7 @@ agentController.getAgentDetail = async (
 
     const { id } = req.params;
     const member = req.member;
-    const agentId = shapeIntoMongooseObjectId(id);
+    const agentId: ObjectId = shapeIntoMongooseObjectId(id);
     const result = await agentService.getAgentDetail(agentId, member);
     res.status(HttpCode.OK).json(result);
   } catch (error) {

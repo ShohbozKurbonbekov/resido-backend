@@ -1,5 +1,5 @@
 import PropertyService from "../models/Property.service";
-import { T } from "../libs/types/common";
+import { CommonUsers, T } from "../libs/types/common";
 import { NextFunction, Request, Response } from "express";
 import { ExtendedRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
@@ -7,6 +7,7 @@ import {
   FeaturedPropertyInput,
   FeaturedPropertyResult,
   PropertyInput,
+  PropertyUpdateInput,
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
@@ -16,6 +17,7 @@ import { shapeIntoMongooseObjectId } from "../libs/config";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
+//////////////////// --- CREATE PROPERTY -- //////////////
 propertyController.createProperty = async (
   req: ExtendedRequest,
   res: Response
@@ -42,9 +44,37 @@ propertyController.createProperty = async (
 
     res.send(`
         <script>
-        alert(${message});
+        alert("${message}");
         window.location.replace("/agent/properties/all")
         </script>`);
+  }
+};
+
+//////////////////// -- UPDATE PROPERTY --- ////////////
+propertyController.updateProperty = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("updateProperty process");
+    const input: PropertyUpdateInput = req.body;
+    const { id } = req.params;
+    const propertyId = shapeIntoMongooseObjectId(id);
+
+    if (req.files?.length) {
+      input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
+    }
+
+    const result = await propertyService.updateProperty(propertyId, input);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
   }
 };
 
@@ -107,12 +137,16 @@ propertyController.getFeaturedProperty = async (
 };
 
 /////////// --------------- GET ALL PRODUCTS ---------- ///////////////
-propertyController.getAllProducts = async (req: Request, res: Response) => {
+propertyController.getAllProducts = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
   try {
     console.log("GetAllProducts process");
 
+    const member: CommonUsers | null = req.member;
     const queries: T = buildPropertyInquery(req.body);
-    const result = await propertyService.getAllProperties(queries);
+    const result = await propertyService.getAllProperties(queries, member);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

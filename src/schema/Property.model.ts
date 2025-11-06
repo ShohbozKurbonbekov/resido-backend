@@ -1,5 +1,5 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
-import { Property, PropertyDocument } from "../libs/types/property";
+import { PropertyInput } from "../libs/types/property";
 import {
   PropertyCooling,
   PropertyFurnature,
@@ -76,7 +76,7 @@ const PropertyAmenitiesSchema = new Schema(
   { _id: false }
 );
 
-const PropertySchema = new Schema(
+const PropertySchema = new Schema<PropertyInput>(
   {
     agencyId: {
       type: Schema.Types.ObjectId,
@@ -117,6 +117,14 @@ const PropertySchema = new Schema(
       required: true,
     },
     bedrooms: {
+      type: Number,
+      required: true,
+    },
+    hall: {
+      type: Number,
+      required: true,
+    },
+    kitchen: {
       type: Number,
       required: true,
     },
@@ -215,5 +223,5 @@ PropertySchema.index({
   status: 1,
 });
 
-export type PropertyDoc = InferSchemaType<typeof PropertySchema>;
-export default mongoose.model<PropertyDoc>("Property", PropertySchema);
+export type Property = InferSchemaType<typeof PropertySchema>;
+export default mongoose.model<Property>("Property", PropertySchema);

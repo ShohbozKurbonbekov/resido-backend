@@ -15,7 +15,7 @@ export const MORGAN_FORMAT = chalk.bgGreen(
 export const agendaConfig = {
   mongoUri: process.env.MONGO_URL as string,
   agendaCollectionName: "agendaJobs",
-  cron: "40 0 * * *",
+  cron: "*/5 * * * *",
 };
 export const jwtTime = 6;
 

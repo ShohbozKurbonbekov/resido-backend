@@ -2,6 +2,35 @@ import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import { CommentInput } from "../libs/types/comment";
 
+const CommentUserSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    avatar: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
+    occupation: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+    },
+    userAddress: { type: String },
+    userDescription: {
+      type: String,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const CommentSchema = new Schema<CommentInput>(
   {
     userId: {
@@ -30,30 +59,8 @@ const CommentSchema = new Schema<CommentInput>(
       default: 0,
     },
     userInfo: {
-      type: {
-        name: {
-          type: String,
-          required: true,
-        },
-        avatar: {
-          type: String,
-          required: true,
-        },
-        phone: {
-          type: String,
-        },
-        occupation: {
-          type: String,
-          required: true,
-        },
-        email: {
-          type: String,
-        },
-        userAddress: { type: String },
-        userDescription: {
-          type: String,
-        },
-      },
+      type: CommentUserSchema,
+      required: true,
     },
   },
   {

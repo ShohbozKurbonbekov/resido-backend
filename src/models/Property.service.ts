@@ -2,24 +2,22 @@ import {
   FeaturedPropertyInput,
   FeaturedPropertyResult,
   Properties,
-  Property,
-  PropertyDocument,
   PropertyInput,
-  PropertyInquery,
+  PropertyUpdateInput,
   RecentPropertyForRent,
   RecentPropertyResult,
 } from "../libs/types/property";
-import PropertyModel, { PropertyDoc } from "../schema/Property.model";
+import PropertyModel, { Property } from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
-import { StatisticsModifier, T } from "../libs/types/common";
+import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
 import {
   priceValueField,
   famousIndicatorField,
   commentLookup,
   addTotCommentsAvRatingFields,
+  shapeIntoMongooseObjectId,
 } from "../libs/config";
-import { ObjectId } from "mongoose";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
@@ -27,6 +25,7 @@ import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
 import chalk from "chalk";
+import { ObjectId } from "mongoose";
 class PropertyService {
   private readonly propertyModel;
   public viewService;
@@ -126,7 +125,7 @@ class PropertyService {
   public async likeTargetProperty(
     userId: ObjectId,
     propertyId: ObjectId
-  ): Promise<PropertyDoc> {
+  ): Promise<Property> {
     const target = await this.propertyModel
       .findOne({
         _id: propertyId,
@@ -161,7 +160,7 @@ class PropertyService {
 
   private async propertyStatsEditor(
     input: StatisticsModifier
-  ): Promise<PropertyDoc> {
+  ): Promise<Property> {
     const { targetKey, _id, modifier } = input;
 
     const result = await this.propertyModel
@@ -178,11 +177,11 @@ class PropertyService {
       )
       .exec();
 
-    return result as PropertyDoc;
+    return result as Property;
   }
 
   // CREATE PROPERTY
-  public async createProperty(input: PropertyInput): Promise<PropertyDoc> {
+  public async createProperty(input: PropertyInput): Promise<Property> {
     try {
       const result = await this.propertyModel.create(input);
       return result;
@@ -190,6 +189,27 @@ class PropertyService {
       console.log("Error: in createProduct Model ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
+  }
+
+  // UPDATE PROPERTY
+  public async updateProperty(
+    propertyId: ObjectId,
+    input: PropertyUpdateInput
+  ): Promise<Property> {
+    const target = await this.propertyModel.findById(propertyId);
+
+    if (!target) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+
+    const result = await this.propertyModel.findByIdAndUpdate(
+      propertyId,
+      input,
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.UPDATING_FAILED);
+    }
+    return result;
   }
 
   // GET RECENT PROPERTY FOR RENT
@@ -208,6 +228,30 @@ class PropertyService {
     const [result] = await this.propertyModel.aggregate([
       {
         $match: match,
+      },
+      {
+        $lookup: {
+          from: "agents",
+          let: {
+            authorId: "$agentId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$authorId"],
+                },
+              },
+            },
+            {
+              $project: { fullName: 1, rank: 1, _id: 1 },
+            },
+          ],
+          as: "author",
+        },
+      },
+      {
+        $unwind: "$author",
       },
       { $sort: sort },
 
@@ -243,7 +287,7 @@ class PropertyService {
     const match: T = {
       status: PropertyStatus.AVAILABLE,
       featuredScore: {
-        $gte: 5,
+        $gte: 3,
       },
     };
 
@@ -253,6 +297,7 @@ class PropertyService {
     };
     const [result] = await this.propertyModel.aggregate([
       { $match: match },
+
       {
         $sort: sort,
       },
@@ -277,16 +322,22 @@ class PropertyService {
     if (!result.properties.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-    return {
-      properties: result.properties,
-      totalPropertiesNumber: result.totalPropertiesNumber[0]?.total ?? 0,
-    };
+    return result;
   }
 
   // GET ALL PROPERTIES
-  public async getAllProperties(queries: T): Promise<Properties> {
+  public async getAllProperties(
+    queries: T,
+    member: CommonUsers | null
+  ): Promise<Properties> {
     const match: T = {
-      status: PropertyStatus.AVAILABLE,
+      status: {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      },
     };
 
     const sort: T = {};
@@ -299,35 +350,69 @@ class PropertyService {
     }
     if (queries?.order === PropertySortOrder.MOST_FAMOUS) {
       sort.famousIndicator = -1;
-      sort.createdAt = -1;
     }
 
     this.shapeMatchQuery(match, queries);
-
-    const pipeline: any[] = [{ $match: match }];
-
-    if (Object.keys(match).length > 1) {
-      pipeline.push(
-        {
-          $lookup: {
-            from: "agents",
-            localField: "agentId",
-            foreignField: "_id",
-            as: "agentData",
-            pipeline: [{ $project: { name: 1, rank: 1, isVerified: 1 } }],
-          },
+    const pipeline: any[] = [
+      { $match: match },
+      {
+        $lookup: {
+          from: "agents",
+          localField: "agentId",
+          foreignField: "_id",
+          as: "agentData",
+          pipeline: [{ $project: { name: 1, rank: 1, isVerified: 1 } }],
         },
-        { $unwind: "$agentData" },
-        {
-          $match: {
-            "agentData.isVerified": queries.propertyVerified,
-            "agentData.rank": queries.rank,
-          },
-        }
-      );
-    }
+      },
+      { $unwind: "$agentData" },
+    ];
 
+    if (queries.propertyVerified || queries.rank) {
+      const filter: T = {};
+
+      if (queries.propertyVerified) {
+        filter["agentData.isVerified"] = queries.propertyVerified;
+      }
+      if (queries.rank) {
+        filter["agentData.rank"] = queries.rank;
+      }
+      pipeline.push({
+        $match: filter,
+      });
+    }
     pipeline.push(
+      {
+        $lookup: {
+          from: "likes",
+          let: {
+            targetId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$targetId", "$$targetId"],
+                    },
+                    ...(member
+                      ? [
+                          {
+                            $eq: [
+                              "$userId",
+                              shapeIntoMongooseObjectId(member?._id),
+                            ],
+                          },
+                        ]
+                      : []),
+                  ],
+                },
+              },
+            },
+          ],
+          as: "meLiked",
+        },
+      },
       priceValueField,
       famousIndicatorField,
       { $sort: sort },
@@ -339,16 +424,15 @@ class PropertyService {
             },
             { $limit: queries.limit },
           ],
-          metaCounter: [{ $count: "total" }],
+          totalPropertiesNumber: [{ $count: "total" }],
         },
       }
     );
 
     const [result] = await this.propertyModel.aggregate(pipeline);
-    console.log(result.metaCounter[0]?.total);
 
     if (!result.properties.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return { properties: [], totalPropertiesNumber: [{ total: 0 }] };
     }
     return result;
   }
@@ -396,7 +480,7 @@ class PropertyService {
   public async getProperty(
     memberId: ObjectId,
     productId: ObjectId
-  ): Promise<PropertyDoc> {
+  ): Promise<Property> {
     const match = {
       _id: productId,
       status: PropertyStatus.AVAILABLE,
@@ -431,7 +515,7 @@ class PropertyService {
       commentLookup,
     ]);
 
-    return result as PropertyDoc;
+    return result as Property;
   }
 }
 export default PropertyService;

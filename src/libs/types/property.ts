@@ -11,9 +11,9 @@ import {
   PropertyType,
   SellingTypeEnum,
 } from "../enums/property.enum";
-import { Document } from "mongoose";
-import { PropertyDoc } from "../../schema/Property.model";
+import { Property } from "../../schema/Property.model";
 
+// PROPERTY TYPE FOR CREATING AND RETRIEVING
 export interface PropertyAddress {
   street?: string;
   city?: string;
@@ -23,20 +23,20 @@ export interface PropertyAddress {
   geoCode?: GeocodeType;
 }
 
-interface GeocodeType {
-  lat: number;
-  long: number;
+export interface GeocodeType {
+  lat?: number;
+  long?: number;
 }
 
 interface SellingType {
   optionRent?: {
-    type?: SellingTypeEnum;
+    type?: SellingTypeEnum.RENT;
     overalAmunt?: number;
     monthlyPayment?: number;
     devidedMonths?: number;
   };
   optionSell?: {
-    type?: string;
+    type?: SellingTypeEnum.SALE;
     overalAmount?: number;
     discount?: string;
   };
@@ -67,6 +67,8 @@ export interface PropertyInput {
   area: number;
   bathrooms: number;
   bedrooms: number;
+  hall: number;
+  kitchen: number;
   description: string;
   heating: PropertyHeating;
   cooling: PropertyCooling;
@@ -84,88 +86,84 @@ export interface PropertyInput {
   averageRating?: number;
   status?: PropertyStatus;
   totalLikes?: number;
+  totalComments?: number;
+  featuredScore?: number;
   recentBoost?: number;
   daysSinceCreated?: number;
   firePlace?: boolean;
   videos?: string[];
 }
 
-export interface Property {
+// UPDATE PROPERTY TYPE
+export interface PropertyUpdateInput {
   _id: ObjectId;
-  agencyId: ObjectId;
-  agentId: ObjectId;
-  title: string;
-  status: PropertyStatus;
-  sellingOption: SellingType;
-  floors: number;
-  propertyType: PropertyType;
-  area: number;
-  images: string[];
-  bathrooms: number;
-  bedrooms: number;
-  address: PropertyAddress;
-  description: string;
-  heating: PropertyHeating;
-  cooling: PropertyCooling;
-  furnished: PropertyFurnature;
-  security: PropertySecurity;
-  yearBuilt: number;
-  garageSpace: number;
-  amenities: PropertyAmenities;
-  views: number;
-  averageRating: number;
-  totalLikes: number;
-  featuredScore: number;
-  totalComments: number;
-  nearBySchools: boolean;
-  nearByTransports: boolean;
-  firePlace: boolean;
-  videos: string[];
-  recentBoost: number;
-  daysSinceCreated: number;
+  title?: string;
+  sellingOption?: SellingType;
+  floors?: number;
+  propertyType?: PropertyType;
+  area?: number;
+  images?: string[];
+  bathrooms?: number;
+  bedrooms?: number;
+  hall?: number;
+  kitchen?: number;
+  address?: PropertyAddress;
+  description?: string;
+  heating?: PropertyHeating;
+  cooling?: PropertyCooling;
+  furnished?: PropertyFurnature;
+  security?: PropertySecurity;
+  yearBuilt?: number;
+  garageSpace?: number;
+  amenities?: PropertyAmenities;
+  nearBySchools?: boolean;
+  nearByTransports?: boolean;
+  firePlace?: boolean;
+  videos?: string[];
   mood?: PropertyMood;
 }
 
-export type PropertyDocument = Property & Document;
+export interface CommonPropertiesResult {
+  properties: Property[];
+  totalPropertiesNumber: TotalCounter[];
+}
 
-export interface RecentPropertyForRent {
+export interface CommonPropertiesInput {
   page: number;
   limit: number;
 }
 
-export type FeaturedPropertyInput = RecentPropertyForRent;
+export type RecentPropertyForRent = CommonPropertiesInput;
 
-export interface RecentPropertyResult {
-  properties: PropertyDoc[];
-  totalPropertiesNumber: TotalCounter[];
+export type FeaturedPropertyInput = CommonPropertiesInput;
+
+export type RecentPropertyResult = CommonPropertiesResult;
+
+export type FeaturedPropertyResult = CommonPropertiesResult;
+
+export type Properties = CommonPropertiesResult;
+
+export interface PropertyPriceRange {
+  start: number;
+  end: number;
 }
-
-export type FeaturedPropertyResult = RecentPropertyResult;
-
 export interface PropertySearchFeatures {
   propertySearch?: string;
   propertyVerified?: boolean;
-  propertyAgentLevel?: boolean;
+  propertyAgentLevel?: string;
   propertyLocation?: MajorCites;
   propertyType?: PropertyType;
   propertyBedrooms?: number;
   propertyAmenities?: PropertyAmenities;
   propertyMood?: PropertyMood;
-  propertyPriceRange?: number;
+  propertyPriceRange?: PropertyPriceRange;
 }
 
-export interface PropertyInquery {
-  page: number;
-  limit: number;
+export interface PropertyInquery extends CommonPropertiesInput {
   order: PropertySortOrder;
   search?: PropertySearchFeatures;
 }
 
 export interface TotalCounter {
   total?: number;
-}
-
-export interface Properties {
-  properties?: Property[];
-  metaCounter?: TotalCounter[];
 }

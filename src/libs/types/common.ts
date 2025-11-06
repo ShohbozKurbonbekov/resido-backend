@@ -8,11 +8,11 @@ export interface T {
 }
 
 export interface Social {
-  facebook: string;
-  twitter: string;
-  instagram: string;
-  linkedin: string;
-  email: string;
+  facebook: string | null;
+  twitter: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  email: string | null;
 }
 
 export interface StatisticsModifier {
