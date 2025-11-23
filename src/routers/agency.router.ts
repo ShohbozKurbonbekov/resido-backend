@@ -10,6 +10,7 @@ agency.get(
   memberController.checkMemberAuth,
   agencyController.getAgencyDetail
 );
+agency.post("/:id/agents-properties", agencyController.getAgentsProperties);
 
 ///////////////// GET AGENCY BY LOCATION ///////////////
 agency.post("/search/byLocation", agencyController.getAgencyByLocation);

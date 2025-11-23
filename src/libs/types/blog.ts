@@ -2,6 +2,7 @@ import { ObjectId } from "mongoose";
 import { BlogAuthorType, BlogCategory, BlogStatus } from "../enums/blog.enum";
 import { TotalCounter } from "./property";
 import { BlogDoc } from "../../schema/Blog.model";
+import { CommonPageInput } from "./common";
 
 export interface BlogInput {
   _id?: ObjectId;
@@ -27,9 +28,7 @@ export interface BlogSearchType {
   title?: string;
   category?: BlogCategory;
 }
-export interface BlogSearchInput {
-  page: number;
-  limit: number;
+export interface BlogSearchInput extends CommonPageInput {
   sort: ["DESC", "ASC"];
   search: BlogSearchType;
 }

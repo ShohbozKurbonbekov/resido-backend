@@ -22,7 +22,7 @@ export enum Message {
   WRONG_PASSWORD = "Wrong password, Please try again",
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
   NO_MEMBER = "No member with that email",
-  INVALID_ROLE = "there is no such role found",
+  INVALID_ROLE = "you are not allowed to request this role",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
   ONLY_USERS = "Sorry, only common users are allowed to like it",
   ONLY_AGENCY_ADMIN_AGENT = "Only Admin, Agency or Agent are authorized to post a blog",
@@ -30,6 +30,7 @@ export enum Message {
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",
   PROPERTY_CREATE_AGENTS = "Only agents are authorized to create a property",
   PROPERTY_UPDATE_AGENTS = "Only agents are authorized to update a property",
+  NO_COMMENT_TYPE = "No such comment type registered",
 }
 
 class Errors extends Error {

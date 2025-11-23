@@ -1,4 +1,5 @@
 import {
+  ChosenProperty,
   FeaturedPropertyInput,
   FeaturedPropertyResult,
   Properties,
@@ -26,6 +27,7 @@ import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
 import chalk from "chalk";
 import { ObjectId } from "mongoose";
+
 class PropertyService {
   private readonly propertyModel;
   public viewService;
@@ -129,7 +131,13 @@ class PropertyService {
     const target = await this.propertyModel
       .findOne({
         _id: propertyId,
-        status: PropertyStatus.AVAILABLE,
+        status: {
+          $in: [
+            PropertyStatus.AVAILABLE,
+            PropertyStatus.RENTED,
+            PropertyStatus.SOLD,
+          ],
+        },
       })
       .lean()
       .exec();
@@ -386,6 +394,7 @@ class PropertyService {
           from: "likes",
           let: {
             targetId: "$_id",
+            userId: shapeIntoMongooseObjectId(member?._id),
           },
           pipeline: [
             {
@@ -395,22 +404,23 @@ class PropertyService {
                     {
                       $eq: ["$targetId", "$$targetId"],
                     },
-                    ...(member
-                      ? [
-                          {
-                            $eq: [
-                              "$userId",
-                              shapeIntoMongooseObjectId(member?._id),
-                            ],
-                          },
-                        ]
-                      : []),
+
+                    {
+                      $eq: ["$userId", "$$userId"],
+                    },
                   ],
                 },
               },
             },
           ],
           as: "meLiked",
+        },
+      },
+      {
+        $addFields: {
+          meLiked: {
+            $cond: [{ $gt: [{ $size: "$meLiked" }, 0] }, true, false],
+          },
         },
       },
       priceValueField,
@@ -480,10 +490,15 @@ class PropertyService {
   public async getProperty(
     memberId: ObjectId,
     productId: ObjectId
-  ): Promise<Property> {
-    const match = {
-      _id: productId,
-      status: PropertyStatus.AVAILABLE,
+  ): Promise<ChosenProperty> {
+    const match: T = {
+      status: {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      },
     };
 
     if (memberId) {
@@ -510,12 +525,76 @@ class PropertyService {
 
     let [result] = await this.propertyModel.aggregate([
       {
-        $match: match,
+        $facet: {
+          mainProperty: [
+            {
+              $match: { ...match, _id: productId },
+            },
+            {
+              $lookup: {
+                from: "likes",
+                let: {
+                  targetId: "$_id",
+                  userId: shapeIntoMongooseObjectId(memberId),
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          {
+                            $eq: ["$targetId", "$$targetId"],
+                          },
+                          {
+                            $eq: ["$userId", "$$userId"],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+                as: "meLiked",
+              },
+            },
+            {
+              $addFields: {
+                meLiked: {
+                  $cond: [{ $gt: [{ $size: "$meLiked" }, 0] }, true, false],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "agents",
+                foreignField: "_id",
+                localField: "agentId",
+                as: "agentData",
+              },
+            },
+            { $unwind: "$agentData" },
+            priceValueField,
+          ],
+          trendingProperties: [
+            {
+              $match: {
+                ...match,
+                featuredScore: {
+                  $gte: 3,
+                },
+              },
+            },
+            { $sort: { featuredScore: -1, createdAt: -1 } },
+            { $limit: 6 },
+          ],
+        },
       },
-      commentLookup,
     ]);
 
-    return result as Property;
+    if (!result.mainProperty.length) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
   }
 }
 export default PropertyService;

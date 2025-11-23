@@ -25,3 +25,8 @@ export type CommonUsersUpdateInput =
   | AgencyInputUpdate
   | UserInputUpdate
   | AgentInputUpdate;
+
+export interface CommonPageInput {
+  limit: number;
+  page: number;
+}

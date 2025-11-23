@@ -7,6 +7,8 @@ import AgencyService from "../models/Agency.service";
 import { ExtendedRequest } from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { SearchByLocationInput } from "../libs/types/agent";
+import { AgencyTargetType } from "../libs/enums/agency.enum";
+import { AgencyAgePropertiesInput } from "../libs/types/agency";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -17,10 +19,18 @@ agencyController.getAgencyByLocation = async (req: Request, res: Response) => {
     // Checking input
     console.log(chalk.blue("getAgencyByLocation process"));
 
-    const input: SearchByLocationInput = req.body;
+    const { page, limit, location } = req.body;
+    const queries: SearchByLocationInput = {
+      page: Number(page),
+      limit: Number(limit),
+    };
+
+    if (location) {
+      queries.location = location;
+    }
 
     // getting data
-    const result = await agencyService.getAgencyByLocation(input);
+    const result = await agencyService.getAgencyByLocation(queries);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {
@@ -49,6 +59,35 @@ agencyController.getAgencyDetail = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log(chalk.bgRed("Error in getAgencyDetail process: "), error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////////// GET AGENT AND PROPERTIES OF AGENCY ///////////
+agencyController.getAgentsProperties = async (req: Request, res: Response) => {
+  try {
+    console.log("getAgentsProperties proccess: ");
+    const { id } = req.params;
+    const agencyId = shapeIntoMongooseObjectId(id);
+    const { page, limit, location, agencyTarget } = req.body;
+    const input: AgencyAgePropertiesInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 6,
+      agencyTarget,
+    };
+
+    if (location) {
+      input.location = location;
+    }
+
+    const result = await agencyService.getAgentsProperties(agencyId, input);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getAgentsProperties: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

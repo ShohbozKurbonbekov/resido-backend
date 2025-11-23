@@ -1,7 +1,7 @@
 import PropertyService from "../models/Property.service";
 import { CommonUsers, T } from "../libs/types/common";
 import { NextFunction, Request, Response } from "express";
-import { ExtendedRequest } from "../libs/types/user";
+import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import {
   FeaturedPropertyInput,
@@ -14,6 +14,7 @@ import {
 import makeUploader from "../libs/utils/uploader";
 import buildPropertyInquery from "../libs/utils/buildPropertyInquery";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { orrangeFiles } from "../libs/utils/orrangeFiles";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -52,17 +53,24 @@ propertyController.createProperty = async (
 
 //////////////////// -- UPDATE PROPERTY --- ////////////
 propertyController.updateProperty = async (
-  req: ExtendedRequest,
+  req: UploadRequest,
   res: Response
 ) => {
   try {
     console.log("updateProperty process");
     const input: PropertyUpdateInput = req.body;
     const { id } = req.params;
+
+    const images = req.files?.images;
+    const videos = req.files?.videos;
     const propertyId = shapeIntoMongooseObjectId(id);
 
-    if (req.files?.length) {
-      input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
+    if (videos?.length) {
+      input.videos = orrangeFiles(videos);
+    }
+
+    if (images?.length) {
+      input.images = orrangeFiles(images);
     }
 
     const result = await propertyService.updateProperty(propertyId, input);
@@ -84,7 +92,10 @@ propertyController.uploadProperties = (
   res: Response,
   next: NextFunction
 ) => {
-  const upload = makeUploader("properties").array("images", 3);
+  const upload = makeUploader("properties").fields([
+    { name: "images", maxCount: 5 },
+    { name: "videos", maxCount: 1 },
+  ]);
 
   upload(req, res, (error: any) => {
     if (error) {
@@ -165,11 +176,11 @@ propertyController.getProperty = async (
   res: Response
 ) => {
   try {
-    console.log("getPropertyProcess");
-    const productId = shapeIntoMongooseObjectId(req.params.id);
+    console.log("getProperty Process");
+    const propertyId = shapeIntoMongooseObjectId(req.params.id);
     const memberId = shapeIntoMongooseObjectId(req.member?._id);
 
-    const result = await propertyService.getProperty(memberId, productId);
+    const result = await propertyService.getProperty(memberId, propertyId);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

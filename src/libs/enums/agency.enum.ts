@@ -16,3 +16,7 @@ export enum SubscriptionTarrif {
   STANDART = "STANDART",
   PREMIUM = "PREMIUM",
 }
+export enum AgencyTargetType {
+  AGENTS = "AGENTS",
+  PROPERTIES = "PROPERTIES",
+}

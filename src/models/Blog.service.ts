@@ -98,7 +98,7 @@ class BlogService {
               branches: [
                 {
                   case: {
-                    $gte: ["$featuredScore", 6],
+                    $gte: ["$featuredScore", 5],
                   },
                   then: true,
                 },

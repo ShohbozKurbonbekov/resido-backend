@@ -12,6 +12,7 @@ import {
   SellingTypeEnum,
 } from "../enums/property.enum";
 import { Property } from "../../schema/Property.model";
+import { CommonPageInput } from "./common";
 
 // PROPERTY TYPE FOR CREATING AND RETRIEVING
 export interface PropertyAddress {
@@ -58,6 +59,7 @@ export interface PropertyAmenities {
 }
 
 export interface PropertyInput {
+  _id?: ObjectId;
   agencyId: ObjectId;
   agentId: ObjectId;
   title: string;
@@ -72,7 +74,7 @@ export interface PropertyInput {
   description: string;
   heating: PropertyHeating;
   cooling: PropertyCooling;
-  address?: PropertyAddress;
+  address: PropertyAddress;
   furnished?: PropertyFurnature;
   images?: string[];
   security?: PropertySecurity;
@@ -92,6 +94,7 @@ export interface PropertyInput {
   daysSinceCreated?: number;
   firePlace?: boolean;
   videos?: string[];
+  comments?: [];
 }
 
 // UPDATE PROPERTY TYPE
@@ -128,20 +131,21 @@ export interface CommonPropertiesResult {
   totalPropertiesNumber: TotalCounter[];
 }
 
-export interface CommonPropertiesInput {
-  page: number;
-  limit: number;
-}
+export type CommonPropertiesInput = CommonPageInput;
 
-export type RecentPropertyForRent = CommonPropertiesInput;
+export type RecentPropertyForRent = CommonPageInput;
 
-export type FeaturedPropertyInput = CommonPropertiesInput;
+export type FeaturedPropertyInput = CommonPageInput;
 
 export type RecentPropertyResult = CommonPropertiesResult;
 
 export type FeaturedPropertyResult = CommonPropertiesResult;
 
 export type Properties = CommonPropertiesResult;
+export interface ChosenProperty {
+  mainProperty: PropertyInput[];
+  trendingProperties: PropertyInput[];
+}
 
 export interface PropertyPriceRange {
   start: number;
@@ -159,7 +163,7 @@ export interface PropertySearchFeatures {
   propertyPriceRange?: PropertyPriceRange;
 }
 
-export interface PropertyInquery extends CommonPropertiesInput {
+export interface PropertyInquery extends CommonPageInput {
   order: PropertySortOrder;
   search?: PropertySearchFeatures;
 }

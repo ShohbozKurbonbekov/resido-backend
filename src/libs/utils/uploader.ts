@@ -21,13 +21,17 @@ const makeUploader = (address: string) => {
   return multer({
     storage: storage,
     limits: {
-      fileSize: 1000_000,
+      fileSize: 5000_000,
     },
 
     fileFilter: (req, file, cb) => {
-      const hasFIle = file.originalname.match(/\.(jpg|jpeg|png)$/);
-      if (!hasFIle) {
-        return cb(new Error(`Please provide jpg/jpeg/png format of the image`));
+      const hasFile = file.originalname.match(/\.(jpg|jpeg|png|mp4)$/);
+      if (!hasFile) {
+        return cb(
+          new Error(
+            `Please provide image formats jpg/jpeg/png and mp4 for videos`
+          )
+        );
       }
 
       cb(null, true);

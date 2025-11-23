@@ -1,4 +1,4 @@
-import { CommentInput } from "../libs/types/comment";
+import { CommentInput, Comments, ItemComments } from "../libs/types/comment";
 import CommentModel, { CommentDocs } from "../schema/Comment.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
@@ -6,9 +6,9 @@ import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import BlogModel from "../schema/Blog.model";
-import { Model } from "mongoose";
+import { Model, ObjectId } from "mongoose";
 
 class CommentService {
   public readonly commentModel;
@@ -72,6 +72,7 @@ class CommentService {
     }
   }
 
+  ///////////////////////// GET LATEST COMMENTS /////////////
   public async getLatestComments(): Promise<CommentDocs[]> {
     const result = await this.commentModel
       .find({
@@ -84,6 +85,81 @@ class CommentService {
       .exec();
     if (!result.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
+
+  //////////////////////// GET ITEM COMMENTS ////////////////
+  public async getComments(
+    itemId: ObjectId,
+    input: ItemComments
+  ): Promise<Comments> {
+    const { page, limit, commentTarget } = input;
+    const match: T = { status: CommentStatus.ACTIVE, targetId: itemId };
+    const sort: T = {
+      createdAt: -1,
+    };
+    const Models: T = {
+      blog: this.blogModel,
+      property: this.propertyModel,
+      agent: this.agentModel,
+    };
+
+    const Model = Models[commentTarget];
+    if (!Model) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.NO_COMMENT_TYPE);
+    }
+
+    const item = await Model.findById(itemId);
+
+    if (!item) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const [result] = await this.commentModel.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "users",
+          let: {
+            authorId: "$userId",
+          },
+          as: "authorData",
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$authorId"],
+                },
+              },
+            },
+            {
+              $project: {
+                avatar: 1,
+                memberPhone: 1,
+                memberAddress: 1,
+                occupation: 1,
+                memberEmail: 1,
+                memberName: 1,
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$authorData" },
+      {
+        $facet: {
+          comments: [{ $sort: sort }, { $limit: limit * page }],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.comments.length) {
+      return {
+        comments: [],
+        metaCounter: [{ total: 0 }],
+      };
     }
     return result;
   }

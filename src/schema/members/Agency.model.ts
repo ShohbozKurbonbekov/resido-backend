@@ -77,7 +77,10 @@ const AgencySchema = new Schema<AgencyMemberInput>(
       unique: true,
       required: true,
     },
-
+    yearOfExperience: {
+      type: Number,
+      required: true,
+    },
     memberPassword: {
       type: String,
       select: false,
@@ -107,14 +110,6 @@ const AgencySchema = new Schema<AgencyMemberInput>(
     },
 
     agencyOwner: {
-      type: String,
-      required: true,
-    },
-    country: {
-      type: String,
-      required: true,
-    },
-    city: {
       type: String,
       required: true,
     },
@@ -154,7 +149,7 @@ const AgencySchema = new Schema<AgencyMemberInput>(
     },
     billingInfo: {
       type: BillingSchema,
-      required: true,
+      default: () => ({}),
     },
 
     socialLinks: {
@@ -189,6 +184,9 @@ AgencySchema.pre("save", async function (next) {
   if (user.isModified("memberPassword")) {
     const salt: string = await bcrypt.genSalt();
     user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
+  }
+  if (!user?.registrationNumber) {
+    user.registrationNumber = "AC" + "-" + Date.now() + "$" + "RESIDO";
   }
 
   next();

@@ -16,17 +16,30 @@ import {
   SearchByLocationInput,
   SearchByLocationResult,
 } from "../libs/types/agent";
-import { SearchByLocationAgency } from "../libs/types/agency";
+import {
+  AgencyAgePropertiesInput,
+  AgencyAgePropertiesResult,
+  SearchByLocationAgency,
+} from "../libs/types/agency";
+import AgentModel from "../schema/members/Agent.model";
+import PropertyModel from "../schema/Property.model";
+import { AgencyTargetType } from "../libs/enums/agency.enum";
+import { AgentStatus } from "../libs/enums/agent.enum";
+import { PropertyStatus } from "../libs/enums/property.enum";
 
 class AgencyService {
   private readonly agencyModel;
   private readonly viewModel;
   public readonly viewService;
+  public readonly agentModel;
+  public readonly propertyModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
     this.viewModel = ViewModel;
     this.viewService = new ViewService();
+    this.agentModel = AgentModel;
+    this.propertyModel = PropertyModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -221,14 +234,16 @@ class AgencyService {
     input: SearchByLocationInput
   ): Promise<SearchByLocationAgency> {
     const { page, limit, location } = input;
-
     const match: T = {
       memberStatus: MemberStatus.ACTIVE,
-      address: {
+    };
+
+    if (location) {
+      match["address"] = {
         $regex: location,
         $options: "i",
-      },
-    };
+      };
+    }
 
     const sort: T = {
       createdAt: -1,
@@ -237,6 +252,28 @@ class AgencyService {
 
     const [result] = await this.agencyModel.aggregate([
       { $match: match },
+      propertiesLookupByAgencyId,
+      agentsLookupByAgencyId,
+      {
+        $addFields: {
+          agentsTotalNumber: {
+            $size: {
+              $ifNull: ["$agentsList", []],
+            },
+          },
+          propertiesTotalNumber: {
+            $size: {
+              $ifNull: ["$propertiesList", []],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          agentsList: 0,
+          propertiesList: 0,
+        },
+      },
       {
         $sort: sort,
       },
@@ -259,6 +296,7 @@ class AgencyService {
     return result;
   }
 
+  // GET AGENCY DETAIL
   public async getAgencyDetail(
     member: CommonUsers | null,
     agencyId: ObjectId
@@ -302,11 +340,31 @@ class AgencyService {
       },
       propertiesLookupByAgencyId,
       agentsLookupByAgencyId,
+      {
+        $addFields: {
+          agencyItems: {
+            agents: {
+              $ifNull: ["$agentsList", []],
+            },
+            properties: {
+              $ifNull: ["$propertiesList", []],
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          agentsList: 0,
+          propertiesList: 0,
+        },
+      },
     ]);
 
     return result;
   }
 
+  // UPDATE AGENCY STATISTICS
   private async agencyStatsEditor(input: StatisticsModifier): Promise<Agency> {
     const { targetKey, _id, modifier } = input;
 
@@ -326,6 +384,216 @@ class AgencyService {
       .exec();
 
     return result as Agency;
+  }
+  // GET AGENCY AGENTS AND PROPERTIES
+  public async getAgentsProperties(
+    agencyId: ObjectId,
+    input: AgencyAgePropertiesInput
+  ): Promise<AgencyAgePropertiesResult> {
+    console.log(input);
+    const { page, limit, location, agencyTarget } = input;
+
+    const match: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agencyId,
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const target = await this.agencyModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const Models: T = {
+      AGENTS: this.agentModel,
+      PROPERTIES: this.propertyModel,
+    };
+
+    const Model = Models[agencyTarget!];
+    console.log(Model);
+    if (!Model) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_ROLE);
+    }
+
+    const filter: T = {};
+
+    //  AGENT FILTER
+    if (agencyTarget === AgencyTargetType.AGENTS) {
+      (filter.currentStatus = AgentStatus.AVAILABLE),
+        (filter.memberStatus = MemberStatus.ACTIVE);
+
+      if (location) {
+        filter.address = {
+          $regex: location,
+          $options: "i",
+        };
+      }
+    }
+
+    // PROPERTY FILTER
+    if (agencyTarget === AgencyTargetType.PROPERTIES) {
+      filter.status = {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      };
+
+      if (location) {
+        filter.$or = [
+          { "address.street": { $regex: location, $options: "i" } },
+          {
+            "address.district": { $regex: location, $options: "i" },
+          },
+          {
+            "address.city": { $regex: location, $options: "i" },
+          },
+          { "address.country": { $regex: location, $options: "i" } },
+        ];
+      }
+    }
+
+    const lookup =
+      agencyTarget === AgencyTargetType.AGENTS
+        ? [
+            {
+              $lookup: {
+                from: "agents",
+                let: {
+                  agencyId: "$_id",
+                },
+                pipeline: [
+                  {
+                    $facet: {
+                      limitedAgents: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$agencyId", "$$agencyId"],
+                            },
+                            ...filter,
+                          },
+                        },
+                        {
+                          $sort: sort,
+                        },
+                        {
+                          $skip: (page - 1) * limit,
+                        },
+                        {
+                          $limit: limit,
+                        },
+                      ],
+                      totalAgents: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$agencyId", "$$agencyId"],
+                            },
+                            ...filter,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+                as: "agencyAgents",
+              },
+            },
+            {
+              $unwind: "$agencyAgents",
+            },
+            {
+              $addFields: {
+                paginatedAgents: {
+                  $ifNull: ["$agencyAgents.limitedAgents", []],
+                },
+                agentsTotalNumber: {
+                  $size: {
+                    $ifNull: ["$agencyAgents.totalAgents", []],
+                  },
+                },
+              },
+            },
+            {
+              $project: {
+                agencyAgents: 0,
+              },
+            },
+          ]
+        : [
+            {
+              $lookup: {
+                from: "properties",
+                let: {
+                  agencyId: "$_id",
+                },
+                pipeline: [
+                  {
+                    $facet: {
+                      paginatedProperties: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$agencyId", "$$agencyId"],
+                            },
+                            ...filter,
+                          },
+                        },
+                        {
+                          $sort: sort,
+                        },
+                        {
+                          $skip: (page - 1) * limit,
+                        },
+                        {
+                          $limit: limit,
+                        },
+                      ],
+                      totalProperties: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$agencyId", "$$agencyId"],
+                            },
+                            ...filter,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+                as: "agencyProperties",
+              },
+            },
+            { $unwind: "$agencyProperties" },
+            {
+              $addFields: {
+                paginatedProperties: {
+                  $ifNull: ["$agencyProperties.paginatedProperties", []],
+                },
+                propertiesTotalNumber: {
+                  $size: {
+                    $ifNull: ["$agencyProperties.totalProperties", []],
+                  },
+                },
+              },
+            },
+            {
+              $project: {
+                agencyProperties: 0,
+              },
+            },
+          ];
+
+    const pipeline: any[] = [{ $match: match }, ...lookup];
+    const [result] = await this.agencyModel.aggregate(pipeline);
+
+    return { agency: result };
   }
 }
 

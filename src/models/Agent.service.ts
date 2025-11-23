@@ -1,5 +1,7 @@
 import {
   Agent,
+  AgentDetailType,
+  AgentPropertiesInput,
   FeaturedAgentsInput,
   FeaturedAgentsResult,
   SearchByLocationInput,
@@ -19,7 +21,8 @@ import { ViewDocs } from "../schema/View.model";
 import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
-import { AgentStatus } from "../libs/enums/agent.enum";
+import { AgentPropertyType, AgentStatus } from "../libs/enums/agent.enum";
+import { PropertyStatus } from "../libs/enums/property.enum";
 
 class AgentService {
   private readonly agentModel;
@@ -140,8 +143,12 @@ class AgentService {
     const { limit, page } = input;
     const match: T = {
       memberStatus: MemberStatus.ACTIVE,
-      address: { $regex: input.location, $options: "i" },
+      currentStatus: AgentStatus.AVAILABLE,
     };
+
+    if (input.location) {
+      match.address = { $regex: input.location, $options: "i" };
+    }
 
     const sort: T = {
       featuredScore: -1,
@@ -167,19 +174,21 @@ class AgentService {
     ]);
 
     if (!result.agents.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return { agents: [], totalNumbers: [{ total: 0 }] };
     }
 
     return result;
   }
 
+  // GET AGENT DETAIL
   public async getAgentDetail(
     agentId: ObjectId,
     member: CommonUsers
-  ): Promise<Agent> {
+  ): Promise<AgentDetailType> {
     const match: T = {
       _id: agentId,
       memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgentStatus.AVAILABLE,
     };
 
     const target = await this.agentModel.findOne(match);
@@ -210,7 +219,7 @@ class AgentService {
       }
     }
 
-    let [result] = await this.agentModel.aggregate([
+    let result = await this.agentModel.aggregate([
       { $match: match },
       {
         $lookup: {
@@ -225,6 +234,16 @@ class AgentService {
           totalProperties: {
             $size: {
               $ifNull: ["$allProperties", []],
+            },
+          },
+        },
+      },
+      commentLookup,
+      {
+        $addFields: {
+          totalComments: {
+            $size: {
+              $ifNull: ["$comments", []],
             },
           },
         },
@@ -270,9 +289,14 @@ class AgentService {
       },
     ]);
 
-    return result;
+    if (!result.length) {
+      return { agent: [] };
+    }
+
+    return { agent: result };
   }
 
+  // UPDATE AGENT STATISTICS
   private async agentStatsEditor(input: StatisticsModifier): Promise<Agent> {
     const { targetKey, _id, modifier } = input;
 
@@ -294,6 +318,7 @@ class AgentService {
     return result as Agent;
   }
 
+  // LIKE AN AGENT
   public async likeTargetAgent(
     userId: ObjectId,
     agentId: ObjectId
@@ -386,6 +411,121 @@ class AgentService {
     }
 
     return result;
+  }
+
+  // GET AGENT PROPERTIES
+  public async getAgentProperties(
+    agentId: ObjectId,
+    input: AgentPropertiesInput
+  ): Promise<AgentDetailType> {
+    const match: T = {
+      currentStatus: AgentStatus.AVAILABLE,
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agentId,
+    };
+    const target = await this.agentModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const propertyFilter: T = {
+      status: {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      },
+    };
+
+    if (input?.agentPropertyType) {
+      if (input.agentPropertyType === AgentPropertyType.RENT) {
+        propertyFilter["sellingOption.optionRent.type"] =
+          AgentPropertyType.RENT;
+      }
+
+      if (input?.agentPropertyType === AgentPropertyType.SALE) {
+        propertyFilter["sellingOption.optionSell.type"] =
+          AgentPropertyType.SALE;
+      }
+    }
+
+    if (input.searchInput) {
+      propertyFilter["title"] = {
+        $regex: input.searchInput,
+        $options: "i",
+      };
+    }
+
+    const sort: T = {
+      createdAt: -1,
+    };
+    const result = await this.agentModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $lookup: {
+          from: "properties",
+          let: {
+            agentId: "$_id",
+          },
+          as: "agentProperties",
+          pipeline: [
+            {
+              $facet: {
+                limitedProperties: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$agentId", "$$agentId"],
+                      },
+                      ...propertyFilter,
+                    },
+                  },
+                  { $sort: sort },
+                  {
+                    $skip: (input.page - 1) * input.limit,
+                  },
+                  { $limit: input.limit },
+                ],
+                overalProperties: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$agentId", "$$agentId"],
+                      },
+                      ...propertyFilter,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$agentProperties" },
+      {
+        $addFields: {
+          limitedProperties: {
+            $ifNull: ["$agentProperties.limitedProperties", []],
+          },
+          totalProperties: {
+            $size: {
+              $ifNull: ["$agentProperties.overalProperties", []],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          agentProperties: 0,
+        },
+      },
+    ]);
+
+    return { agent: result };
   }
 }
 export default AgentService;

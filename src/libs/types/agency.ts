@@ -1,19 +1,25 @@
 import { ObjectId } from "mongoose";
 import {
   AgencyCurrentBadge,
+  AgencyTargetType,
   SubscriptionStatus,
   SubscriptionTarrif,
 } from "../enums/agency.enum";
 import { MemberStatus, MemberType } from "../enums/member.enum";
-import { Social } from "./common";
+import { CommonPageInput, Social } from "./common";
 import { Agent } from "./agent";
 import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
+import { Property } from "../../schema/Property.model";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
   subscriptionDate: Date;
   subscriptionStatus: SubscriptionStatus;
+}
+export interface AgencyToggleStateType {
+  agents?: Agent[];
+  properties?: Property[];
 }
 export interface AgencyMemberInput {
   memberName: string;
@@ -32,6 +38,7 @@ export interface AgencyMemberInput {
   agencyBadge?: AgencyCurrentBadge;
   isVerified?: boolean;
   avatar?: string;
+  agencyItems?: AgencyToggleStateType;
   registrationNumber?: string;
   agentsTotalNumber?: number;
   propertiesTotalNumber?: number;
@@ -42,31 +49,8 @@ export interface AgencyMemberInput {
   memberStatus?: MemberStatus;
   createdAt?: Date;
   updatedAt?: Date;
+  yearOfExperience: number;
 }
-
-// export interface Agency {
-//   _id: ObjectId;
-//   memberName: string;
-//   memberEmail: string;
-//   memberPhone: string;
-//   memberPassword: string;
-//   role: MemberType;
-//   memberStatus: MemberStatus;
-//   address?: string;
-//   bioInfo?: string;
-//   agencyOwner?: string;
-//   avatar?: string;
-//   country?: string;
-//   city?: string;
-//   registrationNumber: string;
-//   memberSince: Date;
-//   permittedProperties: number;
-//   billingInfo: BillingDetails;
-//   agenycBadge: AgencyCurrentBadge;
-//   socialLinks: Social;
-//   isVerified: boolean;
-//   views: number;
-// }
 
 export interface AgencyInputUpdate {
   _id: ObjectId;
@@ -88,3 +72,12 @@ export interface AgencyResults {
   totalNumbers: TotalCounter[];
 }
 export type SearchByLocationAgency = AgencyResults;
+
+export interface AgencyAgePropertiesInput extends CommonPageInput {
+  agencyTarget?: AgencyTargetType;
+  location?: string;
+}
+
+export interface AgencyAgePropertiesResult {
+  agency: Agency;
+}

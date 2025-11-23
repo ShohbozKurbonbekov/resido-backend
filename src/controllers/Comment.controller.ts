@@ -1,10 +1,11 @@
 import CommentService from "../models/Comment.service";
 import { T } from "../libs/types/common";
-import { Response } from "express";
+import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
-import { CommentInput } from "../libs/types/comment";
+import { CommentInput, ItemComments } from "../libs/types/comment";
 import { ExtendedRequest, User } from "../libs/types/user";
 import { CommentDocs } from "../schema/Comment.model";
+import { shapeIntoMongooseObjectId } from "../libs/config";
 
 const commentController: T = {};
 const commentService = new CommentService();
@@ -38,6 +39,31 @@ commentController.getLatestComments = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getLatestComment: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////--- GET COMMENTS ---///////////////////
+commentController.getComments = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const itemId = shapeIntoMongooseObjectId(id);
+    const { page, limit, commentTarget } = req.body;
+    const input: ItemComments = {
+      page: Number(page),
+      limit: Number(limit),
+      commentTarget,
+    };
+
+    const result = await commentService.getComments(itemId, input);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getComments", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

@@ -1,6 +1,8 @@
 import { ObjectId } from "mongoose";
 import { CommentStatus, CommentTargetType } from "../enums/comment.enum";
 import { TotalCounter } from "./property";
+import { CommonPageInput } from "./common";
+import { CommentDocs } from "../../schema/Comment.model";
 
 interface UserInfoType {
   avatar: string;
@@ -23,6 +25,9 @@ export interface CommentInput {
 }
 
 export interface Comments {
-  comments?: Comment[];
+  comments?: CommentDocs[];
   metaCounter?: TotalCounter[];
+}
+export interface ItemComments extends CommonPageInput {
+  commentTarget: CommentTargetType;
 }

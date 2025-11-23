@@ -47,9 +47,12 @@ class MemberService {
   ): Promise<CommonUsers> {
     try {
       let result;
-      if (input.role === "USER") {
+      if (
+        input.role === MemberType.USER ||
+        input.role === MemberType.REAL_ESTATE_ADMIN
+      ) {
         result = await this.userModel.create(input);
-      } else if (input.role === "AGENCY") {
+      } else if (input.role === MemberType.AGENCY) {
         result = await this.agencyModel.create(input);
       } else {
         result = await this.agentModel.create(input);

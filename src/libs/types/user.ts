@@ -1,9 +1,17 @@
 import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Request } from "express";
-import { Agent } from "./agent";
 import { CommonUsers, Social } from "./common";
 
+export interface uploadFiles {
+  videos?: Express.Multer.File[];
+  images?: Express.Multer.File[];
+}
+
+export type UploadRequest = Request<{ id: string }, {}, any> & {
+  files?: uploadFiles;
+  member: CommonUsers;
+};
 export interface ExtendedRequest extends Request {
   file: Express.Multer.File;
   files: Express.Multer.File[];

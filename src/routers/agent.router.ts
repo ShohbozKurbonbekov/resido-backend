@@ -12,6 +12,7 @@ agent.get(
   memberController.checkMemberAuth,
   agentController.getAgentDetail
 );
+agent.post("/:id/properties", agentController.getAgentProperties);
 
 ////////////////// -- GET FEATURED AGENTS -- ////////////////
 

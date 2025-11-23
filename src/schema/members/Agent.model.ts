@@ -115,7 +115,6 @@ const AgentSchema = new Schema<Agent>(
     },
     licenseNumber: {
       type: String,
-      required: true,
     },
     avatar: {
       type: String,
@@ -155,6 +154,9 @@ AgentSchema.pre("save", async function (next) {
     user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
 
     next();
+  }
+  if (!user?.licenseNumber) {
+    user.licenseNumber = `BR-` + Date.now() + "-" + "RESIDO";
   }
 });
 export default mongoose.model("Agent", AgentSchema);

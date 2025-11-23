@@ -17,4 +17,7 @@ comment.post(
 /////////////// --  GET 10 LATEST COMMENTS -- ////////////
 comment.get("/get/latest", commentController.getLatestComments);
 
+////////////////// -- GET EVERY 10 PROPERTY COMMMENTS --//////////
+comment.post("/get/:id/comments", commentController.getComments);
+
 export default comment;
