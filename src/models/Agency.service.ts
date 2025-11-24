@@ -1,4 +1,9 @@
-import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  StatisticsModifier,
+  T,
+} from "../libs/types/common";
 import { MemberStatus } from "../libs/enums/member.enum";
 import ViewModel, { ViewDocs } from "../schema/View.model";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
@@ -407,55 +412,15 @@ class AgencyService {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
 
-    const Models: T = {
-      AGENTS: this.agentModel,
-      PROPERTIES: this.propertyModel,
-    };
-
-    const Model = Models[agencyTarget!];
-    console.log(Model);
-    if (!Model) {
-      throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_ROLE);
-    }
-
     const filter: T = {};
 
-    //  AGENT FILTER
-    if (agencyTarget === AgencyTargetType.AGENTS) {
-      (filter.currentStatus = AgentStatus.AVAILABLE),
-        (filter.memberStatus = MemberStatus.ACTIVE);
+    this.filterAgencyItems(filter, location, agencyTarget!);
 
-      if (location) {
-        filter.address = {
-          $regex: location,
-          $options: "i",
-        };
-      }
-    }
+    const generalLimitedItemsSearch: Record<string, any>[] =
+      this.generateLimitedItemsSearch(filter, sort, { page, limit });
 
-    // PROPERTY FILTER
-    if (agencyTarget === AgencyTargetType.PROPERTIES) {
-      filter.status = {
-        $in: [
-          PropertyStatus.AVAILABLE,
-          PropertyStatus.RENTED,
-          PropertyStatus.SOLD,
-        ],
-      };
-
-      if (location) {
-        filter.$or = [
-          { "address.street": { $regex: location, $options: "i" } },
-          {
-            "address.district": { $regex: location, $options: "i" },
-          },
-          {
-            "address.city": { $regex: location, $options: "i" },
-          },
-          { "address.country": { $regex: location, $options: "i" } },
-        ];
-      }
-    }
+    const generalShortSearch: Record<string, any>[] =
+      this.generateShortSearch(filter);
 
     const lookup =
       agencyTarget === AgencyTargetType.AGENTS
@@ -469,35 +434,8 @@ class AgencyService {
                 pipeline: [
                   {
                     $facet: {
-                      limitedAgents: [
-                        {
-                          $match: {
-                            $expr: {
-                              $eq: ["$agencyId", "$$agencyId"],
-                            },
-                            ...filter,
-                          },
-                        },
-                        {
-                          $sort: sort,
-                        },
-                        {
-                          $skip: (page - 1) * limit,
-                        },
-                        {
-                          $limit: limit,
-                        },
-                      ],
-                      totalAgents: [
-                        {
-                          $match: {
-                            $expr: {
-                              $eq: ["$agencyId", "$$agencyId"],
-                            },
-                            ...filter,
-                          },
-                        },
-                      ],
+                      limitedAgents: [...generalLimitedItemsSearch],
+                      totalAgents: [...generalShortSearch],
                     },
                   },
                 ],
@@ -535,35 +473,8 @@ class AgencyService {
                 pipeline: [
                   {
                     $facet: {
-                      paginatedProperties: [
-                        {
-                          $match: {
-                            $expr: {
-                              $eq: ["$agencyId", "$$agencyId"],
-                            },
-                            ...filter,
-                          },
-                        },
-                        {
-                          $sort: sort,
-                        },
-                        {
-                          $skip: (page - 1) * limit,
-                        },
-                        {
-                          $limit: limit,
-                        },
-                      ],
-                      totalProperties: [
-                        {
-                          $match: {
-                            $expr: {
-                              $eq: ["$agencyId", "$$agencyId"],
-                            },
-                            ...filter,
-                          },
-                        },
-                      ],
+                      paginatedProperties: [...generalLimitedItemsSearch],
+                      totalProperties: [...generalShortSearch],
                     },
                   },
                 ],
@@ -595,6 +506,87 @@ class AgencyService {
 
     return { agency: result };
   }
+
+  private filterAgencyItems(
+    filter: T,
+    location: string | undefined,
+    agencyTarget: AgencyTargetType
+  ): void {
+    //  AGENT FILTER
+    if (agencyTarget === AgencyTargetType.AGENTS) {
+      (filter.currentStatus = AgentStatus.AVAILABLE),
+        (filter.memberStatus = MemberStatus.ACTIVE);
+
+      if (location) {
+        filter.address = {
+          $regex: location,
+          $options: "i",
+        };
+      }
+    }
+
+    // PROPERTY FILTER
+    if (agencyTarget === AgencyTargetType.PROPERTIES) {
+      filter.status = {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      };
+
+      if (location) {
+        filter.$or = [
+          { "address.street": { $regex: location, $options: "i" } },
+          {
+            "address.district": { $regex: location, $options: "i" },
+          },
+          {
+            "address.city": { $regex: location, $options: "i" },
+          },
+          { "address.country": { $regex: location, $options: "i" } },
+        ];
+      }
+    }
+  }
+  private generateLimitedItemsSearch = (
+    filter: T,
+    sort: T,
+    input: CommonPageInput
+  ) => {
+    const { page, limit } = input;
+    return [
+      {
+        $match: {
+          $expr: {
+            $eq: ["$agencyId", "$$agencyId"],
+          },
+          ...filter,
+        },
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $skip: (page - 1) * limit,
+      },
+      {
+        $limit: limit,
+      },
+    ];
+  };
+  private generateShortSearch = (filter: T) => {
+    return [
+      {
+        $match: {
+          $expr: {
+            $eq: ["$agencyId", "$$agencyId"],
+          },
+          ...filter,
+        },
+      },
+    ];
+  };
 }
 
 export default AgencyService;
