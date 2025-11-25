@@ -94,5 +94,5 @@ export interface AgentDetailType {
 
 export interface AgentPropertiesInput extends CommonPageInput {
   agentPropertyType?: AgentPropertyType;
-  searchInput?: string;
+  searchLocation?: string;
 }

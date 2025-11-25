@@ -2,9 +2,10 @@ import express from "express";
 import memberController from "../controllers/member.controller";
 import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
-import { allowRoles } from "../libs/config";
 import commentController from "../controllers/Comment.controller";
 import blogController from "../controllers/Blog.controller";
+import { allowRoles } from "../middlewares/allowRoles";
+import uploadFiles from "../middlewares/uploadFile";
 const member = express.Router();
 
 //////////////////// -- SIGNUP --//////////////////////////
@@ -25,7 +26,7 @@ member.get(
 member.post(
   "/update",
   memberController.verifyMember,
-  memberController.uploadMemberImage,
+  uploadFiles("members", "avatar", 1, true),
   memberController.updateMember
 );
 
@@ -49,5 +50,6 @@ member.post(
     MemberType.AGENT,
     MemberType.REAL_ESTATE_ADMIN
   ),
+  uploadFiles("blogs", "blogImage", 1, true),
   blogController.postBlog
 );

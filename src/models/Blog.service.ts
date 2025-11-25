@@ -213,7 +213,7 @@ class BlogService {
     ]);
 
     if (!result.blogs.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
     }
 
     return result;

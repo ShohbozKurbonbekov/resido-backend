@@ -6,6 +6,7 @@ import { CommonUsers, Social } from "./common";
 export interface uploadFiles {
   videos?: Express.Multer.File[];
   images?: Express.Multer.File[];
+  blogImage?: Express.Multer.File[];
 }
 
 export type UploadRequest = Request<{ id: string }, {}, any> & {

@@ -1,9 +1,9 @@
 import express from "express";
 import memberController from "../controllers/member.controller";
-import { allowRoles } from "../libs/config";
 import { MemberType } from "../libs/enums/member.enum";
 import commentController from "../controllers/Comment.controller";
 import { Message } from "../libs/Errors";
+import { allowRoles } from "../middlewares/allowRoles";
 const comment = express.Router();
 
 /////////////////// -- WRITE COMMENT -- //////////////////

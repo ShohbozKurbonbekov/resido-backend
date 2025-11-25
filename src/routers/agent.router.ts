@@ -1,9 +1,9 @@
 import express from "express";
 import memberController from "../controllers/member.controller";
 import agentController from "../controllers/Agent.controller";
-import { allowRoles } from "../libs/config";
 import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
+import { allowRoles } from "../middlewares/allowRoles";
 const agent = express.Router();
 
 ////////////////////// ---- AGENT DETAIL ---------- //////////////

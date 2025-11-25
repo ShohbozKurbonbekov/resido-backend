@@ -1,12 +1,21 @@
+import fs from "fs";
 import multer from "multer";
 import { v4 } from "uuid";
 import path from "path";
 
 const getTargetImageStorage = (address: string) => {
+  const uploadPath = `./uploads/${address}`;
+
+  // create a folder  if no
+
+  if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
   return multer.diskStorage({
     destination: function (req, file, callback) {
       callback(null, `./uploads/${address}`);
     },
+
     filename: function (req, file, callback) {
       const extension = path.parse(file.originalname).ext;
       const random_name = v4() + extension;

@@ -1,19 +1,23 @@
 import BlogService from "../models/Blog.service";
 import { T } from "../libs/types/common";
-import { ExtendedRequest } from "../libs/types/user";
+import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { BlogInput, BlogSearchInput } from "../libs/types/blog";
 import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { orrangeFiles } from "../libs/utils/orrangeFiles";
 
 const blogController: T = {};
 const blogService = new BlogService();
 
 ///////////// ---- POST BLOG ------------- ////////////
-blogController.postBlog = async (req: ExtendedRequest, res: Response) => {
+blogController.postBlog = async (req: UploadRequest, res: Response) => {
   try {
     const input: BlogInput = req.body;
     const member = req.member;
+    if (req.files?.blogImage?.length) {
+      input.blogImage = orrangeFiles(req.files?.blogImage).join("");
+    }
 
     const result = await blogService.postBlog(member, input);
 

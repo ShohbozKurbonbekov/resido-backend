@@ -1,16 +1,17 @@
 import express from "express";
 import memberController from "../controllers/member.controller";
 import propertyController from "../controllers/Property.controller";
-import { allowRoles } from "../libs/config";
 import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
+import { allowRoles } from "../middlewares/allowRoles";
+import uploadFiles from "../middlewares/uploadFile";
 const property = express.Router();
 
 property.post(
   "/create",
   memberController.verifyMember,
   allowRoles(Message.PROPERTY_CREATE_AGENTS, MemberType.AGENT),
-  propertyController.uploadProperties,
+  uploadFiles("properties", "images", 5, true, true, "videos", 1),
   propertyController.createProperty
 );
 
@@ -19,7 +20,7 @@ property.post(
   "/update/:id",
   memberController.verifyMember,
   allowRoles(Message.PROPERTY_UPDATE_AGENTS, MemberType.AGENT),
-  propertyController.uploadProperties,
+  uploadFiles("properties", "images", 5, true, true, "videos", 1),
   propertyController.updateProperty
 );
 

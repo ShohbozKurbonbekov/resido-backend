@@ -15,7 +15,6 @@ const BlogSchema = new Schema<BlogInput>(
     blogAuthorId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      // refPath: "blogAuthorType",
       index: true,
     },
     blogAuthorType: {
@@ -26,7 +25,7 @@ const BlogSchema = new Schema<BlogInput>(
     blogStatus: {
       type: String,
       enum: BlogStatus,
-      required: true,
+      default: BlogStatus.ACTIVE,
     },
     blogTitle: {
       type: String,

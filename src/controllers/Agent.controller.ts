@@ -106,7 +106,7 @@ agentController.getFeaturedAgents = async (req: Request, res: Response) => {
 agentController.getAgentProperties = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { page, limit, agentPropertyType, searchInput } = req.body;
+    const { page, limit, agentPropertyType, searchLocation } = req.body;
     const inqueries: AgentPropertiesInput = {
       page: Number(page),
       limit: Number(limit),
@@ -115,8 +115,8 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
     if (agentPropertyType !== AgentPropertyType.NONE) {
       inqueries.agentPropertyType = agentPropertyType;
     }
-    if (searchInput) {
-      inqueries.searchInput = searchInput;
+    if (searchLocation) {
+      inqueries.searchLocation = searchLocation;
     }
 
     const agentId = shapeIntoMongooseObjectId(id);

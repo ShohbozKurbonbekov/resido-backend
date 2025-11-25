@@ -86,25 +86,6 @@ propertyController.updateProperty = async (
   }
 };
 
-/////////////////// ---------- UPLOAD PROPERTIES ---------------- /////////////////////////////////
-propertyController.uploadProperties = (
-  req: ExtendedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  const upload = makeUploader("properties").fields([
-    { name: "images", maxCount: 5 },
-    { name: "videos", maxCount: 1 },
-  ]);
-
-  upload(req, res, (error: any) => {
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-    next();
-  });
-};
-
 /////////////////// ------- GET RECENT PROPERTIES FOR RENT -------------- ///////////////////////
 propertyController.getRecentPropertiesForRent = async (
   req: Request,

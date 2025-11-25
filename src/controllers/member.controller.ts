@@ -213,49 +213,5 @@ memberController.checkMemberAuth = async (
     next();
   }
 };
-//////////////////// -------- UPLOAD IMAGE ------------- //////////////////////
-memberController.uploadMemberImage = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const upload = makeUploader("members").single("avatar");
-
-  upload(req, res, (error: any) => {
-    if (error) {
-      res.status(400).json({
-        error: error.message,
-      });
-    }
-
-    next();
-  });
-};
-
-///////////////// ALLOW ONLY USERS /////////////////
-memberController.allowOnlyUsers = async (
-  req: ExtendedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    console.log("member data: ", req.member);
-    console.log("only users are allowed into the next page");
-    const memberType = req.member?.role;
-
-    if (memberType === MemberType.USER) {
-      next();
-    } else {
-      throw new Errors(HttpCode.FORBIDDEN, Message.ONLY_USERS);
-    }
-  } catch (error) {
-    console.log("Error in allowOnlyUsers process: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
 
 export default memberController;

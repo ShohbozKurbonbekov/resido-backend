@@ -451,13 +451,18 @@ class AgentService {
       }
     }
 
-    if (input.searchInput) {
-      propertyFilter["title"] = {
-        $regex: input.searchInput,
-        $options: "i",
-      };
+    if (input.searchLocation) {
+      propertyFilter.$or = [
+        { "address.street": { $regex: input.searchLocation, $options: "i" } },
+        {
+          "address.district": { $regex: input.searchLocation, $options: "i" },
+        },
+        {
+          "address.city": { $regex: input.searchLocation, $options: "i" },
+        },
+        { "address.country": { $regex: input.searchLocation, $options: "i" } },
+      ];
     }
-
     const sort: T = {
       createdAt: -1,
     };
