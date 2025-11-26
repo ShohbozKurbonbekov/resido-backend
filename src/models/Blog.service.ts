@@ -160,6 +160,12 @@ class BlogService {
             ? "User"
             : String(member.role)[0].toUpperCase() +
               member.role.slice(1).toLowerCase(),
+        blogAuthor: {
+          authorName:
+            blogger?.memberName && blogger?.fullName && blogger?.nickname,
+          socials: blogger?.socialLinks && blogger?.socials,
+          bioInfo: blogger?.bioInfo ?? blogger?.memberDescription,
+        },
       });
 
       return result;
@@ -336,8 +342,6 @@ class BlogService {
                 preserveNullAndEmptyArrays: true,
               },
             },
-
-            commentLookup,
           ],
           trendingBlogs: [
             {

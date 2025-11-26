@@ -10,7 +10,6 @@ const blog = express.Router();
 blog.get(
   "/:id",
   memberController.checkMemberAuth,
-
   blogController.getBlogDetail
 );
 

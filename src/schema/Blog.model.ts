@@ -1,10 +1,30 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
-import { BlogInput } from "../libs/types/blog";
+import { BlogAuthor, BlogInput } from "../libs/types/blog";
 import {
   BlogAuthorType,
   BlogCategory,
   BlogStatus,
 } from "../libs/enums/blog.enum";
+import { SocialsSchema } from "../../src/libs/utils/SocialsSchema";
+
+const BlogAuthorSchema = new Schema<BlogAuthor>(
+  {
+    authorName: {
+      type: String,
+      required: true,
+    },
+    bioInfo: {
+      type: String,
+    },
+    socials: {
+      type: SocialsSchema,
+      required: true,
+    },
+  },
+  {
+    _id: false,
+  }
+);
 
 const BlogSchema = new Schema<BlogInput>(
   {
@@ -69,6 +89,10 @@ const BlogSchema = new Schema<BlogInput>(
     },
     blogShortInfo: {
       type: String,
+      required: true,
+    },
+    blogAuthor: {
+      type: BlogAuthorSchema,
       required: true,
     },
   },

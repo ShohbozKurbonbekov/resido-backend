@@ -4,17 +4,8 @@ import { Agent } from "../../libs/types/agent";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import bcrypt from "bcrypt";
 import { AgentStatus } from "../../libs/enums/agent.enum";
+import { SocialsSchema } from "../../libs/utils/SocialsSchema";
 
-const AgentSocials = new Schema(
-  {
-    facebook: { type: String, default: null },
-    twitter: { type: String, default: null },
-    instagram: { type: String, default: null },
-    linkedin: { type: String, default: null },
-    email: { type: String, default: null },
-  },
-  { _id: false }
-);
 const AgentSchema = new Schema<Agent>(
   {
     agencyId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -124,7 +115,7 @@ const AgentSchema = new Schema<Agent>(
       default: 0,
     },
     socialLinks: {
-      type: AgentSocials,
+      type: SocialsSchema,
       required: true,
     },
     isVerified: {

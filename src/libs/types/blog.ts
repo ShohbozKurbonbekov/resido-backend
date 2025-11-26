@@ -2,8 +2,13 @@ import { ObjectId } from "mongoose";
 import { BlogAuthorType, BlogCategory, BlogStatus } from "../enums/blog.enum";
 import { TotalCounter } from "./property";
 import { BlogDoc } from "../../schema/Blog.model";
-import { CommonPageInput } from "./common";
+import { CommonPageInput, Social } from "./common";
 
+export interface BlogAuthor {
+  authorName: string;
+  socials: Social;
+  bioInfo?: string;
+}
 export interface BlogInput {
   _id?: ObjectId;
   blogAuthorType: BlogAuthorType;
@@ -22,6 +27,7 @@ export interface BlogInput {
   createdAt?: Date;
   updatedAt?: Date;
   averageRating?: number;
+  blogAuthor: BlogAuthor;
 }
 
 export interface BlogSearchType {
