@@ -5,6 +5,7 @@ import { BlogDoc } from "../../schema/Blog.model";
 import { CommonPageInput, Social } from "./common";
 
 export interface BlogAuthor {
+  authorAvatar?: string;
   authorName: string;
   socials: Social;
   bioInfo?: string;
@@ -45,6 +46,6 @@ export interface Blogs {
 }
 
 export interface BlogDetailOutput {
-  mainBlog: BlogDoc;
+  mainBlog: BlogDoc | null;
   trendingBlogs: BlogDoc[];
 }

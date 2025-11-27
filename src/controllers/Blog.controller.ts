@@ -14,6 +14,9 @@ const blogService = new BlogService();
 blogController.postBlog = async (req: UploadRequest, res: Response) => {
   try {
     const input: BlogInput = req.body;
+    if (Array.isArray(input.blogTags) && input.blogTags.length) {
+      input.blogTags = JSON.parse(req.body.blogTags);
+    }
     const member = req.member;
     if (req.files?.blogImage?.length) {
       input.blogImage = orrangeFiles(req.files?.blogImage).join("");
@@ -33,10 +36,10 @@ blogController.postBlog = async (req: UploadRequest, res: Response) => {
 };
 
 ////////////////// ---- GET ALL BLOGS ------- //////////////
-blogController.getAllBlogs = async (req: Request, res: Response) => {
+blogController.getAllBlogs = async (req: ExtendedRequest, res: Response) => {
   try {
     console.log("getAllBlogs process");
-
+    const member = req?.member;
     const input: BlogSearchInput = req.body;
     const { page, limit, search, sort } = input;
 
@@ -48,7 +51,7 @@ blogController.getAllBlogs = async (req: Request, res: Response) => {
 
     if (search?.title) query.title = search.title;
     if (search?.category) query.category = search.category;
-    const result = await blogService.getAllBlogs(query);
+    const result = await blogService.getAllBlogs(member, query);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

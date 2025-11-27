@@ -15,7 +15,11 @@ blog.get(
 
 //////////////////////// -- GETBLOGS -- /////////////////
 
-blog.post("/get/all", blogController.getAllBlogs);
+blog.post(
+  "/get/all",
+  memberController.checkMemberAuth,
+  blogController.getAllBlogs
+);
 
 ///////////////// -- LIKE TARGET BLOG -- ///////////////
 blog.post(

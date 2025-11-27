@@ -27,6 +27,7 @@ import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
 import chalk from "chalk";
 import { ObjectId } from "mongoose";
+import likeTargetItem from "../libs/utils/likeTargetItem";
 
 class PropertyService {
   private readonly propertyModel;
@@ -389,40 +390,7 @@ class PropertyService {
       });
     }
     pipeline.push(
-      {
-        $lookup: {
-          from: "likes",
-          let: {
-            targetId: "$_id",
-            userId: shapeIntoMongooseObjectId(member?._id),
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$targetId", "$$targetId"],
-                    },
-
-                    {
-                      $eq: ["$userId", "$$userId"],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "meLiked",
-        },
-      },
-      {
-        $addFields: {
-          meLiked: {
-            $cond: [{ $gt: [{ $size: "$meLiked" }, 0] }, true, false],
-          },
-        },
-      },
+      ...likeTargetItem(member?._id),
       priceValueField,
       famousIndicatorField,
       { $sort: sort },

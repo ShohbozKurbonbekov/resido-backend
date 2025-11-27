@@ -27,6 +27,8 @@ import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import chalk from "chalk";
 import { BulkWriteResult } from "mongodb/mongodb";
+import likeTargetItem from "../libs/utils/likeTargetItem";
+import member from "../routers/member.router";
 
 class BlogService {
   private readonly blogModel;
@@ -150,20 +152,21 @@ class BlogService {
     if (!blogger) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-
+    console.log(blogger);
     try {
       const result = await this.blogModel.create({
         ...input,
-        blogAuthorId: member._id,
+        blogAuthorId: blogger?._id,
         blogAuthorType:
-          member.role === MemberType.REAL_ESTATE_ADMIN
+          blogger?.role === MemberType.REAL_ESTATE_ADMIN
             ? "User"
-            : String(member.role)[0].toUpperCase() +
-              member.role.slice(1).toLowerCase(),
+            : String(blogger?.role)[0].toUpperCase() +
+              blogger?.role.slice(1).toLowerCase(),
         blogAuthor: {
+          authorAvatar: blogger?.avatar,
           authorName:
-            blogger?.memberName && blogger?.fullName && blogger?.nickname,
-          socials: blogger?.socialLinks && blogger?.socials,
+            blogger?.memberName ?? blogger?.fullName ?? blogger?.nickname,
+          socials: blogger?.socialLinks ?? blogger?.socials,
           bioInfo: blogger?.bioInfo ?? blogger?.memberDescription,
         },
       });
@@ -176,7 +179,10 @@ class BlogService {
   }
 
   // GET ALL BLOGS
-  public async getAllBlogs(query: T): Promise<Blogs> {
+  public async getAllBlogs(
+    member: CommonUsers | null,
+    query: T
+  ): Promise<Blogs> {
     const { page, limit, title, category, sort } = query;
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -196,13 +202,11 @@ class BlogService {
       createdAt: sort === "DESC" ? -1 : 1,
     };
 
-    const [result] = await this.blogModel.aggregate([
+    const pipeline: any[] = [
       {
         $match: match,
       },
-      {
-        $sort: sortBlog,
-      },
+      ...likeTargetItem(member?._id),
       {
         $facet: {
           blogs: [
@@ -216,7 +220,8 @@ class BlogService {
           totalBlogsNumber: [{ $count: "total" }],
         },
       },
-    ]);
+    ];
+    const [result] = await this.blogModel.aggregate(pipeline);
 
     if (!result.blogs.length) {
       return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
@@ -326,23 +331,7 @@ class BlogService {
     const [result] = await this.blogModel.aggregate([
       {
         $facet: {
-          mainBlog: [
-            { $match: match },
-            {
-              $lookup: {
-                from: collectionName,
-                localField: "blogAuthorId",
-                foreignField: "_id",
-                as: "author",
-              },
-            },
-            {
-              $unwind: {
-                path: "$author",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-          ],
+          mainBlog: [{ $match: match }],
           trendingBlogs: [
             {
               $match: {
@@ -362,11 +351,13 @@ class BlogService {
         },
       },
     ]);
-    console.log("result", result);
-    if (!result) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    if (!result.mainBlog?.length) {
+      return { mainBlog: null, trendingBlogs: [] };
     }
-    return result;
+    return {
+      mainBlog: result?.mainBlog[0],
+      trendingBlogs: result?.trendingBlogs,
+    };
   }
 
   public async getSearchTag(query: T): Promise<Blogs> {

@@ -9,6 +9,9 @@ import { SocialsSchema } from "../../src/libs/utils/SocialsSchema";
 
 const BlogAuthorSchema = new Schema<BlogAuthor>(
   {
+    authorAvatar: {
+      type: String,
+    },
     authorName: {
       type: String,
       required: true,

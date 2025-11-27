@@ -27,7 +27,7 @@ class LikeService {
       try {
         await this.likeModel.create(input);
       } catch (error) {
-        console.log("Error in LikeService");
+        console.log("Error in LikeService: ", error);
         throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
       }
     }
