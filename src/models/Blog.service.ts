@@ -26,9 +26,8 @@ import { LikeGroup } from "../libs/enums/like.enum";
 import { View, ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import chalk from "chalk";
-import { BulkWriteResult } from "mongodb/mongodb";
 import likeTargetItem from "../libs/utils/likeTargetItem";
-import member from "../routers/member.router";
+import { pipeline } from "stream";
 
 class BlogService {
   private readonly blogModel;
@@ -296,6 +295,7 @@ class BlogService {
       blogStatus: BlogStatus.ACTIVE,
       _id: blogId,
     };
+
     const target = await this.blogModel.findOne(match);
     if (!target) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
@@ -323,18 +323,38 @@ class BlogService {
       }
     }
 
-    const collectionName =
-      target.blogAuthorType === BlogAuthorType.AGENCY
-        ? "agencies"
-        : target.blogAuthorType.toLowerCase() + "s";
-
-    const [result] = await this.blogModel.aggregate([
+    const pipeline: any[] = [
       {
         $facet: {
-          mainBlog: [{ $match: match }],
+          mainBlog: [{ $match: match }, ...likeTargetItem(member?._id)],
+          prevBlog: [
+            {
+              $match: {
+                blogStatus: BlogStatus.ACTIVE,
+                createdAt: {
+                  $lt: target?.createdAt,
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          nextBlog: [
+            {
+              $match: {
+                blogStatus: BlogStatus.ACTIVE,
+                createdAt: {
+                  $gt: target?.createdAt,
+                },
+              },
+            },
+            { $sort: { createdAt: 1 } },
+            { $limit: 1 },
+          ],
           trendingBlogs: [
             {
               $match: {
+                blogStatus: BlogStatus.ACTIVE,
                 isTrending: true,
               },
             },
@@ -350,18 +370,20 @@ class BlogService {
           ],
         },
       },
-    ]);
-    if (!result.mainBlog?.length) {
-      return { mainBlog: null, trendingBlogs: [] };
-    }
+    ];
+    const [result] = await this.blogModel.aggregate(pipeline);
+
     return {
-      mainBlog: result?.mainBlog[0],
+      mainBlog: {
+        ...result?.mainBlog[0],
+        prevBlog: result?.prevBlog[0] ?? null,
+        nextBlog: result?.nextBlog[0] ?? null,
+      },
       trendingBlogs: result?.trendingBlogs,
     };
   }
 
   public async getSearchTag(query: T): Promise<Blogs> {
-    console.log("Query", query);
     const { page, limit, tag } = query;
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -437,7 +459,7 @@ class BlogService {
         },
         { $sort: sort },
         {
-          $limit: 1,
+          $limit: 2,
         },
       ])
       .exec();

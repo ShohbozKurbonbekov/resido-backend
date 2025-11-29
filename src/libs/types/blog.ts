@@ -45,7 +45,12 @@ export interface Blogs {
   totalBlogsNumber: TotalCounter[];
 }
 
+export interface MainBlogType {
+  blogDetail: BlogDoc;
+  prevBlog: BlogDoc | null;
+  nextBlog: BlogDoc | null;
+}
 export interface BlogDetailOutput {
-  mainBlog: BlogDoc | null;
+  mainBlog: BlogDoc;
   trendingBlogs: BlogDoc[];
 }
