@@ -163,9 +163,8 @@ blogController.saveTargetBlog = async (req: ExtendedRequest, res: Response) => {
     console.log("save targetBlog proccess");
     const { id } = req.params;
     const blogId = shapeIntoMongooseObjectId(id);
-    const { targetId } = req.body;
     const query: SavingInput = {
-      targetId: shapeIntoMongooseObjectId(targetId),
+      targetId: shapeIntoMongooseObjectId(blogId),
       targetGroup: TargetGroup.BLOG,
       userId: shapeIntoMongooseObjectId(req?.member?._id),
     };

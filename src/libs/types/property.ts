@@ -89,6 +89,7 @@ export interface PropertyInput {
   status?: PropertyStatus;
   totalLikes?: number;
   totalComments?: number;
+  totalSavings: number;
   featuredScore?: number;
   recentBoost?: number;
   daysSinceCreated?: number;

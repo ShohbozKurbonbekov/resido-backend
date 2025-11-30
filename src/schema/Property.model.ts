@@ -184,6 +184,10 @@ const PropertySchema = new Schema<PropertyInput>(
       type: Number,
       default: 0,
     },
+    totalSavings: {
+      type: Number,
+      default: 0,
+    },
     featuredScore: {
       type: Number,
       default: 0,

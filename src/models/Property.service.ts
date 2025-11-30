@@ -28,16 +28,21 @@ import LikeService from "./Like.service";
 import chalk from "chalk";
 import { ObjectId } from "mongoose";
 import likeTargetItem from "../libs/utils/likeTargetItem";
+import { SavingInput } from "../libs/types/userSaving";
+import UserSaving from "./UserSaving.service";
+import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 
 class PropertyService {
   private readonly propertyModel;
   public viewService;
   public likeService;
+  public saveService;
 
   constructor() {
     this.propertyModel = PropertyModel;
     this.viewService = new ViewService();
     this.likeService = new LikeService();
+    this.saveService = new UserSaving();
   }
 
   // UPDATE PROPERTY
@@ -540,6 +545,7 @@ class PropertyService {
               },
             },
             { $unwind: "$agentData" },
+            ...generateMeSavedKey(shapeIntoMongooseObjectId(memberId)),
             priceValueField,
           ],
           trendingProperties: [
@@ -561,6 +567,39 @@ class PropertyService {
     if (!result.mainProperty.length) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
+
+    return result;
+  }
+
+  // SAVE TARGET PROPERTY
+  public async saveTargetProperty(
+    propertyId: ObjectId,
+    query: SavingInput
+  ): Promise<Property> {
+    const match: T = {
+      status: {
+        $in: [
+          PropertyStatus.AVAILABLE,
+          PropertyStatus.RENTED,
+          PropertyStatus.SOLD,
+        ],
+      },
+      _id: propertyId,
+    };
+
+    const target = await this.propertyModel.findOne(match);
+
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const modifier = <number>await this.saveService.toggleSave(query);
+
+    const result = await this.propertyStatsEditor({
+      _id: target._id,
+      modifier,
+      targetKey: "totalSavings",
+    });
 
     return result;
   }

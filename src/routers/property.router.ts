@@ -48,6 +48,13 @@ property.get(
   propertyController.getProperty
 );
 
+//////////////////// -- SAVE TARGET PROPERTY --- ///////////////
+property.get(
+  "/:id/save",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
+  propertyController.saveTargetProperty
+);
 /////////////////// ------ PROPERTY LIKED ---------- ///////////
 
 property.post(

@@ -30,6 +30,7 @@ import likeTargetItem from "../libs/utils/likeTargetItem";
 import { pipeline } from "stream";
 import { SavingInput } from "../libs/types/userSaving";
 import UserSaving from "./UserSaving.service";
+import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 
 class BlogService {
   private readonly blogModel;
@@ -331,7 +332,11 @@ class BlogService {
     const pipeline: any[] = [
       {
         $facet: {
-          mainBlog: [{ $match: match }, ...likeTargetItem(member?._id)],
+          mainBlog: [
+            { $match: match },
+            ...likeTargetItem(member?._id),
+            ...generateMeSavedKey(shapeIntoMongooseObjectId(member._id)),
+          ],
           prevBlog: [
             {
               $match: {

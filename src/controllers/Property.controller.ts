@@ -15,6 +15,8 @@ import makeUploader from "../libs/utils/uploader";
 import buildPropertyInquery from "../libs/utils/buildPropertyInquery";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import { SavingInput } from "../libs/types/userSaving";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -198,4 +200,34 @@ propertyController.likeTargetProperty = async (
     }
   }
 };
+
+//////////////// --- SAVE TARGET PROPERTY -----------------
+propertyController.saveTargetProperty = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("saveTargetProperty process");
+    const { id } = req.params;
+    const propertyId = shapeIntoMongooseObjectId(id);
+    const member = req?.member;
+    const query: SavingInput = {
+      targetGroup: TargetGroup.PROPERTY,
+      targetId: propertyId,
+      userId: shapeIntoMongooseObjectId(member?._id),
+    };
+
+    const result = await propertyService.saveTargetProperty(propertyId, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in saveTargetProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default propertyController;

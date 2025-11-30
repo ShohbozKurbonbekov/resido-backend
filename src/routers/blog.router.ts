@@ -28,7 +28,9 @@ blog.post(
   allowRoles(Message.ONLY_USERS, MemberType.USER),
   blogController.likeTargetBlog
 );
-blog.post(
+
+///////////////////// --- SAVE A SPECIFIC BLOG --////////////
+blog.get(
   "/:id/save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
