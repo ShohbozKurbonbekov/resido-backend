@@ -28,6 +28,8 @@ import { ViewGroup } from "../libs/enums/view.enum";
 import chalk from "chalk";
 import likeTargetItem from "../libs/utils/likeTargetItem";
 import { pipeline } from "stream";
+import { SavingInput } from "../libs/types/userSaving";
+import UserSaving from "./UserSaving.service";
 
 class BlogService {
   private readonly blogModel;
@@ -36,6 +38,7 @@ class BlogService {
   public readonly agentModel;
   public readonly agencyModel;
   public readonly likeService;
+  public readonly saveService;
 
   constructor() {
     this.userModel = UserModel;
@@ -44,6 +47,7 @@ class BlogService {
     this.agentModel = AgentModel;
     this.agencyModel = AgencyModel;
     this.likeService = new LikeService();
+    this.saveService = new UserSaving();
   }
 
   // CALCULATE BLOG FIELD WITH HELPER
@@ -386,6 +390,7 @@ class BlogService {
     };
   }
 
+  // SEARCH BLOG BY A SPECIFIC TAG NAME
   public async getSearchTag(query: T): Promise<Blogs> {
     const { page, limit, tag } = query;
     const match: T = {
@@ -422,6 +427,7 @@ class BlogService {
     return result;
   }
 
+  // GET NEXT OR PREV BLOG
   public async getNeighbouringBlog(query: T): Promise<BlogDoc> {
     const { blogId, direction } = query;
 
@@ -470,6 +476,30 @@ class BlogService {
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
+    return result;
+  }
+
+  // SAVE TARGET BLOG
+  public async saveTargetBlog(
+    blogId: ObjectId,
+    query: SavingInput
+  ): Promise<BlogDoc> {
+    const match: T = {
+      blogStatus: BlogStatus.ACTIVE,
+      _id: blogId,
+    };
+    const target = await this.blogModel.findOne(match);
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    const modifier = <number>await this.saveService.toggleSave(query);
+
+    const result = await this.blogStatsEditor({
+      _id: target?._id,
+      modifier,
+      targetKey: "totalSavings",
+    });
+
     return result;
   }
 }

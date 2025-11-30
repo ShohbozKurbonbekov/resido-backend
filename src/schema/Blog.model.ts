@@ -77,6 +77,10 @@ const BlogSchema = new Schema<BlogInput>(
       type: Number,
       default: 0,
     },
+    totalSavings: {
+      type: Number,
+      default: 0,
+    },
     totalComments: {
       type: Number,
       default: 0,

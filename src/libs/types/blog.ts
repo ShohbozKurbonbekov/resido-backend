@@ -29,6 +29,7 @@ export interface BlogInput {
   updatedAt?: Date;
   averageRating?: number;
   blogAuthor: BlogAuthor;
+  totalSavings: number;
 }
 
 export interface BlogSearchType {

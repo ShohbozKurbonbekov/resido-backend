@@ -28,6 +28,12 @@ blog.post(
   allowRoles(Message.ONLY_USERS, MemberType.USER),
   blogController.likeTargetBlog
 );
+blog.post(
+  "/:id/save",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
+  blogController.saveTargetBlog
+);
 
 ///////////////////--  GET NEIGHBOURING BLOG -- /////////////
 blog.get("/:id/neighbour", blogController.getNeighbouringBlog);

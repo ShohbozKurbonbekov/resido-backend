@@ -26,6 +26,7 @@ UserSaving.index(
   {
     userId: 1,
     targetId: 1,
+    targetGroup: 1,
   },
   { unique: true }
 );

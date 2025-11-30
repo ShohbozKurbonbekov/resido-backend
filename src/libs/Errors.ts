@@ -14,7 +14,6 @@ export enum Message {
   NO_DATA_FOUND = "No data is found",
   CREATING_FAILED = "Creating is failed!",
   UPDATING_FAILED = "Updating is failed!",
-
   TOKEN_CREATION_FAILED = "Token creation error!",
   NO_USERNAME = "No user found with that username",
   BLOCKED_USER = "You have been blocked, Please contact the admin",
@@ -25,6 +24,7 @@ export enum Message {
   INVALID_ROLE = "you are not allowed to request this role",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
   ONLY_USERS = "Sorry, only common users are allowed to like it",
+  ONLY_USERS_SAVE = "Sorry, only common users are allowed to save it",
   ONLY_AGENCY_ADMIN_AGENT = "Only Admin, Agency or Agent are authorized to post a blog",
   NO_MEMBER_FOUND = "No member is found",
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",

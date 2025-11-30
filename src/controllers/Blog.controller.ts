@@ -6,6 +6,8 @@ import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import { SavingInput } from "../libs/types/userSaving";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
 
 const blogController: T = {};
 const blogService = new BlogService();
@@ -147,6 +149,30 @@ blogController.getNeighbouringBlog = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getNeighbouringBlog :", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////// -------------- SAVE TARGET BLOG --------------//////////////
+blogController.saveTargetBlog = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("save targetBlog proccess");
+    const { id } = req.params;
+    const blogId = shapeIntoMongooseObjectId(id);
+    const { targetId } = req.body;
+    const query: SavingInput = {
+      targetId: shapeIntoMongooseObjectId(targetId),
+      targetGroup: TargetGroup.BLOG,
+      userId: shapeIntoMongooseObjectId(req?.member?._id),
+    };
+    const result = await blogService.saveTargetBlog(blogId, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in saveTargetBlog process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
