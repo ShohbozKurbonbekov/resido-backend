@@ -215,6 +215,7 @@ class BlogService {
             {
               $limit: limit,
             },
+            { $sort: sortBlog },
           ],
           totalBlogsNumber: [{ $count: "total" }],
         },
@@ -331,6 +332,7 @@ class BlogService {
             {
               $match: {
                 blogStatus: BlogStatus.ACTIVE,
+                blogCategory: target?.blogCategory,
                 createdAt: {
                   $lt: target?.createdAt,
                 },
@@ -343,6 +345,7 @@ class BlogService {
             {
               $match: {
                 blogStatus: BlogStatus.ACTIVE,
+                blogCategory: target?.blogCategory,
                 createdAt: {
                   $gt: target?.createdAt,
                 },
