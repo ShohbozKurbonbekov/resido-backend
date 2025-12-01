@@ -8,6 +8,9 @@ import { allowRoles } from "../middlewares/allowRoles";
 import uploadFiles from "../middlewares/uploadFile";
 const member = express.Router();
 
+//////////////// --- GET ADMIN -----//////////////////////
+member.get("/admin", memberController.getAdmin);
+
 //////////////////// -- SIGNUP --//////////////////////////
 member.post("/signup", memberController.getSignup);
 export default member;

@@ -3,14 +3,15 @@ import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Request } from "express";
 import { CommonUsers, Social } from "./common";
 
-export interface uploadFiles {
+export interface UploadFiles {
   videos?: Express.Multer.File[];
   images?: Express.Multer.File[];
   blogImage?: Express.Multer.File[];
+  avatar?: Express.Multer.File[];
 }
 
 export type UploadRequest = Request<{ id: string }, {}, any> & {
-  files?: uploadFiles;
+  files?: UploadFiles;
   member: CommonUsers;
 };
 export interface ExtendedRequest extends Request {

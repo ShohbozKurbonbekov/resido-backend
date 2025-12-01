@@ -37,9 +37,6 @@ blog.get(
   blogController.saveTargetBlog
 );
 
-///////////////////--  GET NEIGHBOURING BLOG -- /////////////
-blog.get("/:id/neighbour", blogController.getNeighbouringBlog);
-
 /////////////// --GET BLOGS BY TAG -- //////////////////
 blog.get("/tags/:tag", blogController.blogSearchTag);
 

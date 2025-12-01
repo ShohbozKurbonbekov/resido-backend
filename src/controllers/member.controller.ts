@@ -32,8 +32,24 @@ import { Agency } from "../schema/members/Agency.model";
 const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
+/////////////////////////////// ----- PUBLIC ADMIN ---- ///////////////////////////////////////////////////
+memberController.getAdmin = async (req: Request, res: Response) => {
+  try {
+    console.log("getAdmin proccess");
 
-///////////////////////////////// ----- SIGNUP ---- ///////////////////////////////////////////////////
+    const result = await memberService.getAdmin();
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getting admin: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////////////////// ----- SIGNUP ---- ///////////////////////////////////////////////////
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup access completed");

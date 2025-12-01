@@ -5,6 +5,7 @@ import { AdminRequest } from "../libs/types/admin";
 import Errors, { Message, HttpCode } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
+import { orrangeFiles } from "../libs/utils/orrangeFiles";
 
 const residoAdminController: T = {};
 const adminService = new AdminService();
@@ -78,15 +79,15 @@ residoAdminController.processSignup = async (
   res: Response
 ) => {
   try {
-    console.log("process signup");
-    const file = req.file;
+    console.log("process signup for Admin");
+    const adminAvatar = req.files?.avatar;
 
-    if (!file) {
+    if (!adminAvatar?.length) {
       throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
     }
 
     const input = req.body;
-    input.avatar = file?.path.replace(/\\/g, "/");
+    input.avatar = orrangeFiles(adminAvatar)[0];
     input.role = MemberType.REAL_ESTATE_ADMIN;
 
     const result = await adminService.processSignup(input);
@@ -102,24 +103,6 @@ residoAdminController.processSignup = async (
     res.send(`<script> alert("${message}"); window.location.replace("/admin/signup")
       </script>`);
   }
-};
-
-residoAdminController.uploadMemberImage = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const upload = makeUploader("members").single("avatar");
-
-  upload(req, res, (error: any) => {
-    if (error) {
-      res.status(400).json({
-        error: error.message,
-      });
-    }
-
-    next();
-  });
 };
 
 export default residoAdminController;

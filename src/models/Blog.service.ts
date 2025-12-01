@@ -335,7 +335,7 @@ class BlogService {
           mainBlog: [
             { $match: match },
             ...likeTargetItem(member?._id),
-            ...generateMeSavedKey(shapeIntoMongooseObjectId(member._id)),
+            ...generateMeSavedKey(shapeIntoMongooseObjectId(member?._id)),
           ],
           prevBlog: [
             {

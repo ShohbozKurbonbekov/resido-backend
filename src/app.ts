@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import adminRouter from "./admin-router";
 import cors from "cors";
 import morgan from "morgan";
 import { MORGAN_FORMAT } from "./libs/config";
@@ -14,6 +13,7 @@ import comment from "./routers/comment.router";
 import agent from "./routers/agent.router";
 import agency from "./routers/agency.router";
 import blog from "./routers/blog.router";
+import adminRouter from "./routers/admin-router";
 // SESSION STORE
 const MongoDbStore = ConnectMongoDBSession(session);
 const store = new MongoDbStore({

@@ -42,6 +42,23 @@ class MemberService {
     this.messageModel = MessageModel;
   }
 
+  /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
+  public async getAdmin(): Promise<User> {
+    const match: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const result = await this.userModel.findOne(match).lean().exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
+  }
+
+  /////////////////////////// --  MEMBER SIGN UP -- //////////////////////////////
   public async signup(
     input: UserMemberInput | AgencyMemberInput | MemberAgentInput
   ): Promise<CommonUsers> {
@@ -67,6 +84,8 @@ class MemberService {
       );
     }
   }
+
+  /////////////////////////// --  MEMBER LOGIN -- //////////////////////////////
 
   public async login(input: LoginInput): Promise<User | Agency | Agent> {
     let member: null | Agency | Agent | User = null;
@@ -153,6 +172,7 @@ class MemberService {
     return result;
   }
 
+  /////////////////////////// --  GET MEMBER DETAIL -- //////////////////////////////
   public async getMemberDetail(member: CommonUsers): Promise<CommonUsers> {
     // style 1
     const memberId = shapeIntoMongooseObjectId(member._id);
@@ -184,7 +204,7 @@ class MemberService {
     return result;
   }
 
-  // WRITE A MESSAGE TO USER
+  /////////////////////////// --  WRITE A MESSAGE -- //////////////////////////////
   public async WriteMessageToMember(
     userId: ObjectId,
     input: MessageInput
@@ -232,7 +252,7 @@ class MemberService {
     }
   }
 
-  /// UPDATE A MEMBER
+  /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
   public async updateMember(
     member: CommonUsers,
     input: CommonUsersUpdateInput
