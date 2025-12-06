@@ -36,9 +36,8 @@ import likeTargetItem from "../libs/utils/likeTargetItem";
 import { SavingInput } from "../libs/types/userSaving";
 import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
-import { User } from "../libs/types/user";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
-import UserSavingModel from "../schema/UserSaving.model";
+import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
 
 class PropertyService {
   private readonly propertyModel;
@@ -674,16 +673,38 @@ class PropertyService {
               },
             },
           ],
-          total: [{ $count: "count" }],
+          totalPropertiesNumber: [{ $count: "total" }],
         },
       },
     ]);
 
-    const totalCount = result.total[0]?.count ?? 0;
     return {
       properties: result?.items ?? [],
-      totalPropertiesNumber: totalCount,
+      totalPropertiesNumber: result.totalPropertiesNumber,
     };
+  }
+
+  // DELETE  SAVED PROPERTY
+  public async deleteSavedProperty(
+    targetId: ObjectId,
+    memberId: ObjectId
+  ): Promise<SavingOutput> {
+    const target = await this.propertyModel.findById(targetId);
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    const query: SavingInput = {
+      targetGroup: TargetGroup.PROPERTY,
+      targetId,
+      userId: memberId,
+    };
+
+    const result = await this.saveModel.findOneAndDelete(query);
+
+    if (!result) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.NO_PROPERTIES_DELETE);
+    }
+    return result;
   }
 }
 export default PropertyService;

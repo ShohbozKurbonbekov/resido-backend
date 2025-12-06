@@ -57,11 +57,18 @@ property.get(
 );
 
 //////////////////// -- GET SAVED PROPERTIES --- ///////////////
-property.get(
+property.post(
   "/see/saved-properties",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE_SEE, MemberType.USER),
   propertyController.getSavedProperties
+);
+
+//////////////////// -- DELETE SAVED PROPERTY --- ///////////////
+property.post(
+  "/delete/saved-property",
+  memberController.verifyMember,
+  propertyController.deleteSavedProperty
 );
 /////////////////// ------ PROPERTY LIKED ---------- ///////////
 

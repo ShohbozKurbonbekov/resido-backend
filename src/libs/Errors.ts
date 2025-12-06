@@ -32,6 +32,7 @@ export enum Message {
   PROPERTY_CREATE_AGENTS = "Only agents are authorized to create a property",
   PROPERTY_UPDATE_AGENTS = "Only agents are authorized to update a property",
   NO_COMMENT_TYPE = "No such comment type registered",
+  NO_PROPERTIES_DELETE = "No property found to delete!",
 }
 
 class Errors extends Error {
