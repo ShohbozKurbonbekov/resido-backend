@@ -78,10 +78,7 @@ class MemberService {
       return result.toObject();
     } catch (error) {
       console.log("Error in userSignup service model", error);
-      throw new Errors(
-        HttpCode.BAD_REQUEST,
-        Message.USED_USERNAME_PHONE_PASSWORD
-      );
+      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
   }
 

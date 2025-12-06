@@ -38,6 +38,6 @@ blog.get(
 );
 
 /////////////// --GET BLOGS BY TAG -- //////////////////
-blog.get("/tags/:tag", blogController.blogSearchTag);
+blog.get("/tags/related", blogController.blogSearchTag);
 
 export default blog;

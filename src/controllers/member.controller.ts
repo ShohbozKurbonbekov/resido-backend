@@ -52,7 +52,7 @@ memberController.getAdmin = async (req: Request, res: Response) => {
 /////////////////////////////// ----- SIGNUP ---- ///////////////////////////////////////////////////
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
-    console.log("signup access completed");
+    console.log("signup process");
     const input: UserMemberInput | AgencyMemberInput | MemberAgentInput =
       req.body;
     let result: CommonUsers = await memberService.signup(input);

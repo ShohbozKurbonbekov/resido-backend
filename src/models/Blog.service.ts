@@ -1,7 +1,12 @@
 import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import ViewService from "./View.service";
-import { BlogDetailOutput, BlogInput, Blogs } from "../libs/types/blog";
+import {
+  BlogDetailOutput,
+  BlogInput,
+  Blogs,
+  SearchBlogTags,
+} from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
 import AgentModel from "../schema/members/Agent.model";
 import AgencyModel from "../schema/members/Agency.model";
@@ -396,40 +401,16 @@ class BlogService {
   }
 
   // SEARCH BLOG BY A SPECIFIC TAG NAME
-  public async getSearchTag(query: T): Promise<Blogs> {
-    const { page, limit, tag } = query;
-    const match: T = {
-      blogStatus: BlogStatus.ACTIVE,
-      blogTags: { $in: [tag] },
-    };
-    const sort: T = {
-      createdAt: -1,
-    };
+  public async getSearchTag(tag: string): Promise<SearchBlogTags> {
+    const blogs = await this.blogModel
+      .find({
+        blogStatus: BlogStatus.ACTIVE,
+        blogTags: { $in: [new RegExp(`^${tag}$`, "i")] },
+      })
+      .sort({ createdAt: -1 })
+      .limit(6);
 
-    const [result] = await this.blogModel.aggregate([
-      { $match: match },
-      {
-        $sort: sort,
-      },
-      {
-        $facet: {
-          blogs: [
-            {
-              $skip: (page - 1) * limit,
-            },
-            {
-              $limit: limit,
-            },
-          ],
-          totalBlogsNumber: [{ $count: "total" }],
-        },
-      },
-    ]);
-
-    if (!result.blogs.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-    return result;
+    return { blogs };
   }
 
   // GET NEXT OR PREV BLOG

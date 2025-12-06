@@ -15,10 +15,9 @@ const blogService = new BlogService();
 ///////////// ---- POST BLOG ------------- ////////////
 blogController.postBlog = async (req: UploadRequest, res: Response) => {
   try {
+    const parsedTags = req.body.blogTags ? JSON.parse(req.body.blogTags) : [];
     const input: BlogInput = req.body;
-    if (Array.isArray(input.blogTags) && input.blogTags.length) {
-      input.blogTags = JSON.parse(req.body.blogTags);
-    }
+    input.blogTags = parsedTags;
     const member = req.member;
     if (req.files?.blogImage?.length) {
       input.blogImage = orrangeFiles(req.files?.blogImage).join("");
@@ -110,15 +109,8 @@ blogController.getBlogDetail = async (req: ExtendedRequest, res: Response) => {
 blogController.blogSearchTag = async (req: Request, res: Response) => {
   try {
     console.log("blogSearchTag process");
-    const { tag } = req.params;
-    const { limit, page } = req.query;
-    const query: T = {
-      limit: Number(limit) || 1,
-      page: Number(page) || 6,
-      tag,
-    };
-
-    const result = await blogService.getSearchTag(query);
+    const { tag } = req.query;
+    const result = await blogService.getSearchTag(String(tag));
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

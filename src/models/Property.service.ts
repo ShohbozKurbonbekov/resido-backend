@@ -11,7 +11,12 @@ import {
 import PropertyModel, { Property } from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
-import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  StatisticsModifier,
+  T,
+} from "../libs/types/common";
 import {
   priceValueField,
   famousIndicatorField,
@@ -31,18 +36,23 @@ import likeTargetItem from "../libs/utils/likeTargetItem";
 import { SavingInput } from "../libs/types/userSaving";
 import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
+import { User } from "../libs/types/user";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
+import UserSavingModel from "../schema/UserSaving.model";
 
 class PropertyService {
   private readonly propertyModel;
   public viewService;
   public likeService;
   public saveService;
+  private readonly saveModel;
 
   constructor() {
     this.propertyModel = PropertyModel;
     this.viewService = new ViewService();
     this.likeService = new LikeService();
     this.saveService = new UserSaving();
+    this.saveModel = UserSavingModel;
   }
 
   // UPDATE PROPERTY
@@ -602,6 +612,78 @@ class PropertyService {
     });
 
     return result;
+  }
+
+  // GET SAVED PROPERTIES
+  public async getSavedProperties(
+    user: CommonUsers,
+    query: CommonPageInput
+  ): Promise<Properties> {
+    const { limit, page } = query;
+    const match: T = {
+      userId: shapeIntoMongooseObjectId(user._id),
+      targetGroup: TargetGroup.PROPERTY,
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.saveModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          items: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "properties",
+                localField: "targetId",
+                foreignField: "_id",
+                as: "property",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      title: 1,
+                      address: 1,
+                      sellingOption: 1,
+                      images: 1,
+                      createdAt: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $unwind: {
+                path: "$property",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$property",
+              },
+            },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const totalCount = result.total[0]?.count ?? 0;
+    return {
+      properties: result?.items ?? [],
+      totalPropertiesNumber: totalCount,
+    };
   }
 }
 export default PropertyService;

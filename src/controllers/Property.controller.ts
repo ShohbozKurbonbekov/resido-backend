@@ -1,7 +1,7 @@
 import PropertyService from "../models/Property.service";
-import { CommonUsers, T } from "../libs/types/common";
+import { CommonPageInput, CommonUsers, T } from "../libs/types/common";
 import { NextFunction, Request, Response } from "express";
-import { ExtendedRequest, UploadRequest } from "../libs/types/user";
+import { ExtendedRequest, UploadRequest, User } from "../libs/types/user";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import {
   FeaturedPropertyInput,
@@ -162,7 +162,6 @@ propertyController.getProperty = async (
     console.log("getProperty Process");
     const propertyId = shapeIntoMongooseObjectId(req.params.id);
     const memberId = shapeIntoMongooseObjectId(req.member?._id);
-
     const result = await propertyService.getProperty(memberId, propertyId);
 
     res.status(HttpCode.OK).json(result);
@@ -222,6 +221,33 @@ propertyController.saveTargetProperty = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in saveTargetProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////// --- GET SAVED PROPERTIES -----------------
+propertyController.getSavedProperties = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log(" getSavedProperties proccess");
+
+    const user = req.member;
+    const { page, limit } = req.body;
+    const query: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 4,
+    };
+
+    const result = await propertyService.getSavedProperties(user, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getting saved properties: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

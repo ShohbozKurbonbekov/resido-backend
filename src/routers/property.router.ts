@@ -55,6 +55,14 @@ property.get(
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
   propertyController.saveTargetProperty
 );
+
+//////////////////// -- GET SAVED PROPERTIES --- ///////////////
+property.get(
+  "/see/saved-properties",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_SAVE_SEE, MemberType.USER),
+  propertyController.getSavedProperties
+);
 /////////////////// ------ PROPERTY LIKED ---------- ///////////
 
 property.post(

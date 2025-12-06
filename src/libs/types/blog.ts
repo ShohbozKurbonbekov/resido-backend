@@ -55,3 +55,7 @@ export interface BlogDetailOutput {
   mainBlog: BlogDoc;
   trendingBlogs: BlogDoc[];
 }
+
+export interface SearchBlogTags {
+  blogs: BlogDoc[];
+}
