@@ -43,6 +43,11 @@ const AgentSchema = new Schema<Agent>(
       type: Number,
       defualt: 0,
     },
+
+    totalSavings: {
+      type: Number,
+      default: 0,
+    },
     averageRating: {
       type: Number,
       default: 0,

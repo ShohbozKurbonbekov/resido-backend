@@ -52,6 +52,7 @@ export interface Agent {
   totalComments: number;
   views: number;
   totalLikes: number;
+  totalSavings: number;
   averageRating: number;
   featuredScore?: number;
   rank?: string;

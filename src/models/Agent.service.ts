@@ -13,7 +13,11 @@ import { MemberStatus } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
 import { ObjectId } from "mongoose";
-import { addTotCommentsAvRatingFields, commentLookup } from "../libs/config";
+import {
+  addTotCommentsAvRatingFields,
+  commentLookup,
+  shapeIntoMongooseObjectId,
+} from "../libs/config";
 import { ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
@@ -23,16 +27,21 @@ import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
 import { AgentPropertyType, AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
+import { SavingInput } from "../libs/types/userSaving";
+import UserSaving from "./UserSaving.service";
+import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 
 class AgentService {
   private readonly agentModel;
   public readonly viewService;
   public readonly likeService;
+  public readonly saveService;
 
   constructor() {
     this.agentModel = AgentModel;
     this.viewService = new ViewService();
     this.likeService = new LikeService();
+    this.saveService = new UserSaving();
   }
 
   // UPDATE AGENT FIELDS
@@ -221,6 +230,7 @@ class AgentService {
 
     let result = await this.agentModel.aggregate([
       { $match: match },
+      ...generateMeSavedKey(shapeIntoMongooseObjectId(member?._id)),
       {
         $lookup: {
           from: "properties",
@@ -346,6 +356,32 @@ class AgentService {
       _id: agentId,
       targetKey: "totalLikes",
       modifier,
+    });
+
+    return result;
+  }
+
+  // SAVE TARGET BLOG
+  public async saveTargetAgent(
+    agentId: ObjectId,
+    query: SavingInput
+  ): Promise<Agent> {
+    const match: T = {
+      currentStatus: AgentStatus.AVAILABLE,
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agentId,
+    };
+
+    const target = await this.agentModel.findOne(match);
+    if (!target) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    const modifier = <number>await this.saveService.toggleSave(query);
+
+    const result = await this.agentStatsEditor({
+      _id: target._id,
+      modifier,
+      targetKey: "totalSavings",
     });
 
     return result;

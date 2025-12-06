@@ -12,6 +12,8 @@ agent.get(
   memberController.checkMemberAuth,
   agentController.getAgentDetail
 );
+
+//////////////////// ---------- AGENT PROPERTIES ---- ////////////////
 agent.post("/:id/properties", agentController.getAgentProperties);
 
 ////////////////// -- GET FEATURED AGENTS -- ////////////////
@@ -27,6 +29,14 @@ agent.post(
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS, MemberType.USER),
   agentController.likeTargetAgent
+);
+
+///////////////////// --- SAVE A SPECIFIC BLOG --////////////
+agent.get(
+  "/:id/save",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
+  agentController.saveTargetAgent
 );
 
 export default agent;

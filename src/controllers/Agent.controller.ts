@@ -12,6 +12,8 @@ import { ExtendedRequest } from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { ObjectId } from "mongoose";
 import { AgentPropertyType } from "../libs/enums/agent.enum";
+import { SavingInput } from "../libs/types/userSaving";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -124,6 +126,32 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getAgentProperties process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////// -------------- SAVE TARGET BLOG --------------//////////////
+agentController.saveTargetAgent = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("save targetAgent proccess");
+    const { id } = req.params;
+    const agentId = shapeIntoMongooseObjectId(id);
+    const query: SavingInput = {
+      targetId: shapeIntoMongooseObjectId(agentId),
+      targetGroup: TargetGroup.AGENT,
+      userId: shapeIntoMongooseObjectId(req?.member?._id),
+    };
+    const result = await agentService.saveTargetAgent(agentId, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in saveTargetBlog process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
