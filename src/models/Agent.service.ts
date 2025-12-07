@@ -2,13 +2,19 @@ import {
   Agent,
   AgentDetailType,
   AgentPropertiesInput,
+  AgentResults,
   FeaturedAgentsInput,
   FeaturedAgentsResult,
   SearchByLocationInput,
   SearchByLocationResult,
 } from "../libs/types/agent";
 import AgentModel from "../schema/members/Agent.model";
-import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  StatisticsModifier,
+  T,
+} from "../libs/types/common";
 import { MemberStatus } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
@@ -30,18 +36,22 @@ import { PropertyStatus } from "../libs/enums/property.enum";
 import { SavingInput } from "../libs/types/userSaving";
 import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
+import UserSavingModel from "../schema/UserSaving.model";
 
 class AgentService {
   private readonly agentModel;
   public readonly viewService;
   public readonly likeService;
   public readonly saveService;
+  public readonly saveModel;
 
   constructor() {
     this.agentModel = AgentModel;
     this.viewService = new ViewService();
     this.likeService = new LikeService();
     this.saveService = new UserSaving();
+    this.saveModel = UserSavingModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -385,6 +395,139 @@ class AgentService {
     });
 
     return result;
+  }
+
+  // GET FOLLOWED AGENTS
+  public async getFollowedAgents(
+    user: CommonUsers,
+    query: CommonPageInput
+  ): Promise<AgentResults> {
+    const { limit, page } = query;
+    const match: T = {
+      userId: shapeIntoMongooseObjectId(user._id),
+      targetGroup: TargetGroup.AGENT,
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.saveModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          items: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "agents",
+                localField: "targetId",
+                foreignField: "_id",
+                as: "agent",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      agencyId: 1,
+                      nickname: 1,
+                      fullName: 1,
+                      averageRating: 1,
+                      totalSavings: 1,
+                      avatar: 1,
+                      createdAt: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $unwind: {
+                path: "$agent",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$agent",
+              },
+            },
+            {
+              $lookup: {
+                from: "properties",
+                let: {
+                  agentId: "$_id",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$agentId", "$$agentId"],
+                      },
+                    },
+                  },
+                  {
+                    $count: "count",
+                  },
+                ],
+                as: "overalProperties",
+              },
+            },
+            {
+              $lookup: {
+                from: "agencies",
+                localField: "agencyId",
+                foreignField: "_id",
+                as: "agency",
+                pipeline: [
+                  {
+                    $project: {
+                      memberName: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $unwind: {
+                path: "$agency",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                propertiesNumber: {
+                  $ifNull: [
+                    { $arrayElemAt: ["$overalProperties.count", 0] },
+                    0,
+                  ],
+                },
+                agencyName: "$agency.memberName",
+              },
+            },
+
+            {
+              $project: {
+                overalProperties: 0,
+                agency: 0,
+              },
+            },
+          ],
+          totalNumbers: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    return {
+      agents: result?.items ?? [],
+      totalNumbers: result?.totalNumbers,
+    };
   }
 
   // GET FEATURED AGENTS

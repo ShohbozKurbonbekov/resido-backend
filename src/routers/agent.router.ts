@@ -39,4 +39,12 @@ agent.get(
   agentController.saveTargetAgent
 );
 
+//////////////////// -- GET FOLLOWED AGENTS --- ///////////////
+agent.post(
+  "/see/followed-agents",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_FOLLOW, MemberType.USER),
+  agentController.getFollowedAgents
+);
+
 export default agent;

@@ -1,5 +1,5 @@
 import AgentService from "../models/Agent.service";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { Request, Response } from "express";
 import {
@@ -152,6 +152,33 @@ agentController.saveTargetAgent = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in saveTargetBlog process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////// --- GET SAVED PROPERTIES -----------------
+agentController.getFollowedAgents = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("getFollowedAgents proccess");
+
+    const user = req.member;
+    const { page, limit } = req.body;
+    const query: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 4,
+    };
+
+    const result = await agentService.getFollowedAgents(user, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getting getFollowedAgents: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

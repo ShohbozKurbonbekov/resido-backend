@@ -26,6 +26,7 @@ export enum Message {
   ONLY_USERS = "Sorry, only common users are allowed to like it",
   ONLY_USERS_SAVE = "Sorry, only common users are allowed to save it",
   ONLY_USERS_SAVE_SEE = "Sorry, only common users are allowed to see saved ones",
+  ONLY_USERS_FOLLOW = "Only common users are allowed to follow an agent",
   ONLY_AGENCY_ADMIN_AGENT = "Only Admin, Agency or Agent are authorized to post a blog",
   NO_MEMBER_FOUND = "No member is found",
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",
