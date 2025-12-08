@@ -47,4 +47,11 @@ agent.post(
   agentController.getFollowedAgents
 );
 
+//////////////////// -- UNFOLLOW SAVED AGENT --- ///////////////
+agent.post(
+  "/unfollow/followed-agent",
+  memberController.verifyMember,
+  agentController.unFollowAgent
+);
+
 export default agent;

@@ -76,8 +76,20 @@ export interface AgentInputUpdate {
   avatar?: string;
 }
 
+export interface FollowedAgent {
+  _id: string;
+  agencyId: string;
+  nickname: string;
+  fullName: string;
+  averageRating: number;
+  createdAt: number;
+  totalSavings: number;
+  propertiesNumber: number;
+  avatar?: string;
+}
+
 export interface AgentResults {
-  agents: Agent[];
+  agents: FollowedAgent[];
   totalNumbers: TotalCounter[];
 }
 
