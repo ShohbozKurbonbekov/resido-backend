@@ -33,10 +33,10 @@ agent.post(
 
 ///////////////////// --- SAVE A SPECIFIC BLOG --////////////
 agent.get(
-  "/:id/save",
+  "/:id/toggle-save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
-  agentController.saveTargetAgent
+  agentController.saveToggleAgent
 );
 
 //////////////////// -- GET FOLLOWED AGENTS --- ///////////////
@@ -45,13 +45,6 @@ agent.post(
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_FOLLOW, MemberType.USER),
   agentController.getFollowedAgents
-);
-
-//////////////////// -- UNFOLLOW SAVED AGENT --- ///////////////
-agent.post(
-  "/unfollow/followed-agent",
-  memberController.verifyMember,
-  agentController.unFollowAgent
 );
 
 export default agent;

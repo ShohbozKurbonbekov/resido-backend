@@ -372,7 +372,7 @@ class AgentService {
   }
 
   // SAVE TARGET BLOG
-  public async saveTargetAgent(
+  public async saveToggleAgent(
     agentId: ObjectId,
     query: SavingInput
   ): Promise<Agent> {
@@ -528,29 +528,6 @@ class AgentService {
       agents: result?.items ?? [],
       totalNumbers: result?.totalNumbers,
     };
-  }
-
-  // UNFOLLOW  SAVED AGENT
-  public async unFollowAgent(
-    targetId: ObjectId,
-    memberId: ObjectId
-  ): Promise<SavingOutput> {
-    const target = await this.agentModel.findById(targetId);
-    if (!target) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-    const query: SavingInput = {
-      targetGroup: TargetGroup.AGENT,
-      targetId,
-      userId: memberId,
-    };
-
-    const result = await this.saveModel.findOneAndDelete(query);
-
-    if (!result) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.NO_PROPERTIES_DELETE);
-    }
-    return result;
   }
 
   // GET FEATURED AGENTS

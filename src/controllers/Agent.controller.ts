@@ -135,23 +135,23 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
 };
 
 ////////////// -------------- SAVE TARGET BLOG --------------//////////////
-agentController.saveTargetAgent = async (
+agentController.saveToggleAgent = async (
   req: ExtendedRequest,
   res: Response
 ) => {
   try {
-    console.log("save targetAgent proccess");
+    console.log("saveToggleAgent proccess");
     const { id } = req.params;
     const agentId = shapeIntoMongooseObjectId(id);
     const query: SavingInput = {
       targetId: shapeIntoMongooseObjectId(agentId),
       targetGroup: TargetGroup.AGENT,
-      userId: shapeIntoMongooseObjectId(req?.member?._id),
+      userId: shapeIntoMongooseObjectId(req.member._id),
     };
-    const result = await agentService.saveTargetAgent(agentId, query);
+    const result = await agentService.saveToggleAgent(agentId, query);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in saveTargetBlog process: ", error);
+    console.log("Error in saveToggleAgent process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
@@ -187,23 +187,4 @@ agentController.getFollowedAgents = async (
   }
 };
 
-/////////////// ---- DELETE SAVED PROPERTY --------------------------/////////////////
-agentController.unFollowAgent = async (req: ExtendedRequest, res: Response) => {
-  try {
-    console.log("unFollowAgent process");
-    const targetId = shapeIntoMongooseObjectId(req.body.targetId);
-    const memberId = shapeIntoMongooseObjectId(req.member._id);
-
-    const result = await agentService.unFollowAgent(targetId, memberId);
-
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in unFollowAgent: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
 export default agentController;
