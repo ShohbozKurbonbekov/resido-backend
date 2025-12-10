@@ -50,10 +50,10 @@ property.get(
 
 //////////////////// -- SAVE TARGET PROPERTY --- ///////////////
 property.get(
-  "/:id/save",
+  "/:id/toggle-save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
-  propertyController.saveTargetProperty
+  propertyController.toggleSaveProperty
 );
 
 //////////////////// -- GET SAVED PROPERTIES --- ///////////////
@@ -64,12 +64,6 @@ property.post(
   propertyController.getSavedProperties
 );
 
-//////////////////// -- DELETE SAVED PROPERTY --- ///////////////
-property.post(
-  "/delete/saved-property",
-  memberController.verifyMember,
-  propertyController.deleteSavedProperty
-);
 /////////////////// ------ PROPERTY LIKED ---------- ///////////
 
 property.post(

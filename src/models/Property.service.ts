@@ -581,7 +581,7 @@ class PropertyService {
   }
 
   // SAVE TARGET PROPERTY
-  public async saveTargetProperty(
+  public async toggleSaveProperty(
     propertyId: ObjectId,
     query: SavingInput
   ): Promise<Property> {
@@ -682,29 +682,6 @@ class PropertyService {
       properties: result?.items ?? [],
       totalPropertiesNumber: result.totalPropertiesNumber,
     };
-  }
-
-  // DELETE  SAVED PROPERTY
-  public async deleteSavedProperty(
-    targetId: ObjectId,
-    memberId: ObjectId
-  ): Promise<SavingOutput> {
-    const target = await this.propertyModel.findById(targetId);
-    if (!target) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-    const query: SavingInput = {
-      targetGroup: TargetGroup.PROPERTY,
-      targetId,
-      userId: memberId,
-    };
-
-    const result = await this.saveModel.findOneAndDelete(query);
-
-    if (!result) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.NO_PROPERTIES_DELETE);
-    }
-    return result;
   }
 }
 export default PropertyService;

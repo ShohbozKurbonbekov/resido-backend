@@ -201,12 +201,12 @@ propertyController.likeTargetProperty = async (
 };
 
 //////////////// --- SAVE TARGET PROPERTY -----------------
-propertyController.saveTargetProperty = async (
+propertyController.toggleSaveProperty = async (
   req: ExtendedRequest,
   res: Response
 ) => {
   try {
-    console.log("saveTargetProperty process");
+    console.log("toggleSave process");
     const { id } = req.params;
     const propertyId = shapeIntoMongooseObjectId(id);
     const member = req?.member;
@@ -216,7 +216,7 @@ propertyController.saveTargetProperty = async (
       userId: shapeIntoMongooseObjectId(member?._id),
     };
 
-    const result = await propertyService.saveTargetProperty(propertyId, query);
+    const result = await propertyService.toggleSaveProperty(propertyId, query);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {
@@ -256,29 +256,4 @@ propertyController.getSavedProperties = async (
   }
 };
 
-/////////////// ---- DELETE SAVED PROPERTY --------------------------/////////////////
-propertyController.deleteSavedProperty = async (
-  req: ExtendedRequest,
-  res: Response
-) => {
-  try {
-    console.log("deleteSavedProperty process");
-    const targetId = shapeIntoMongooseObjectId(req.body.targetId);
-    const memberId = shapeIntoMongooseObjectId(req.member._id);
-
-    const result = await propertyService.deleteSavedProperty(
-      targetId,
-      memberId
-    );
-
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in deleteSavedProperty: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
 export default propertyController;
