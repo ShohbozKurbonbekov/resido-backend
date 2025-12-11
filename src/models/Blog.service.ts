@@ -1,10 +1,16 @@
-import { CommonUsers, StatisticsModifier, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  StatisticsModifier,
+  T,
+} from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import ViewService from "./View.service";
 import {
   BlogDetailOutput,
   BlogInput,
   Blogs,
+  SavedBlogsOutput,
   SearchBlogTags,
 } from "../libs/types/blog";
 import UserModel from "../schema/members/User.model";
@@ -36,6 +42,9 @@ import { pipeline } from "stream";
 import { SavingInput } from "../libs/types/userSaving";
 import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
+import UserSavingModel from "../schema/UserSaving.model";
+import path from "path";
 
 class BlogService {
   private readonly blogModel;
@@ -45,6 +54,7 @@ class BlogService {
   public readonly agencyModel;
   public readonly likeService;
   public readonly saveService;
+  public readonly saveModel;
 
   constructor() {
     this.userModel = UserModel;
@@ -54,6 +64,7 @@ class BlogService {
     this.agencyModel = AgencyModel;
     this.likeService = new LikeService();
     this.saveService = new UserSaving();
+    this.saveModel = UserSavingModel;
   }
 
   // CALCULATE BLOG FIELD WITH HELPER
@@ -466,7 +477,7 @@ class BlogService {
   }
 
   // SAVE TARGET BLOG
-  public async saveTargetBlog(
+  public async saveToggleBlog(
     blogId: ObjectId,
     query: SavingInput
   ): Promise<BlogDoc> {
@@ -486,6 +497,90 @@ class BlogService {
       targetKey: "totalSavings",
     });
 
+    return result;
+  }
+
+  // GET SAVED PROPERTIES
+  public async getSavedBlogs(
+    user: CommonUsers,
+    query: CommonPageInput
+  ): Promise<SavedBlogsOutput> {
+    const { limit, page } = query;
+
+    const match: T = {
+      userId: shapeIntoMongooseObjectId(user._id),
+      targetGroup: TargetGroup.BLOG,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.saveModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $lookup: {
+                from: "blogs",
+                let: {
+                  targetId: "$targetId",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$_id", "$$targetId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 1,
+                      blogImage: 1,
+                      blogTitle: 1,
+                      blogShortInfo: 1,
+                      blogCategory: 1,
+                      createdAt: 1,
+                      updatedAt: 1,
+                    },
+                  },
+                ],
+                as: "blog",
+              },
+            },
+            {
+              $unwind: {
+                path: "$blog",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$blog",
+              },
+            },
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
+    }
     return result;
   }
 }

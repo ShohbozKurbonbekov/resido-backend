@@ -59,3 +59,18 @@ export interface BlogDetailOutput {
 export interface SearchBlogTags {
   blogs: BlogDoc[];
 }
+
+interface SavedBlog {
+  _id: ObjectId;
+  blogImage: string;
+  blogTitle: string;
+  blogShortInfo: string;
+  blogCategory: BlogCategory;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SavedBlogsOutput {
+  blogs: SavedBlog[];
+  totalBlogsNumber: TotalCounter[];
+}

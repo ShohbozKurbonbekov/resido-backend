@@ -31,10 +31,18 @@ blog.post(
 
 ///////////////////// --- SAVE A SPECIFIC BLOG --////////////
 blog.get(
-  "/:id/save",
+  "/:id/toggle-save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
-  blogController.saveTargetBlog
+  blogController.saveToggleBlog
+);
+
+//////////////////// -- GET SAVED PROPERTIES --- ///////////////
+blog.post(
+  "/see/saved-blogs",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USERS_SAVE_SEE, MemberType.USER),
+  blogController.getSavedBlogs
 );
 
 /////////////// --GET BLOGS BY TAG -- //////////////////

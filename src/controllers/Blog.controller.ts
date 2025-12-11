@@ -1,5 +1,5 @@
 import BlogService from "../models/Blog.service";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { BlogInput, BlogSearchInput } from "../libs/types/blog";
 import { Response, Request } from "express";
@@ -150,9 +150,9 @@ blogController.getNeighbouringBlog = async (req: Request, res: Response) => {
 };
 
 ////////////// -------------- SAVE TARGET BLOG --------------//////////////
-blogController.saveTargetBlog = async (req: ExtendedRequest, res: Response) => {
+blogController.saveToggleBlog = async (req: ExtendedRequest, res: Response) => {
   try {
-    console.log("save targetBlog proccess");
+    console.log("saveToggleBlog proccess");
     const { id } = req.params;
     const blogId = shapeIntoMongooseObjectId(id);
     const query: SavingInput = {
@@ -160,10 +160,10 @@ blogController.saveTargetBlog = async (req: ExtendedRequest, res: Response) => {
       targetGroup: TargetGroup.BLOG,
       userId: shapeIntoMongooseObjectId(req?.member?._id),
     };
-    const result = await blogService.saveTargetBlog(blogId, query);
+    const result = await blogService.saveToggleBlog(blogId, query);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in saveTargetBlog process: ", error);
+    console.log("Error in saveToggleBlog process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
@@ -171,4 +171,29 @@ blogController.saveTargetBlog = async (req: ExtendedRequest, res: Response) => {
     }
   }
 };
+
+//////////////// --- GET SAVED BLOGS -----------------
+blogController.getSavedBlogs = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("getSavedBlogs proccess");
+
+    const user = req.member;
+    const { page, limit } = req.body;
+    const query: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 4,
+    };
+
+    const result = await blogService.getSavedBlogs(user, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getSavedBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default blogController;
