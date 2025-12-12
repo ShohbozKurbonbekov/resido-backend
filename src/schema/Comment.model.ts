@@ -68,6 +68,12 @@ const CommentSchema = new Schema<CommentInput>(
   }
 );
 
+CommentSchema.index({
+  userId: 1,
+  status: 1,
+  createdAt: 1,
+});
+
 export type CommentDocs = InferSchemaType<typeof CommentSchema>;
 
 export default mongoose.model<CommentDocs>("Comment", CommentSchema);

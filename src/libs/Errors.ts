@@ -34,6 +34,7 @@ export enum Message {
   PROPERTY_UPDATE_AGENTS = "Only agents are authorized to update a property",
   NO_COMMENT_TYPE = "No such comment type registered",
   NO_PROPERTIES_DELETE = "No property found to delete!",
+  ONLY_USER_SEE_COMMENTS = "Sorry, only users are allowed to see their comments",
 }
 
 class Errors extends Error {

@@ -106,6 +106,7 @@ class CommentService {
     };
 
     const Model = Models[commentTarget];
+
     if (!Model) {
       throw new Errors(HttpCode.BAD_REQUEST, Message.NO_COMMENT_TYPE);
     }
@@ -155,6 +156,57 @@ class CommentService {
       },
     ]);
 
+    if (!result.comments.length) {
+      return {
+        comments: [],
+        metaCounter: [{ total: 0 }],
+      };
+    }
+    return result;
+  }
+
+  /////////////////////// GET USER COMMENTS /////////////////////
+  public async getUserComments(
+    userId: ObjectId,
+    query: CommonPageInput
+  ): Promise<Comments> {
+    const { page, limit } = query;
+
+    const match: T = {
+      userId,
+      status: CommentStatus.ACTIVE,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.commentModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          comments: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+            {
+              $project: {
+                userInfo: 0,
+              },
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
     if (!result.comments.length) {
       return {
         comments: [],

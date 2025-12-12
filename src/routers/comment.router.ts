@@ -21,3 +21,11 @@ comment.get("/get/latest", commentController.getLatestComments);
 comment.post("/get/:id/comments", commentController.getComments);
 
 export default comment;
+
+///////////////// --- GET USER ALL COMMENTS --- ////////////////
+comment.post(
+  "/get/all/user-reviews",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USER_SEE_COMMENTS, MemberType.USER),
+  commentController.getUserComments
+);

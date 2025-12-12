@@ -1,5 +1,5 @@
 import CommentService from "../models/Comment.service";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
 import { CommentInput, ItemComments } from "../libs/types/comment";
@@ -64,6 +64,32 @@ commentController.getComments = async (req: Request, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getComments", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////--- GET USER ALL COMMENTS ---///////////////////
+commentController.getUserComments = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    const input: CommonPageInput = req.body;
+    const query = {
+      page: Number(input.page) || 1,
+      limit: Number(input.limit) || 4,
+    };
+    const userId = shapeIntoMongooseObjectId(req.member?._id);
+
+    const result = await commentService.getUserComments(userId, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getUserComments", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
