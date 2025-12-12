@@ -36,6 +36,8 @@ export enum Message {
   NO_PROPERTIES_DELETE = "No property found to delete!",
   ONLY_USER_SEE_COMMENTS = "Sorry, only users are allowed to see their comments",
   ONLY_USER_UPDATE_COMMENT = "Only common users are allowed  to update their comments",
+  ONLY_USER_DELETE_COMMENT = "Only common users are allowed  to delete their comments",
+  DELETING_FAILED = "Deleting failed",
 }
 
 class Errors extends Error {

@@ -102,7 +102,8 @@ commentController.getUserComments = async (
   }
 };
 
-///////////////////////--- UPDATE USER  COMMENTS ---///////////////////
+///////////////////////---
+// UPDATE USER  COMMENTS ---///////////////////
 commentController.updateUserComments = async (
   req: ExtendedRequest,
   res: Response
@@ -120,6 +121,32 @@ commentController.updateUserComments = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in updateUserComments", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////---
+// DELETE USER  COMMENTS ---///////////////////
+commentController.deleteUserComments = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+    const userId = shapeIntoMongooseObjectId(req.member?._id);
+    const query: T = {
+      userId,
+      _id: shapeIntoMongooseObjectId(id),
+    };
+    const result = await commentService.deleteUserComments(query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in deleteUserComments", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

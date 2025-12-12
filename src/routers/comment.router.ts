@@ -37,3 +37,11 @@ comment.post(
   allowRoles(Message.ONLY_USER_UPDATE_COMMENT, MemberType.USER),
   commentController.updateUserComments
 );
+
+///////////////// --- DELETE USER COMMENTS --- ////////////////
+comment.post(
+  "/delete/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USER_DELETE_COMMENT, MemberType.USER),
+  commentController.deleteUserComments
+);

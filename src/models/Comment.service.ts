@@ -250,5 +250,26 @@ class CommentService {
     }
     return result;
   }
+
+  /////////////////////// DELETE USER COMMENTS /////////////////////
+  public async deleteUserComments(query: T): Promise<CommentDocs> {
+    const match: T = {
+      ...query,
+      status: CommentStatus.ACTIVE,
+    };
+
+    const result = await this.commentModel.findOneAndUpdate(
+      match,
+      {
+        status: CommentStatus.DELETE,
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.DELETING_FAILED);
+    }
+    return result;
+  }
 }
 export default CommentService;
