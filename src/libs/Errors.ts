@@ -35,6 +35,7 @@ export enum Message {
   NO_COMMENT_TYPE = "No such comment type registered",
   NO_PROPERTIES_DELETE = "No property found to delete!",
   ONLY_USER_SEE_COMMENTS = "Sorry, only users are allowed to see their comments",
+  ONLY_USER_UPDATE_COMMENT = "Only common users are allowed  to update their comments",
 }
 
 class Errors extends Error {

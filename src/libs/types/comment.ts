@@ -24,6 +24,11 @@ export interface CommentInput {
   status?: CommentStatus;
 }
 
+export interface CommentUpdate {
+  rating: number;
+  content: string;
+}
+
 export interface Comments {
   comments?: CommentDocs[];
   metaCounter?: TotalCounter[];

@@ -1,4 +1,9 @@
-import { CommentInput, Comments, ItemComments } from "../libs/types/comment";
+import {
+  CommentInput,
+  Comments,
+  CommentUpdate,
+  ItemComments,
+} from "../libs/types/comment";
 import CommentModel, { CommentDocs } from "../schema/Comment.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
@@ -212,6 +217,36 @@ class CommentService {
         comments: [],
         metaCounter: [{ total: 0 }],
       };
+    }
+    return result;
+  }
+
+  /////////////////////// UPDATE USER COMMENTS /////////////////////
+  public async updateUserComments(
+    query: T,
+    input: CommentUpdate
+  ): Promise<CommentDocs> {
+    const match: T = {
+      ...query,
+      status: CommentStatus.ACTIVE,
+    };
+
+    const updateInput = {
+      ...(input.content && { content: input.content.trim() }),
+      ...(typeof input.rating === "number" && { rating: input.rating }),
+    };
+
+    const result = await this.commentModel.findOneAndUpdate(
+      match,
+      updateInput,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
   }

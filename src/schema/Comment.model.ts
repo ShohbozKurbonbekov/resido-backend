@@ -53,6 +53,7 @@ const CommentSchema = new Schema<CommentInput>(
     content: {
       type: String,
       required: true,
+      trim: true,
     },
     rating: {
       type: Number,

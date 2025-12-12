@@ -29,3 +29,11 @@ comment.post(
   allowRoles(Message.ONLY_USER_SEE_COMMENTS, MemberType.USER),
   commentController.getUserComments
 );
+
+///////////////// --- UPDATE USER COMMENTS --- ////////////////
+comment.post(
+  "/update/:targetId",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_USER_UPDATE_COMMENT, MemberType.USER),
+  commentController.updateUserComments
+);

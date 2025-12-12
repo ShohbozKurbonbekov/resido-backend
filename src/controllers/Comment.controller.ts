@@ -2,7 +2,11 @@ import CommentService from "../models/Comment.service";
 import { CommonPageInput, T } from "../libs/types/common";
 import { Response, Request } from "express";
 import Errors, { HttpCode } from "../libs/Errors";
-import { CommentInput, ItemComments } from "../libs/types/comment";
+import {
+  CommentInput,
+  CommentUpdate,
+  ItemComments,
+} from "../libs/types/comment";
 import { ExtendedRequest, User } from "../libs/types/user";
 import { CommentDocs } from "../schema/Comment.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
@@ -90,6 +94,32 @@ commentController.getUserComments = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getUserComments", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////--- UPDATE USER  COMMENTS ---///////////////////
+commentController.updateUserComments = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    const { targetId } = req.params;
+    const input: CommentUpdate = req.body;
+    const userId = shapeIntoMongooseObjectId(req.member?._id);
+    const query: T = {
+      userId,
+      _id: shapeIntoMongooseObjectId(targetId),
+    };
+    const result = await commentService.updateUserComments(query, input);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateUserComments", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
