@@ -36,7 +36,14 @@ member.post(
 ////////////////// -- LOGOUT -- //////////////////
 member.post("/logout", memberController.verifyMember, memberController.logout);
 
-//////////////// -  WRITE A MESSAGE TO MEMBER -- ////////////
+//////////////// - GET ALL MEMBER MESSAGES -- ////////////
+member.post(
+  "/get/all-messages",
+  memberController.verifyMember,
+  memberController.getMemberMessages
+);
+
+//////////////// -  WRITE A MESSAGE TO  MEMBER -- ////////////
 member.post(
   "/write/message",
   memberController.verifyMember,

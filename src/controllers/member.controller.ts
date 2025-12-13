@@ -5,7 +5,12 @@ import {
   ExtendedRequest,
   UserInputUpdate,
 } from "../libs/types/user";
-import { CommonUsers, CommonUsersUpdateInput, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  CommonUsersUpdateInput,
+  T,
+} from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
@@ -164,7 +169,8 @@ memberController.logout = async (req: Request, res: Response) => {
   }
 };
 
-/////////////////// ---- WRITE A MESSAGE TO MEMBER ------////////////////////
+///////////////////
+// ---- WRITE A MESSAGE TO MEMBER ------////////////////////
 memberController.WriteMessageToMember = async (
   req: ExtendedRequest,
   res: Response
@@ -179,6 +185,29 @@ memberController.WriteMessageToMember = async (
     res.status(HttpCode.CREATED).json(result);
   } catch (error) {
     console.log("Error in WriteMessageToMember process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////// ---- GET  ALL  MEMBER MESSAGES ------////////////////////
+memberController.getMemberMessages = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("getMemberMessages process");
+    const member = req.member;
+    const query: CommonPageInput = req.body;
+
+    const result = await memberService.getMemberMessages(member, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getMemberMessages process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

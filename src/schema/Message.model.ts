@@ -29,6 +29,7 @@ const MessageSchema = new Schema<MessageInput>(
 
     receiverId: {
       type: Schema.Types.ObjectId,
+      required: true,
     },
     receiverCollectionName: {
       type: String,
@@ -80,6 +81,8 @@ MessageSchema.index({
   senderId: 1,
   receiverId: 1,
   createdAt: 1,
+  deletedByReceiver: 1,
+  deletedBySender: 1,
 });
 
 export type MessageDoc = InferSchemaType<typeof MessageSchema>;

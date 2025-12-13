@@ -5,6 +5,8 @@ import {
   MessageSenderType,
 } from "../enums/message.enum";
 import { CommonUsers } from "./common";
+import { MessageDoc } from "../../schema/Message.model";
+import { TotalCounter } from "./property";
 
 export interface MessageInput {
   senderId?: ObjectId;
@@ -25,4 +27,9 @@ export interface MessageInput {
   subject: string;
   email: string;
   phone: string;
+}
+
+export interface MessagesOutput {
+  messages: MessageDoc[];
+  metaCounter: TotalCounter[];
 }

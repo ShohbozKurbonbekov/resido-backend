@@ -25,9 +25,14 @@ import bcrypt from "bcrypt";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
-import { MessageInput } from "../libs/types/message";
+import { MessageInput, MessagesOutput } from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
-import { CommonUsers, CommonUsersUpdateInput, T } from "../libs/types/common";
+import {
+  CommonPageInput,
+  CommonUsers,
+  CommonUsersUpdateInput,
+  T,
+} from "../libs/types/common";
 import { CollectionName } from "../libs/enums/message.enum";
 
 class MemberService {
@@ -257,6 +262,117 @@ class MemberService {
     }
   }
 
+  /////////////////////////// --  GET MEMBER MESSAGES -- //////////////////////////////
+  public async getMemberMessages(
+    member: CommonUsers,
+    query: CommonPageInput
+  ): Promise<MessagesOutput> {
+    const userId = shapeIntoMongooseObjectId(member._id);
+    const { page, limit } = query;
+    const match: T = {
+      $or: [
+        {
+          senderId: userId,
+          deletedBySender: false,
+        },
+        { receiverId: userId, deletedByReceiver: false },
+      ],
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.messageModel.aggregate([
+      {
+        $match: match,
+      },
+      { $sort: sort },
+      {
+        $facet: {
+          messages: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+            ...this.lookupSenderReceiver(
+              "senderId",
+              "senderUser",
+              "senderAgent",
+              "senderAgency"
+            ),
+            ...this.lookupSenderReceiver(
+              "receiverId",
+              "receiverUser",
+              "receiverAgent",
+              "receiverAgency"
+            ),
+            {
+              $addFields: {
+                senderData: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$senderCollectionName", "users"] },
+                        then: { $arrayElemAt: ["$senderUser", 0] },
+                      },
+                      {
+                        case: { $eq: ["$senderCollectionName", "agents"] },
+                        then: { $arrayElemAt: ["$senderAgent", 0] },
+                      },
+                      {
+                        case: { $eq: ["$senderCollectionName", "agencies"] },
+                        then: { $arrayElemAt: ["$senderAgency", 0] },
+                      },
+                    ],
+                    default: null,
+                  },
+                },
+                receiverData: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$receiverCollectionName", "users"] },
+                        then: { $arrayElemAt: ["$receiverUser", 0] },
+                      },
+                      {
+                        case: { $eq: ["$receiverCollectionName", "agents"] },
+                        then: { $arrayElemAt: ["$receiverAgent", 0] },
+                      },
+                      {
+                        case: { $eq: ["$receiverCollectionName", "agencies"] },
+                        then: { $arrayElemAt: ["$receiverAgency", 0] },
+                      },
+                    ],
+                    default: null,
+                  },
+                },
+              },
+            },
+            {
+              $project: {
+                senderUser: 0,
+                senderAgent: 0,
+                senderAgency: 0,
+                receiverUser: 0,
+                receiverAgent: 0,
+                receiverAgency: 0,
+              },
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.messages.length) {
+      return { messages: [], metaCounter: [{ total: 0 }] };
+    }
+
+    return result;
+  }
+
   /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
   public async updateMember(
     member: CommonUsers,
@@ -301,6 +417,45 @@ class MemberService {
       return CollectionName.Agent;
     }
     return CollectionName.User;
+  }
+
+  private lookupSenderReceiver(
+    localField: string,
+    lookupData1: string,
+    lookupData2: string,
+    lookupData3: string
+  ) {
+    return [
+      {
+        $lookup: {
+          from: "users",
+          localField: localField,
+          foreignField: "_id",
+          pipeline: [
+            { $project: { memberName: 1, avatar: 1, memberDescription: 1 } },
+          ],
+          as: lookupData1,
+        },
+      },
+      {
+        $lookup: {
+          from: "agents",
+          localField: localField,
+          foreignField: "_id",
+          pipeline: [{ $project: { fullName: 1, avatar: 1, bioInfo: 1 } }],
+          as: lookupData2,
+        },
+      },
+      {
+        $lookup: {
+          from: "agencies",
+          localField: localField,
+          foreignField: "_id",
+          pipeline: [{ $project: { memberName: 1, avatar: 1, bioInfo: 1 } }],
+          as: lookupData3,
+        },
+      },
+    ];
   }
 }
 
