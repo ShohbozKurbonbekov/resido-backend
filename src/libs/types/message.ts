@@ -1,18 +1,24 @@
 import { ObjectId } from "mongoose";
-import { MessageReceiverType, MessageSenderType } from "../enums/message.enum";
+import {
+  CollectionName,
+  MessageReceiverType,
+  MessageSenderType,
+} from "../enums/message.enum";
+import { CommonUsers } from "./common";
 
 export interface MessageInput {
-  //sender
   senderId?: ObjectId;
   senderType: MessageSenderType;
   deletedBySender?: boolean;
+  senderCollectionName: CollectionName;
+  senderData?: CommonUsers;
 
-  // receiver
   receiverId?: ObjectId;
   receiverType: MessageReceiverType;
   deletedByReceiver?: boolean;
+  receiverCollectionName: CollectionName;
+  receiverData?: CommonUsers;
 
-  // content
   isRead?: boolean;
   whenIsRead?: Date;
   content: string;

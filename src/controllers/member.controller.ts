@@ -171,10 +171,10 @@ memberController.WriteMessageToMember = async (
 ) => {
   try {
     console.log("WriteMessageToMember process");
-    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const member = req.member;
     const input: MessageInput = req.body;
 
-    const result = await memberService.WriteMessageToMember(userId, input);
+    const result = await memberService.WriteMessageToMember(member, input);
 
     res.status(HttpCode.CREATED).json(result);
   } catch (error) {
@@ -198,6 +198,7 @@ memberController.verifyMember = async (
     if (token) {
       req.member = await authService.checkAuth(token);
     }
+
     if (!req.member) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.NOT_AUTHENTICATED);
     }

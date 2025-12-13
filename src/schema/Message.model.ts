@@ -3,34 +3,18 @@ import { MessageInput } from "../libs/types/message";
 import {
   MessageSenderType,
   MessageReceiverType,
+  CollectionName,
 } from "../libs/enums/message.enum";
-const SenderInfoSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-    },
-    phone: {
-      type: String,
-      required: true,
-    },
-    address: {
-      type: String,
-    },
-  },
-  {
-    _id: false,
-  }
-);
 
 const MessageSchema = new Schema<MessageInput>(
   {
     senderId: {
       type: Schema.Types.ObjectId,
+      required: true,
+    },
+    senderCollectionName: {
+      type: String,
+      enum: CollectionName,
       required: true,
     },
     senderType: {
@@ -45,6 +29,11 @@ const MessageSchema = new Schema<MessageInput>(
 
     receiverId: {
       type: Schema.Types.ObjectId,
+    },
+    receiverCollectionName: {
+      type: String,
+      enum: CollectionName,
+      required: true,
     },
     receiverType: {
       type: String,
@@ -88,12 +77,9 @@ const MessageSchema = new Schema<MessageInput>(
   }
 );
 MessageSchema.index({
-  receiverId: 1,
-  createdAt: -1,
-});
-MessageSchema.index({
   senderId: 1,
-  createdAt: -1,
+  receiverId: 1,
+  createdAt: 1,
 });
 
 export type MessageDoc = InferSchemaType<typeof MessageSchema>;

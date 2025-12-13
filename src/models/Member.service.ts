@@ -28,6 +28,7 @@ import MessageModel, { MessageDoc } from "../schema/Message.model";
 import { MessageInput } from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
 import { CommonUsers, CommonUsersUpdateInput, T } from "../libs/types/common";
+import { CollectionName } from "../libs/enums/message.enum";
 
 class MemberService {
   private readonly userModel;
@@ -203,10 +204,11 @@ class MemberService {
 
   /////////////////////////// --  WRITE A MESSAGE -- //////////////////////////////
   public async WriteMessageToMember(
-    userId: ObjectId,
+    member: CommonUsers,
     input: MessageInput
   ): Promise<MessageDoc> {
     const { receiverId, receiverType } = input;
+    const userId = shapeIntoMongooseObjectId(member._id);
 
     const receiverModel: T = {
       USER: this.userModel,
@@ -230,6 +232,10 @@ class MemberService {
         : { _id: receiverId, memberStatus: MemberStatus.ACTIVE };
 
     const receiver = await Model.findOne(query);
+    const receiverCollectionName: CollectionName =
+      this.findCollectionName(receiver);
+    const senderCollectionName: CollectionName =
+      this.findCollectionName(member);
 
     if (!receiver) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
@@ -239,6 +245,8 @@ class MemberService {
       const data: MessageInput = {
         ...input,
         senderId: input.senderId ?? userId,
+        senderCollectionName,
+        receiverCollectionName,
       };
 
       const result = await this.messageModel.create(data);
@@ -283,6 +291,16 @@ class MemberService {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
     return result;
+  }
+
+  private findCollectionName(member: CommonUsers): CollectionName {
+    if (member.role === MemberType.AGENCY) {
+      return CollectionName.Agency;
+    }
+    if (member.role === MemberType.AGENT) {
+      return CollectionName.Agent;
+    }
+    return CollectionName.User;
   }
 }
 
