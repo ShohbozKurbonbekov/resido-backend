@@ -432,7 +432,13 @@ class MemberService {
           localField: localField,
           foreignField: "_id",
           pipeline: [
-            { $project: { memberName: 1, avatar: 1, memberDescription: 1 } },
+            {
+              $project: {
+                name: "$memberName",
+                avatar: 1,
+                description: "$memberDescription",
+              },
+            },
           ],
           as: lookupData1,
         },
@@ -442,7 +448,15 @@ class MemberService {
           from: "agents",
           localField: localField,
           foreignField: "_id",
-          pipeline: [{ $project: { fullName: 1, avatar: 1, bioInfo: 1 } }],
+          pipeline: [
+            {
+              $project: {
+                name: "$fullName",
+                avatar: 1,
+                description: "$bioInfo",
+              },
+            },
+          ],
           as: lookupData2,
         },
       },
@@ -451,7 +465,15 @@ class MemberService {
           from: "agencies",
           localField: localField,
           foreignField: "_id",
-          pipeline: [{ $project: { memberName: 1, avatar: 1, bioInfo: 1 } }],
+          pipeline: [
+            {
+              $project: {
+                name: "$memberName",
+                avatar: 1,
+                description: "$bioInfo",
+              },
+            },
+          ],
           as: lookupData3,
         },
       },

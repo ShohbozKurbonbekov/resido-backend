@@ -8,18 +8,25 @@ import { CommonUsers } from "./common";
 import { MessageDoc } from "../../schema/Message.model";
 import { TotalCounter } from "./property";
 
+export interface SenderReceiverType {
+  _id: string;
+  name: string;
+  avatar?: string;
+  descsription?: string;
+}
+
 export interface MessageInput {
   senderId?: ObjectId;
   senderType: MessageSenderType;
   deletedBySender?: boolean;
   senderCollectionName: CollectionName;
-  senderData?: CommonUsers;
+  senderData?: SenderReceiverType;
 
   receiverId?: ObjectId;
   receiverType: MessageReceiverType;
   deletedByReceiver?: boolean;
   receiverCollectionName: CollectionName;
-  receiverData?: CommonUsers;
+  receiverData?: SenderReceiverType;
 
   isRead?: boolean;
   whenIsRead?: Date;
@@ -30,6 +37,6 @@ export interface MessageInput {
 }
 
 export interface MessagesOutput {
-  messages: MessageDoc[];
+  messages: MessageInput[];
   metaCounter: TotalCounter[];
 }
