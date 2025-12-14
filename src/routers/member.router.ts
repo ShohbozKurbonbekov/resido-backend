@@ -50,6 +50,12 @@ member.post(
   memberController.WriteMessageToMember
 );
 
+//////////////////// - READ MESSAGE - /////////////////
+member.post(
+  "/message/:id/read",
+  memberController.verifyMember,
+  memberController.messageRead
+);
 /////////////////////// BLOG  ENDPOINTS ////////////////////
 member.post(
   "/post/blog",

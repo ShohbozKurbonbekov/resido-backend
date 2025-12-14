@@ -373,6 +373,31 @@ class MemberService {
     return result;
   }
 
+  //////////////////////////// -- MESSAGE READ -- //////////////////////////////
+  public async messageRead(
+    member: CommonUsers,
+    id: ObjectId
+  ): Promise<MessageDoc> {
+    const memberId = shapeIntoMongooseObjectId(member._id);
+    const match: T = {
+      _id: id,
+      deletedBySender: false,
+      receiverId: memberId,
+      isRead: false,
+    };
+
+    const result = await this.messageModel.findOneAndUpdate(
+      match,
+      { $set: { isRead: true }, $currentDate: { whenIsRead: true } },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    return result;
+  }
   /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
   public async updateMember(
     member: CommonUsers,

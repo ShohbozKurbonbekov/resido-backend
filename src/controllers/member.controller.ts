@@ -216,6 +216,26 @@ memberController.getMemberMessages = async (
   }
 };
 
+/////////////////// -------- READ A MESSAGE -- ////////////////////
+memberController.messageRead = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("messageRead process");
+
+    const { id } = req.params;
+    const targetId = shapeIntoMongooseObjectId(id);
+    const member = req.member;
+    const result = await memberService.messageRead(member, targetId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in messageRead: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(error);
+    }
+  }
+};
+
 //////////////////// VERIFY MEMBER ////////////////
 memberController.verifyMember = async (
   req: ExtendedRequest,
@@ -243,6 +263,7 @@ memberController.verifyMember = async (
   }
 };
 
+//////////////////////// SHALLOW CHECK -//////////////////////////
 memberController.checkMemberAuth = async (
   req: ExtendedRequest,
   res: Response,
