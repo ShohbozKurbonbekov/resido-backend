@@ -50,6 +50,13 @@ member.post(
   memberController.messageDelete
 );
 
+//////////////// - EDIT MEMBER MESSAGE -- ////////////
+member.post(
+  "/message/:id/edit",
+  memberController.verifyMember,
+  memberController.messageEdit
+);
+
 //////////////// -  WRITE A MESSAGE TO  MEMBER -- ////////////
 member.post(
   "/write/message",

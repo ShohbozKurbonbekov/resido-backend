@@ -374,6 +374,30 @@ class MemberService {
     return result;
   }
 
+  ////////////////////////// --- EDIT MESSAGE ---/////////////////////
+  public async messageEdit(query: T): Promise<MessageDoc> {
+    const inTenMins = new Date(Date.now() - 1000 * 60 * 10);
+    const { memberId, targetId, content } = query;
+    const match: T = {
+      _id: targetId,
+      senderId: memberId,
+      deletedBySender: false,
+      createdAt: { $gte: inTenMins },
+    };
+
+    const result = await this.messageModel.findOneAndUpdate(
+      match,
+      {
+        $set: { content: content, isEdited: true },
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.EXPIRED_TIME);
+    }
+    return result;
+  }
   ////////////////////////// --- DELETE MESSAGE ---/////////////////////
   public async messageDelete(
     memberId: ObjectId,

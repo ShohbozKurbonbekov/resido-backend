@@ -31,6 +31,7 @@ export interface MessageInput {
   isRead?: boolean;
   whenIsRead?: Date;
   content: string;
+  isEdited: boolean;
   subject: string;
   email: string;
   phone: string;

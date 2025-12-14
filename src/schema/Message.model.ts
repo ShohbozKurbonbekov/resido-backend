@@ -55,6 +55,10 @@ const MessageSchema = new Schema<MessageInput>(
       required: true,
       trim: true,
     },
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
     isRead: {
       type: Boolean,
       default: false,

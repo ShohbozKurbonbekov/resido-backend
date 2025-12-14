@@ -216,7 +216,7 @@ memberController.getMemberMessages = async (
   }
 };
 
-/////////////////// ---- GET  ALL  MEMBER MESSAGES ------////////////////////
+/////////////////// ---- DELETE MEMBER MESSAGE ------////////////////////
 memberController.messageDelete = async (
   req: ExtendedRequest,
   res: Response
@@ -231,6 +231,28 @@ memberController.messageDelete = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in messageDelete process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////// ---- EDIT  MEMBER MESSAGE ------////////////////////
+memberController.messageEdit = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("messageEdit process");
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const targetId = shapeIntoMongooseObjectId(id);
+    const { content } = req.body;
+    const query: T = { memberId, targetId, content };
+    const result = await memberService.messageEdit(query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in messageEdit process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
