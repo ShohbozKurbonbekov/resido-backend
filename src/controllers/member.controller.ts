@@ -216,6 +216,29 @@ memberController.getMemberMessages = async (
   }
 };
 
+/////////////////// ---- GET  ALL  MEMBER MESSAGES ------////////////////////
+memberController.messageDelete = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("messageDelete process");
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const targetId = shapeIntoMongooseObjectId(id);
+    const result = await memberService.messageDelete(memberId, targetId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in messageDelete process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 /////////////////// -------- READ A MESSAGE -- ////////////////////
 memberController.messageRead = async (req: ExtendedRequest, res: Response) => {
   try {

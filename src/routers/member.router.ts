@@ -43,6 +43,13 @@ member.post(
   memberController.getMemberMessages
 );
 
+//////////////// - DELETE MEMBER MESSAGE -- ////////////
+member.post(
+  "/message/:id/delete",
+  memberController.verifyMember,
+  memberController.messageDelete
+);
+
 //////////////// -  WRITE A MESSAGE TO  MEMBER -- ////////////
 member.post(
   "/write/message",

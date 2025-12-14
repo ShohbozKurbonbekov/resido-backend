@@ -280,6 +280,7 @@ class MemberService {
     };
     const sort: T = {
       createdAt: -1,
+      isRead: 1,
     };
 
     const [result] = await this.messageModel.aggregate([
@@ -373,6 +374,30 @@ class MemberService {
     return result;
   }
 
+  ////////////////////////// --- DELETE MESSAGE ---/////////////////////
+  public async messageDelete(
+    memberId: ObjectId,
+    targetId: ObjectId
+  ): Promise<MessageDoc> {
+    const match: T = {
+      _id: targetId,
+      senderId: memberId,
+      deletedBySender: false,
+    };
+
+    const result = await this.messageModel.findOneAndUpdate(
+      match,
+      {
+        $set: { deletedBySender: true },
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
   //////////////////////////// -- MESSAGE READ -- //////////////////////////////
   public async messageRead(
     member: CommonUsers,
