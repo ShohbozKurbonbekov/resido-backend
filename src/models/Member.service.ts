@@ -25,7 +25,11 @@ import bcrypt from "bcrypt";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import MessageModel, { MessageDoc } from "../schema/Message.model";
-import { MessageInput, MessagesOutput } from "../libs/types/message";
+import {
+  MessageInput,
+  MessagesOutput,
+  SenderReceiverType,
+} from "../libs/types/message";
 import { PropertyType } from "../libs/enums/property.enum";
 import {
   CommonPageInput,
@@ -234,24 +238,28 @@ class MemberService {
             role: MemberType.REAL_ESTATE_ADMIN,
             memberStatus: MemberStatus.ACTIVE,
           }
-        : { _id: receiverId, memberStatus: MemberStatus.ACTIVE };
+        : {
+            _id: shapeIntoMongooseObjectId(receiverId),
+            memberStatus: MemberStatus.ACTIVE,
+          };
 
     const receiver = await Model.findOne(query);
-    const receiverCollectionName: CollectionName =
-      this.findCollectionName(receiver);
-    const senderCollectionName: CollectionName =
-      this.findCollectionName(member);
 
     if (!receiver) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
     }
 
+    const receiverData: SenderReceiverType =
+      this.generateMessageReceiver(receiver);
+
+    const senderData: SenderReceiverType = this.generateMessageSender(member);
+
     try {
       const data: MessageInput = {
         ...input,
         senderId: input.senderId ?? userId,
-        senderCollectionName,
-        receiverCollectionName,
+        senderData,
+        receiverData,
       };
 
       const result = await this.messageModel.create(data);
@@ -275,7 +283,7 @@ class MemberService {
           senderId: userId,
           deletedBySender: false,
         },
-        { receiverId: userId, deletedByReceiver: false },
+        { receiverId: userId, deletedBySender: false },
       ],
     };
     const sort: T = {
@@ -296,70 +304,6 @@ class MemberService {
             },
             {
               $limit: limit,
-            },
-            ...this.lookupSenderReceiver(
-              "senderId",
-              "senderUser",
-              "senderAgent",
-              "senderAgency"
-            ),
-            ...this.lookupSenderReceiver(
-              "receiverId",
-              "receiverUser",
-              "receiverAgent",
-              "receiverAgency"
-            ),
-            {
-              $addFields: {
-                senderData: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: { $eq: ["$senderCollectionName", "users"] },
-                        then: { $arrayElemAt: ["$senderUser", 0] },
-                      },
-                      {
-                        case: { $eq: ["$senderCollectionName", "agents"] },
-                        then: { $arrayElemAt: ["$senderAgent", 0] },
-                      },
-                      {
-                        case: { $eq: ["$senderCollectionName", "agencies"] },
-                        then: { $arrayElemAt: ["$senderAgency", 0] },
-                      },
-                    ],
-                    default: null,
-                  },
-                },
-                receiverData: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: { $eq: ["$receiverCollectionName", "users"] },
-                        then: { $arrayElemAt: ["$receiverUser", 0] },
-                      },
-                      {
-                        case: { $eq: ["$receiverCollectionName", "agents"] },
-                        then: { $arrayElemAt: ["$receiverAgent", 0] },
-                      },
-                      {
-                        case: { $eq: ["$receiverCollectionName", "agencies"] },
-                        then: { $arrayElemAt: ["$receiverAgency", 0] },
-                      },
-                    ],
-                    default: null,
-                  },
-                },
-              },
-            },
-            {
-              $project: {
-                senderUser: 0,
-                senderAgent: 0,
-                senderAgency: 0,
-                receiverUser: 0,
-                receiverAgent: 0,
-                receiverAgency: 0,
-              },
             },
           ],
           metaCounter: [{ $count: "total" }],
@@ -483,75 +427,50 @@ class MemberService {
     return result;
   }
 
-  private findCollectionName(member: CommonUsers): CollectionName {
-    if (member.role === MemberType.AGENCY) {
-      return CollectionName.Agency;
+  //////////////////// - HELPER FUCNTIONS ---//////////////
+  private generateMessageReceiver(receiver: CommonUsers): SenderReceiverType {
+    if (
+      receiver.role === MemberType.USER ||
+      receiver.role === MemberType.REAL_ESTATE_ADMIN ||
+      receiver.role === MemberType.AGENCY
+    ) {
+      const receiverData = receiver as User | Agency;
+      return {
+        name: receiverData.memberName,
+        _id: receiverData._id!,
+        avatar: receiverData?.avatar,
+      };
     }
-    if (member.role === MemberType.AGENT) {
-      return CollectionName.Agent;
-    }
-    return CollectionName.User;
-  }
 
-  private lookupSenderReceiver(
-    localField: string,
-    lookupData1: string,
-    lookupData2: string,
-    lookupData3: string
-  ) {
-    return [
-      {
-        $lookup: {
-          from: "users",
-          localField: localField,
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                name: "$memberName",
-                avatar: 1,
-                description: "$memberDescription",
-              },
-            },
-          ],
-          as: lookupData1,
-        },
-      },
-      {
-        $lookup: {
-          from: "agents",
-          localField: localField,
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                name: "$fullName",
-                avatar: 1,
-                description: "$bioInfo",
-              },
-            },
-          ],
-          as: lookupData2,
-        },
-      },
-      {
-        $lookup: {
-          from: "agencies",
-          localField: localField,
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                name: "$memberName",
-                avatar: 1,
-                description: "$bioInfo",
-              },
-            },
-          ],
-          as: lookupData3,
-        },
-      },
-    ];
+    const receiverData = receiver as Agent;
+
+    return {
+      name: receiverData?.fullName,
+      _id: receiverData._id,
+      avatar: receiverData?.avatar,
+    };
+  }
+  private generateMessageSender(sender: CommonUsers): SenderReceiverType {
+    if (
+      sender.role === MemberType.USER ||
+      sender.role === MemberType.REAL_ESTATE_ADMIN ||
+      sender.role === MemberType.AGENCY
+    ) {
+      const senderData = sender as User | Agency;
+      return {
+        name: senderData.memberName,
+        _id: senderData._id!,
+        avatar: senderData?.avatar,
+      };
+    }
+
+    const senderData = sender as Agent;
+
+    return {
+      name: senderData?.fullName,
+      _id: senderData._id,
+      avatar: senderData?.avatar,
+    };
   }
 }
 

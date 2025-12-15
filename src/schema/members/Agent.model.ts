@@ -1,5 +1,5 @@
 import validator, { isStrongPassword } from "validator";
-import mongoose, { Schema } from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { Agent } from "../../libs/types/agent";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import bcrypt from "bcrypt";
@@ -155,4 +155,5 @@ AgentSchema.pre("save", async function (next) {
     user.licenseNumber = `BR-` + Date.now() + "-" + "RESIDO";
   }
 });
+
 export default mongoose.model("Agent", AgentSchema);

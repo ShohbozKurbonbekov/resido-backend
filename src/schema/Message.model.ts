@@ -1,10 +1,27 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
-import { MessageInput } from "../libs/types/message";
+import { MessageInput, SenderReceiverType } from "../libs/types/message";
 import {
   MessageSenderType,
   MessageReceiverType,
   CollectionName,
 } from "../libs/enums/message.enum";
+
+const SenderReceiverDataSchema = new Schema<SenderReceiverType>(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    _id: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    avatar: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
 
 const MessageSchema = new Schema<MessageInput>(
   {
@@ -12,11 +29,7 @@ const MessageSchema = new Schema<MessageInput>(
       type: Schema.Types.ObjectId,
       required: true,
     },
-    senderCollectionName: {
-      type: String,
-      enum: CollectionName,
-      required: true,
-    },
+
     senderType: {
       type: String,
       enum: MessageSenderType,
@@ -26,20 +39,24 @@ const MessageSchema = new Schema<MessageInput>(
       type: Boolean,
       default: false,
     },
+    senderData: {
+      type: SenderReceiverDataSchema,
+      default: () => ({}),
+    },
 
     receiverId: {
       type: Schema.Types.ObjectId,
       required: true,
     },
-    receiverCollectionName: {
-      type: String,
-      enum: CollectionName,
-      required: true,
-    },
+
     receiverType: {
       type: String,
       enum: MessageReceiverType,
       required: true,
+    },
+    receiverData: {
+      type: SenderReceiverDataSchema,
+      default: () => ({}),
     },
     deletedByReceiver: {
       type: Boolean,
