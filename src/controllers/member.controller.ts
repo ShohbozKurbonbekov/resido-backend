@@ -4,6 +4,7 @@ import {
   LoginInput,
   ExtendedRequest,
   UserInputUpdate,
+  UploadRequest,
 } from "../libs/types/user";
 import {
   CommonPageInput,
@@ -33,6 +34,7 @@ import { MessageInput } from "../libs/types/message";
 import residoAdminController from "./resido-admin.controller";
 import { MemberType } from "../libs/enums/member.enum";
 import { Agency } from "../schema/members/Agency.model";
+import { orrangeFiles } from "../libs/utils/orrangeFiles";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -130,15 +132,28 @@ memberController.getMemberDetail = async (
 };
 
 ////////////////////////// ------------ UPLOAD MEMBER -------------- /////////////////
-memberController.updateMember = async (req: ExtendedRequest, res: Response) => {
+memberController.updateMember = async (req: UploadRequest, res: Response) => {
   try {
     console.log("memberUpdate controller");
     const member = req.member;
-    const input: CommonUsersUpdateInput = req.body;
-
-    if (req.file) {
-      input.avatar = req.file.path.replace(/\\/g, "/");
+    const input = req.body;
+    const avatar = req.files?.avatar;
+    if (avatar?.length) {
+      input.avatar = orrangeFiles(avatar)[0];
     }
+    let socials;
+    if (
+      member.role === MemberType.USER ||
+      member.role === MemberType.REAL_ESTATE_ADMIN
+    ) {
+      socials = JSON.parse(req.body.memberSocials);
+      input.memberSocials = socials;
+    }
+    if (member.role === MemberType.AGENCY || member.role === MemberType.AGENT) {
+      socials = JSON.parse(req.body.socialLinks);
+      input.socialLinks = socials;
+    }
+
     const result = await memberService.updateMember(member, input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {

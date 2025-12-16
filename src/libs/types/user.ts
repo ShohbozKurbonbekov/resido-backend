@@ -64,6 +64,7 @@ export interface UserInputUpdate {
   occuption?: string;
   userDescription?: string;
   avatar?: string;
+  memberSocials?: Social;
 }
 
 export interface LoginInput {
