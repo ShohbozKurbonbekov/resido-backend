@@ -22,7 +22,7 @@ const Socials = new Schema(
       type: String,
       default: null,
     },
-    emial: {
+    email: {
       type: String,
       default: null,
     },
@@ -92,6 +92,7 @@ const UserSchema = new Schema<User>(
     },
     memberSocials: {
       type: Socials,
+      default: () => ({}),
     },
     avatar: {
       type: String,
