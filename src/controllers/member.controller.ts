@@ -35,6 +35,7 @@ import residoAdminController from "./resido-admin.controller";
 import { MemberType } from "../libs/enums/member.enum";
 import { Agency } from "../schema/members/Agency.model";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import { userInfo } from "os";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -338,6 +339,26 @@ memberController.checkMemberAuth = async (
   } catch (error) {
     console.log("Error in CheckMemberAuth: ", error);
     next();
+  }
+};
+
+//////////////////////// USER DASHBOARD -//////////////////////////
+memberController.userDashboardOverview = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("userDashboardOverview process");
+    const member = req.member;
+    const result = await memberService.userDashboardOverview(member);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in userDashboardOverview: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
   }
 };
 

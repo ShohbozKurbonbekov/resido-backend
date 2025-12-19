@@ -83,3 +83,11 @@ member.post(
   uploadFiles("blogs", "blogImage", 1, true),
   blogController.postBlog
 );
+
+/////////////////////// USER MEMBER DASHBOARD ////////////////////
+member.get(
+  "/dashboard/overview",
+  memberController.verifyMember,
+  allowRoles(Message.USER_PAGE, MemberType.USER),
+  memberController.userDashboardOverview
+);

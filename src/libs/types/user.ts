@@ -2,6 +2,7 @@ import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../enums/member.enum";
 import { Request } from "express";
 import { CommonUsers, Social } from "./common";
+import { TotalCounter } from "./property";
 
 export interface UploadFiles {
   videos?: Express.Multer.File[];
@@ -70,4 +71,13 @@ export interface UserInputUpdate {
 export interface LoginInput {
   memberEmail: string;
   memberPassword: string;
+}
+
+export interface UserDashboardOverviewType {
+  savedProperties: TotalCounter;
+  savedArticles: TotalCounter;
+  followedAgents: TotalCounter;
+  reviews: TotalCounter;
+  messages: TotalCounter;
+  generatedAt: Date;
 }

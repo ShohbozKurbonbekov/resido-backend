@@ -39,6 +39,7 @@ export enum Message {
   ONLY_USER_DELETE_COMMENT = "Only common users are allowed  to delete their comments",
   DELETING_FAILED = "Deleting failed",
   EXPIRED_TIME = "Given time expired!",
+  USER_PAGE = "Sorry, Only common users are allowed to request to this page",
 }
 
 class Errors extends Error {

@@ -5,6 +5,7 @@ import {
   User,
   LoginInput,
   UserInputUpdate,
+  UserDashboardOverviewType,
 } from "../libs/types/user";
 import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
@@ -38,18 +39,28 @@ import {
   T,
 } from "../libs/types/common";
 import { CollectionName } from "../libs/enums/message.enum";
+import BlogModel from "../schema/Blog.model";
+import UserSavingModel from "../schema/UserSaving.model";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
+import CommentModel from "../schema/Comment.model";
+import { CommentStatus } from "../libs/enums/comment.enum";
 
 class MemberService {
   private readonly userModel;
   private readonly agencyModel;
   private readonly agentModel;
   private readonly messageModel;
-
+  private readonly blogModel;
+  private readonly saveModel;
+  private readonly commentModel;
   constructor() {
     this.userModel = UserModel;
     this.agencyModel = AgencyModel;
     this.agentModel = AgentModel;
     this.messageModel = MessageModel;
+    this.blogModel = BlogModel;
+    this.saveModel = UserSavingModel;
+    this.commentModel = CommentModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -427,6 +438,66 @@ class MemberService {
     return result;
   }
 
+  /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
+  public async userDashboardOverview(
+    member: CommonUsers
+  ): Promise<UserDashboardOverviewType> {
+    const memberId: ObjectId = shapeIntoMongooseObjectId(member._id);
+
+    const [
+      savedPropertiesCount,
+      savedArticlesCount,
+      followedAgentsCount,
+      reviewsCount,
+      messagesCount,
+    ] = await Promise.all([
+      this.saveModel.countDocuments({
+        userId: memberId,
+        targetGroup: TargetGroup.PROPERTY,
+      }),
+      this.saveModel.countDocuments({
+        userId: memberId,
+        targetGroup: TargetGroup.BLOG,
+      }),
+      this.saveModel.countDocuments({
+        userId: memberId,
+        targetGroup: TargetGroup.AGENT,
+      }),
+      this.commentModel.countDocuments({
+        userId: memberId,
+        status: CommentStatus.ACTIVE,
+      }),
+      this.messageModel.countDocuments({
+        $or: [
+          {
+            senderId: memberId,
+            deletedBySender: false,
+          },
+          { receiverId: memberId, deletedBySender: false },
+        ],
+      }),
+    ]);
+
+    return {
+      savedProperties: {
+        total: savedPropertiesCount,
+      },
+      savedArticles: {
+        total: savedArticlesCount,
+      },
+      followedAgents: {
+        total: followedAgentsCount,
+      },
+      reviews: {
+        total: reviewsCount,
+      },
+      messages: {
+        total: messagesCount,
+      },
+      generatedAt: new Date(),
+    };
+  }
+
   //////////////////// - HELPER FUCNTIONS ---//////////////
   private generateMessageReceiver(receiver: CommonUsers): SenderReceiverType {
     if (
@@ -450,6 +521,7 @@ class MemberService {
       avatar: receiverData?.avatar,
     };
   }
+
   private generateMessageSender(sender: CommonUsers): SenderReceiverType {
     if (
       sender.role === MemberType.USER ||
