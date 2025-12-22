@@ -9,6 +9,7 @@ import { SocialsSchema } from "../../libs/utils/SocialsSchema";
 const AgentSchema = new Schema<Agent>(
   {
     agencyId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, required: true },
     nickname: {
       type: String,
       unique: true,
@@ -20,20 +21,10 @@ const AgentSchema = new Schema<Agent>(
       trim: true,
       required: true,
     },
-    memberEmail: {
-      type: String,
-      unique: true,
-      trim: true,
-      required: true,
-      validate: {
-        validator: (value) => {
-          return validator.isEmail(value);
-        },
-        message: "Please give a valid email",
-      },
-    },
+
     featuredScore: {
       type: Number,
+      default: 0,
     },
     views: {
       type: Number,
@@ -67,25 +58,6 @@ const AgentSchema = new Schema<Agent>(
       unique: true,
       trim: true,
     },
-    memberPassword: {
-      type: String,
-      required: true,
-      trim: true,
-      select: false,
-      validate: {
-        validator: (value) => {
-          return isStrongPassword(value, {
-            minLength: 7,
-            minLowercase: 1,
-            minSymbols: 1,
-            minUppercase: 1,
-            minNumbers: 3,
-          });
-        },
-        message:
-          "Please, Make sure that You are providing at leat 7 characters with at least one lowercase letter, one symbol, one uppercase and 3 numbers ",
-      },
-    },
     role: {
       type: String,
       enum: MemberType,
@@ -112,6 +84,10 @@ const AgentSchema = new Schema<Agent>(
     licenseNumber: {
       type: String,
     },
+    certificate: {
+      type: String,
+      required: true,
+    },
     avatar: {
       type: String,
     },
@@ -133,27 +109,5 @@ const AgentSchema = new Schema<Agent>(
   },
   { timestamps: true }
 );
-
-AgentSchema.methods.toJSON = function () {
-  const user = this;
-  const userObject = user.toObject(); //  In Mongoose, the .toObject() method is used to convert a Mongoose document into a plain JavaScript object.
-  delete userObject.memberPassword;
-
-  return userObject;
-};
-
-AgentSchema.pre("save", async function (next) {
-  // HASHING PASSWORD
-  const user: any = this;
-  if (user.isModified("memberPassword")) {
-    const salt: string = await bcrypt.genSalt();
-    user.memberPassword = await bcrypt.hash(user.memberPassword, salt);
-
-    next();
-  }
-  if (!user?.licenseNumber) {
-    user.licenseNumber = `BR-` + Date.now() + "-" + "RESIDO";
-  }
-});
 
 export default mongoose.model("Agent", AgentSchema);

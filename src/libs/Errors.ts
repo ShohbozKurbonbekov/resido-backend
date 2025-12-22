@@ -7,6 +7,7 @@ export enum HttpCode {
   FORBIDDEN = 403,
   NOT_FOUND = 404,
   INTERNAL_SERVER_ERROR = 500,
+  CONFLICT = 409,
 }
 
 export enum Message {
@@ -20,7 +21,7 @@ export enum Message {
   USED_USERNAME_PHONE_PASSWORD = "Oops, Something wrong with your either username or email, at least check you have strong password",
   WRONG_PASSWORD = "Wrong password, Please try again",
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
-  NO_MEMBER = "No member with that email",
+  NO_MEMBER = "No member found",
   INVALID_ROLE = "you are not allowed to request this role",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
   ONLY_USERS = "Sorry, only common users are allowed to like it",
@@ -40,6 +41,9 @@ export enum Message {
   DELETING_FAILED = "Deleting failed",
   EXPIRED_TIME = "Given time expired!",
   USER_PAGE = "Sorry, Only common users are allowed to request to this page",
+  INVALID_SOCIALS = "Invalid social networks data",
+  AGENT_EXISTS = "Agent application already exists",
+  AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
 }
 
 class Errors extends Error {

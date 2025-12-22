@@ -83,7 +83,6 @@ const AgencySchema = new Schema<AgencyMemberInput>(
     },
     memberPassword: {
       type: String,
-      select: false,
       index: true,
       required: true,
       minlength: 7,

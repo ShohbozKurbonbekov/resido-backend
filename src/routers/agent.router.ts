@@ -4,6 +4,8 @@ import agentController from "../controllers/Agent.controller";
 import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import { allowRoles } from "../middlewares/allowRoles";
+import uploadAgent from "../libs/utils/agentUploader";
+import multerErrorHandler from "../middlewares/errorHandler";
 const agent = express.Router();
 
 ////////////////////// ---- AGENT DETAIL ---------- //////////////
@@ -47,4 +49,18 @@ agent.post(
   agentController.getFollowedAgents
 );
 
+////////////////// -- AGENT APPLY --- ///////////////
+agent.post(
+  "/apply/become-agent",
+  memberController.verifyMember,
+  uploadAgent("agents").fields([
+    { name: "avatar", maxCount: 1 },
+    {
+      name: "certificate",
+      maxCount: 1,
+    },
+  ]),
+  multerErrorHandler,
+  agentController.agentApply
+);
 export default agent;

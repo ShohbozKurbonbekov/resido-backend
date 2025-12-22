@@ -3,7 +3,7 @@ import multer from "multer";
 import { v4 } from "uuid";
 import path from "path";
 
-const getTargetImageStorage = (address: string) => {
+export const getTargetFileStorage = (address: string) => {
   const uploadPath = `./uploads/${address}`;
 
   // create a folder  if no
@@ -25,7 +25,7 @@ const getTargetImageStorage = (address: string) => {
 };
 
 const makeUploader = (address: string) => {
-  const storage = getTargetImageStorage(address);
+  const storage = getTargetFileStorage(address);
 
   return multer({
     storage: storage,

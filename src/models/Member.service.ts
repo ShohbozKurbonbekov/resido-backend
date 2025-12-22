@@ -81,22 +81,14 @@ class MemberService {
 
   /////////////////////////// --  MEMBER SIGN UP -- //////////////////////////////
   public async signup(
-    input: UserMemberInput | AgencyMemberInput | MemberAgentInput
-  ): Promise<CommonUsers> {
+    input: UserMemberInput | AgencyMemberInput
+  ): Promise<User | Agency> {
     try {
-      let result;
-      if (
-        input.role === MemberType.USER ||
-        input.role === MemberType.REAL_ESTATE_ADMIN
-      ) {
-        result = await this.userModel.create(input);
-      } else if (input.role === MemberType.AGENCY) {
-        result = await this.agencyModel.create(input);
-      } else {
-        result = await this.agentModel.create(input);
+      if (input.role === MemberType.AGENCY) {
+        return (await this.agencyModel.create(input)).toObject();
       }
 
-      return result.toObject();
+      return (await this.userModel.create(input)).toObject();
     } catch (error) {
       console.log("Error in userSignup service model", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
@@ -106,88 +98,67 @@ class MemberService {
   /////////////////////////// --  MEMBER LOGIN -- //////////////////////////////
 
   public async login(input: LoginInput): Promise<User | Agency | Agent> {
-    let member: null | Agency | Agent | User = null;
-    const memberUser: null | User = await this.userModel.findOne(
-      {
-        memberEmail: input.memberEmail,
+    const { memberEmail, memberPassword } = input;
+    // AGENCY LOGIN
+    const agency = await this.agencyModel
+      .findOne({
+        memberEmail,
         memberStatus: { $ne: MemberStatus.DELETED },
-      },
-      {
-        memberPassword: 1,
-        memberStatus: 1,
-        _id: 1,
+      })
+      .lean();
+
+    if (agency) {
+      if (agency.memberStatus === MemberStatus.BLOCKED) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
       }
-    );
-    const memberAgent: null | Agent = await this.agentModel.findOne(
-      {
-        memberEmail: input.memberEmail,
-        memberStatus: { $ne: MemberStatus.DELETED },
-      },
-      {
-        memberPassword: 1,
-        memberStatus: 1,
-        _id: 1,
+
+      const ok = await bcrypt.compare(memberPassword, agency?.memberPassword);
+
+      if (!ok) {
+        throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
       }
-    );
-    const memberAgency: null | Agency = await this.agencyModel
-      .findOne(
-        {
-          memberEmail: input.memberEmail,
-          memberStatus: { $ne: MemberStatus.DELETED },
+
+      return agency;
+    }
+
+    const user = await this.userModel
+      .findOne({
+        memberEmail,
+        memberStatus: {
+          $ne: MemberStatus.DELETED,
         },
-        {
-          memberPassword: 1,
-          memberStatus: 1,
-          _id: 1,
-        }
-      )
-      .exec();
+      })
+      .lean();
 
-    if (memberUser) member = memberUser;
-    if (memberAgency) member = memberAgency;
-    if (memberAgent) member = memberAgent;
-
-    if (!member) {
+    if (!user) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
-    } else if (member.memberStatus === MemberStatus.BLOCKED) {
+    }
+
+    if (user.memberStatus === MemberStatus.BLOCKED) {
       throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
     }
-    const isMatch: boolean = await bcrypt.compare(
-      input.memberPassword,
-      member.memberPassword
-    );
 
-    if (!isMatch) {
+    const match = await bcrypt.compare(memberPassword, user.memberPassword);
+
+    if (!match) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
     }
 
-    let result: User | Agent | Agency | null = null;
+    if (user.agentMode === true) {
+      const agent = await this.agentModel
+        .findOne({
+          userId: user._id,
+          currentStatus: AgentStatus.AVAILABLE,
+        })
+        .lean();
 
-    const resultUser: null | User = await this.userModel
-      .findById(member?._id)
-      .lean()
-      .exec();
-    const resultAgent: null | Agent = await this.agentModel
-      .findById(member?._id)
-      .lean()
-      .exec();
-    const resultAgency: null | Agency = await this.agencyModel
-      .findById(member?._id)
-      .lean()
-      .exec();
-
-    if (resultUser) {
-      result = resultUser;
-    } else if (resultAgent) {
-      result = resultAgent;
-    } else if (resultAgency) {
-      result = resultAgency;
+      if (!agent) {
+        throw new Errors(HttpCode.CONFLICT, Message.AGENT_NOT_ACTIVE);
+      }
+      return agent;
     }
 
-    if (!result) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
-    }
-    return result;
+    return user;
   }
 
   /////////////////////////// --  GET MEMBER DETAIL -- //////////////////////////////

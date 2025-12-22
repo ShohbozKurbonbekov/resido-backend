@@ -61,10 +61,8 @@ memberController.getAdmin = async (req: Request, res: Response) => {
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup process");
-    const input: UserMemberInput | AgencyMemberInput | MemberAgentInput =
-      req.body;
-    let result: CommonUsers = await memberService.signup(input);
-    // create token
+    const input: UserMemberInput | AgencyMemberInput = req.body;
+    let result = await memberService.signup(input);
     const token = await authService.createToken(result);
     res.cookie("accessToken", token, {
       maxAge: jwtTime * 60 * 60 * 1000,
@@ -88,8 +86,8 @@ memberController.login = async (req: Request, res: Response) => {
     console.log("login");
     const input: LoginInput = req.body;
 
-    const result: User | Agency | Agent = await memberService.login(input);
-
+    const result = await memberService.login(input);
+    console.log(result);
     const token: string = await authService.createToken(result);
 
     res.cookie("accessToken", token, {

@@ -1,6 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
+import {
+  MemberStatus,
+  MemberType,
+  UserCurrentStatus,
+} from "../../libs/enums/member.enum";
 import validator from "validator";
 import { User } from "../../libs/types/user";
 
@@ -39,6 +43,11 @@ const UserSchema = new Schema<User>(
       enum: MemberType,
       default: MemberType.USER,
     },
+
+    agentMode: {
+      type: Boolean,
+      default: false,
+    },
     memberName: {
       type: String,
       unique: true,
@@ -73,7 +82,6 @@ const UserSchema = new Schema<User>(
 
     memberPassword: {
       type: String,
-      select: false,
       required: true,
       minLength: 7,
       trim: true,

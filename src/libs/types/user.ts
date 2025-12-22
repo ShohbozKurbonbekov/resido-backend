@@ -1,5 +1,9 @@
 import { ObjectId } from "mongoose";
-import { MemberStatus, MemberType } from "../enums/member.enum";
+import {
+  MemberStatus,
+  MemberType,
+  UserCurrentStatus,
+} from "../enums/member.enum";
 import { Request } from "express";
 import { CommonUsers, Social } from "./common";
 import { TotalCounter } from "./property";
@@ -9,6 +13,7 @@ export interface UploadFiles {
   images?: Express.Multer.File[];
   blogImage?: Express.Multer.File[];
   avatar?: Express.Multer.File[];
+  certificate?: Express.Multer.File[];
 }
 
 export type UploadRequest = Request<{ id: string }, {}, any> & {
@@ -43,6 +48,8 @@ export interface User {
   memberEmail: string;
   memberPassword: string;
   role: MemberType;
+  agentStatus: UserCurrentStatus;
+  agentMode: boolean;
   memberStatus: MemberStatus;
   memberSocials: Social;
   occupation?: string;

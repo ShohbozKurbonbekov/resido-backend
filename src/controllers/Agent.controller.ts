@@ -8,12 +8,13 @@ import {
   FeaturedAgentsResult,
   SearchByLocationInput,
 } from "../libs/types/agent";
-import { ExtendedRequest } from "../libs/types/user";
+import { ExtendedRequest, UploadRequest, User } from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { ObjectId } from "mongoose";
 import { AgentPropertyType } from "../libs/enums/agent.enum";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
+import { orrangeFiles } from "../libs/utils/orrangeFiles";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -187,4 +188,44 @@ agentController.getFollowedAgents = async (
   }
 };
 
+////////////////////////// ------------ AGENT APPLY -------------- /////////////////
+agentController.agentApply = async (req: UploadRequest, res: Response) => {
+  try {
+    console.log("agentApply process");
+    const input = req.body;
+
+    const member = req.member as User;
+
+    const avatar = req.files?.avatar;
+    const certificate = req.files?.certificate;
+    if (avatar?.length) {
+      input.avatar = orrangeFiles(avatar)[0];
+    }
+    if (certificate?.length) {
+      input.certificate = orrangeFiles(certificate)[0];
+    }
+
+    if (req.body?.socialLinks) {
+      try {
+        input.socialLinks = JSON.parse(req.body.socialLinks);
+      } catch {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_SOCIALS);
+      }
+    }
+
+    input.yearOfExperience = Number.isFinite(input.yearOfExperience)
+      ? input.yearOfExperience
+      : 0;
+
+    const result = await agentService.agentApply(input, member);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agentApply procees: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agentController;

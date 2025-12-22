@@ -10,3 +10,8 @@ export enum MemberStatus {
   BLOCKED = "BLOCK",
   DELETED = "DELETE",
 }
+
+export enum UserCurrentStatus {
+  NONE = "NONE",
+  AGENT = "AGENT",
+}

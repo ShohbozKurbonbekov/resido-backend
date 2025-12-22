@@ -4,6 +4,7 @@ import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { Agent } from "../libs/types/agent";
 import { CommonUsers } from "../libs/types/common";
+import { Agency } from "../schema/members/Agency.model";
 
 class AuthService {
   private readonly secretToken;
@@ -11,7 +12,7 @@ class AuthService {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: CommonUsers): Promise<string> {
+  public async createToken(payload: User | Agency | Agent): Promise<string> {
     return new Promise((resolve, reject) => {
       jwt.sign(
         payload,

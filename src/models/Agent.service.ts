@@ -5,6 +5,7 @@ import {
   AgentResults,
   FeaturedAgentsInput,
   FeaturedAgentsResult,
+  MemberAgentInput,
   SearchByLocationInput,
   SearchByLocationResult,
 } from "../libs/types/agent";
@@ -15,7 +16,7 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, UserCurrentStatus } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
 import { ObjectId } from "mongoose";
@@ -38,6 +39,8 @@ import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
+import { User } from "../libs/types/user";
+import UserModel from "../schema/members/User.model";
 
 class AgentService {
   private readonly agentModel;
@@ -45,6 +48,7 @@ class AgentService {
   public readonly likeService;
   public readonly saveService;
   public readonly saveModel;
+  public readonly userModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -52,6 +56,7 @@ class AgentService {
     this.likeService = new LikeService();
     this.saveService = new UserSaving();
     this.saveModel = UserSavingModel;
+    this.userModel = UserModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -710,6 +715,33 @@ class AgentService {
     ]);
 
     return { agent: result };
+  }
+
+  // AGENT APPLY
+  public async agentApply(
+    input: MemberAgentInput,
+    member: User
+  ): Promise<Agent> {
+    const _id = shapeIntoMongooseObjectId(member._id);
+    const target = await this.agentModel
+      .findOne({ userId: _id })
+      .select("memberPassword _id memberEmail");
+
+    if (target) {
+      throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
+    }
+    console.log(member);
+    try {
+      const agent = await this.agentModel.create({
+        ...input,
+        userId: member._id,
+      });
+
+      return agent;
+    } catch (error) {
+      console.log("Error in agentApply service: ", error);
+      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+    }
   }
 }
 export default AgentService;

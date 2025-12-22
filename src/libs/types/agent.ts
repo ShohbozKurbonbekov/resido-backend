@@ -7,19 +7,20 @@ import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
 
 export interface MemberAgentInput {
-  agencyId: ObjectId;
+  userId: string;
+  agencyId: string;
   nickname: string;
   fullName: string;
-  memberEmail: string;
   phone: string;
-  memberPassword: string;
   role?: MemberType;
   address: string;
   memberStatus?: MemberStatus;
   yearOfExperience: number;
   bioInfo: string;
+  socialLinks: Social;
   licenseNumber: string;
   currentStatus?: AgentStatus;
+  certificate: string;
   totalComments?: number;
   views?: number;
   totalLikes?: number;
@@ -28,18 +29,16 @@ export interface MemberAgentInput {
   rank?: string;
   avatar?: string;
   points?: number;
-  socialLinks?: Social;
   isVerified?: boolean;
 }
 
 export interface Agent {
   _id: ObjectId;
   agencyId: ObjectId;
+  userId: ObjectId;
   nickname: string;
   fullName: string;
-  memberEmail: string;
   phone: string;
-  memberPassword: string;
   role: MemberType;
   address: string;
   yearOfExperience: number;
@@ -58,6 +57,8 @@ export interface Agent {
   rank?: string;
   ///////////
   currentStatus: AgentStatus;
+  certificate: string;
+  agentMode: boolean;
   avatar?: string;
   // comments?: [];
 }
@@ -66,9 +67,7 @@ export interface AgentInputUpdate {
   _id: ObjectId;
   nickname?: string;
   fullName?: string;
-  memberEmail?: string;
   phone?: string;
-  memberPassword?: string;
   address?: string;
   yearOfExperience?: number;
   bioInfo?: string;
