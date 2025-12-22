@@ -83,12 +83,14 @@ class MemberService {
   public async signup(
     input: UserMemberInput | AgencyMemberInput
   ): Promise<User | Agency> {
+    let result;
     try {
       if (input.role === MemberType.AGENCY) {
-        return (await this.agencyModel.create(input)).toObject();
+        result = (await this.agencyModel.create(input)).toObject();
       }
 
-      return (await this.userModel.create(input)).toObject();
+      result = (await this.userModel.create(input)).toObject();
+      return result;
     } catch (error) {
       console.log("Error in userSignup service model", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
@@ -101,10 +103,17 @@ class MemberService {
     const { memberEmail, memberPassword } = input;
     // AGENCY LOGIN
     const agency = await this.agencyModel
-      .findOne({
-        memberEmail,
-        memberStatus: { $ne: MemberStatus.DELETED },
-      })
+      .findOne(
+        {
+          memberEmail,
+          memberStatus: { $ne: MemberStatus.DELETED },
+        },
+        {
+          memberStatus: 1,
+          _id: 1,
+          memberPassword: 1,
+        }
+      )
       .lean();
 
     if (agency) {
@@ -118,16 +127,24 @@ class MemberService {
         throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
       }
 
-      return agency;
+      return (await this.agencyModel.findById(agency._id)) as Agency;
     }
 
     const user = await this.userModel
-      .findOne({
-        memberEmail,
-        memberStatus: {
-          $ne: MemberStatus.DELETED,
+      .findOne(
+        {
+          memberEmail,
+          memberStatus: {
+            $ne: MemberStatus.DELETED,
+          },
         },
-      })
+        {
+          memberStatus: 1,
+          _id: 1,
+          memberPassword: 1,
+          agentMode: 1,
+        }
+      )
       .lean();
 
     if (!user) {
@@ -156,9 +173,9 @@ class MemberService {
         throw new Errors(HttpCode.CONFLICT, Message.AGENT_NOT_ACTIVE);
       }
       return agent;
+    } else {
+      return (await this.userModel.findById(user._id)) as User;
     }
-
-    return user;
   }
 
   /////////////////////////// --  GET MEMBER DETAIL -- //////////////////////////////

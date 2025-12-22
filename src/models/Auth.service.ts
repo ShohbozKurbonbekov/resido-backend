@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { Agent } from "../libs/types/agent";
-import { CommonUsers } from "../libs/types/common";
+import { CommonUsers, T } from "../libs/types/common";
 import { Agency } from "../schema/members/Agency.model";
 
 class AuthService {
@@ -12,7 +12,7 @@ class AuthService {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: User | Agency | Agent): Promise<string> {
+  public async createToken(payload: T): Promise<string> {
     return new Promise((resolve, reject) => {
       jwt.sign(
         payload,
