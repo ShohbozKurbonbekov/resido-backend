@@ -37,7 +37,7 @@ agent.post(
 agent.get(
   "/:id/toggle-save",
   memberController.verifyMember,
-  allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
+  allowRoles(Message.ONLY_USERS_FOLLOW, MemberType.USER),
   agentController.saveToggleAgent
 );
 
@@ -62,5 +62,20 @@ agent.post(
   ]),
   multerErrorHandler,
   agentController.agentApply
+);
+
+////////////////// -- AGENT UPDATE --- ///////////////
+agent.post(
+  "/update/agent-profile",
+  memberController.verifyMember,
+  uploadAgent("agents").fields([
+    { name: "avatar", maxCount: 1 },
+    {
+      name: "certificate",
+      maxCount: 1,
+    },
+  ]),
+  multerErrorHandler,
+  agentController.updateAgentProfile
 );
 export default agent;

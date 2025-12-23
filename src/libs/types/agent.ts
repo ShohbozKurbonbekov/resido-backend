@@ -64,14 +64,15 @@ export interface Agent {
 }
 
 export interface AgentInputUpdate {
-  _id: ObjectId;
   nickname?: string;
   fullName?: string;
   phone?: string;
   address?: string;
   yearOfExperience?: number;
   bioInfo?: string;
-  socialLinks?: Social;
+  licenseNumber?: string; // set in the schema
+  socialLinks?: Social; // set in the schema
+  certificate?: string;
   avatar?: string;
 }
 

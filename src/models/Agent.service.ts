@@ -1,6 +1,7 @@
 import {
   Agent,
   AgentDetailType,
+  AgentInputUpdate,
   AgentPropertiesInput,
   AgentResults,
   FeaturedAgentsInput,
@@ -742,6 +743,23 @@ class AgentService {
       console.log("Error in agentApply service: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
+  }
+
+  // AGENT CHANGE
+  public async updateAgentProfile(
+    input: AgentInputUpdate,
+    memberId: ObjectId
+  ): Promise<Agent> {
+    const result = await this.agentModel
+      .findByIdAndUpdate({ _id: memberId }, input, { new: true })
+      .lean()
+      .exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    return result;
   }
 }
 export default AgentService;

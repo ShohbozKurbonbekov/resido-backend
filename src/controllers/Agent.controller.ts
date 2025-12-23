@@ -15,6 +15,7 @@ import { AgentPropertyType } from "../libs/enums/agent.enum";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import { Agent } from "http";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -221,6 +222,49 @@ agentController.agentApply = async (req: UploadRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in agentApply procees: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////// ------------ AGENT UPDATE -------------- /////////////////
+agentController.updateAgentProfile = async (
+  req: UploadRequest,
+  res: Response
+) => {
+  try {
+    console.log("updateAgentProfile process");
+    const input = req.body;
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+
+    const avatar = req.files?.avatar;
+    const certificate = req.files?.certificate;
+    if (avatar?.length) {
+      input.avatar = orrangeFiles(avatar)[0];
+    }
+    if (certificate?.length) {
+      input.certificate = orrangeFiles(certificate)[0];
+    }
+
+    if (req.body?.socialLinks) {
+      try {
+        input.socialLinks = JSON.parse(req.body.socialLinks);
+      } catch {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_SOCIALS);
+      }
+    }
+
+    input.yearOfExperience = Number.isFinite(input.yearOfExperience)
+      ? input.yearOfExperience
+      : 0;
+
+    const result = await agentService.updateAgentProfile(input, memberId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateAgentProfile procees: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
