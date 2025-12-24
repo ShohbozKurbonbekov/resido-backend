@@ -15,12 +15,12 @@ export interface BlogInput {
   blogAuthorType: BlogAuthorType;
   blogShortInfo: string;
   blogAuthorId: ObjectId;
-  blogStatus: BlogStatus;
   blogTitle: string;
   blogContent: string;
   blogImage: string;
   blogQuote?: string;
   blogTags: string[];
+  blogStatus?: BlogStatus;
   views?: number;
   totalLikes?: number;
   totalComments?: number;
@@ -29,7 +29,7 @@ export interface BlogInput {
   updatedAt?: Date;
   averageRating?: number;
   blogAuthor: BlogAuthor;
-  totalSavings: number;
+  totalSavings?: number;
 }
 
 export interface BlogSearchType {

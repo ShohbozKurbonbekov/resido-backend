@@ -532,6 +532,32 @@ class MemberService {
       avatar: senderData?.avatar,
     };
   }
+
+  ////////////////////////// - GET MEMBER FULL DATA --- //////////////////
+  public async getMemberData(
+    role: MemberType,
+    id: ObjectId
+  ): Promise<CommonUsers> {
+    const MemberModels: T = {
+      USER: this.userModel,
+      AGENT: this.agentModel,
+      AGENCY: this.agencyModel,
+      REAL_ESTATE_ADMIN: this.userModel,
+    };
+    const CurrentModel = MemberModels[role];
+
+    if (!CurrentModel) {
+      throw new Errors(HttpCode.UNAUTHORIZED, Message.INVALID_ROLE);
+    }
+
+    const member = await CurrentModel.findById({ _id: id }).lean().exec();
+
+    if (!member) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return member;
+  }
 }
 
 export default MemberService;

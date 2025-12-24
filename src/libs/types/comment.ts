@@ -4,21 +4,15 @@ import { TotalCounter } from "./property";
 import { CommonPageInput } from "./common";
 import { CommentDocs } from "../../schema/Comment.model";
 
-interface UserInfoType {
-  avatar: string;
-  name: string;
-  occupation: string;
-  phone?: string;
-  email?: string;
-  userAddress?: string;
-  userDescription?: string;
+export interface ReceiverDataType {
+  targetName: string;
+  targetImage: string | undefined;
 }
-
 export interface CommentInput {
   targetType: CommentTargetType;
   targetId: ObjectId;
   content: string;
-  userInfo?: UserInfoType;
+  receiverData: ReceiverDataType;
   userId?: ObjectId;
   rating?: number;
   status?: CommentStatus;

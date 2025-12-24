@@ -21,9 +21,9 @@ commentController.createComment = async (
 ) => {
   try {
     console.log("createComment process");
-    const input = <CommentInput>req.body;
+    const input = req.body;
     const user = req.member;
-    const result: CommentDocs = await commentService.createComment(input, user);
+    const result = await commentService.createComment(input, user);
     res.status(HttpCode.CREATED).json(result);
   } catch (error) {
     console.log("Error in creating comment process: ", error);

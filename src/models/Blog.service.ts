@@ -166,13 +166,15 @@ class BlogService {
           };
 
     const CurrentModel = Models[member.role];
+    if (!CurrentModel) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    }
 
     const blogger = await CurrentModel.findOne(match);
 
     if (!blogger) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
-    console.log(blogger);
     try {
       const result = await this.blogModel.create({
         ...input,
@@ -185,9 +187,9 @@ class BlogService {
         blogAuthor: {
           authorAvatar: blogger?.avatar,
           authorName:
-            blogger?.memberName ?? blogger?.fullName ?? blogger?.nickname,
-          socials: blogger?.socialLinks ?? blogger?.socials,
-          bioInfo: blogger?.bioInfo ?? blogger?.memberDescription,
+            blogger?.memberName || blogger?.fullName || blogger?.nickname,
+          socials: blogger?.socialLinks || blogger?.socials,
+          bioInfo: blogger?.bioInfo || blogger?.memberDescription,
         },
       });
 

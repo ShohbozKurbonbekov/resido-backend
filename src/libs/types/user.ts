@@ -52,7 +52,7 @@ export interface User {
   agentMode: boolean;
   memberStatus: MemberStatus;
   memberSocials: Social;
-  occupation?: string;
+  occupation: string;
   userFullname?: string;
   memberAddress?: string;
   memberDescription?: string;

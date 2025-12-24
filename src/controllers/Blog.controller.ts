@@ -16,13 +16,13 @@ const blogService = new BlogService();
 blogController.postBlog = async (req: UploadRequest, res: Response) => {
   try {
     const parsedTags = req.body.blogTags ? JSON.parse(req.body.blogTags) : [];
-    const input: BlogInput = req.body;
-    input.blogTags = parsedTags;
     const member = req.member;
+    const input = req.body;
+    input.blogTags = parsedTags;
     if (req.files?.blogImage?.length) {
-      input.blogImage = orrangeFiles(req.files?.blogImage).join("");
+      input.blogImage = orrangeFiles(req.files?.blogImage)[0];
     }
-
+    console.log("/////////////////////////", input.blogTitle);
     const result = await blogService.postBlog(member, input);
 
     res.status(HttpCode.OK).json(result);

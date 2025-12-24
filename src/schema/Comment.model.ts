@@ -1,28 +1,14 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
-import { CommentInput } from "../libs/types/comment";
+import { CommentInput, ReceiverDataType } from "../libs/types/comment";
 
-const CommentUserSchema = new Schema(
+const ReceiverDataSchema = new Schema<ReceiverDataType>(
   {
-    name: {
+    targetName: {
       type: String,
       required: true,
     },
-    avatar: {
-      type: String,
-    },
-    phone: {
-      type: String,
-    },
-    occupation: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-    },
-    userAddress: { type: String },
-    userDescription: {
+    targetImage: {
       type: String,
     },
   },
@@ -59,8 +45,8 @@ const CommentSchema = new Schema<CommentInput>(
       type: Number,
       default: 0,
     },
-    userInfo: {
-      type: CommentUserSchema,
+    receiverData: {
+      type: ReceiverDataSchema,
       required: true,
     },
   },

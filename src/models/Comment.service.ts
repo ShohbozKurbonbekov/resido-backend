@@ -9,23 +9,30 @@ import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import AgentModel from "../schema/members/Agent.model";
-import PropertyModel from "../schema/Property.model";
+import PropertyModel, { Property } from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { CommonPageInput, T } from "../libs/types/common";
-import BlogModel from "../schema/Blog.model";
+import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import { Model, ObjectId } from "mongoose";
+import MemberService from "./Member.service";
+import member from "../routers/member.router";
+import { User } from "../libs/types/user";
+import { TargetGroup } from "../libs/enums/userSaving.enum";
+import { Agent } from "../libs/types/agent";
 
 class CommentService {
   public readonly commentModel;
   public readonly agentModel;
   public readonly propertyModel;
   public readonly blogModel;
+  public readonly memberService;
 
   constructor() {
     this.commentModel = CommentModel;
     this.agentModel = AgentModel;
     this.propertyModel = PropertyModel;
     this.blogModel = BlogModel;
+    this.memberService = new MemberService();
   }
 
   ///////////////////////// CREATE A COMMENT /////////////
@@ -43,7 +50,7 @@ class CommentService {
       const CurrentModel = Models[input.targetType];
 
       if (!CurrentModel) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+        throw new Errors(HttpCode.UNAUTHORIZED, Message.INVALID_ROLE);
       }
 
       const id = shapeIntoMongooseObjectId(input.targetId);
@@ -53,18 +60,13 @@ class CommentService {
         throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
       }
 
-      input.userId = member?._id;
-      input.userInfo = {
-        name: member?.memberName ?? member?.userFullname,
-        avatar: member?.avatar,
-        email: member?.memberEmail,
-        phone: member?.memberPhone,
-        userAddress: member?.memberAddress ?? "No address",
-        userDescription: member?.memberDescription ?? "No description",
-        occupation: member?.occupation,
-      };
+      const receiverData = this.findReceiver(input.targetType, target);
 
-      const result = await this.commentModel.create(input);
+      const result = await this.commentModel.create({
+        ...input,
+        receiverData,
+        userId: shapeIntoMongooseObjectId(member._id),
+      });
       return result;
     } catch (error) {
       console.log("Error in createComment service: ", error);
@@ -270,6 +272,34 @@ class CommentService {
       throw new Errors(HttpCode.BAD_REQUEST, Message.DELETING_FAILED);
     }
     return result;
+  }
+
+  /////////////////////////// -- HELPER FUNCTIONS -- ////////////////////
+
+  private findReceiver(
+    role: CommentTargetType,
+    targatData: Agent | BlogDoc | Property
+  ) {
+    if (role === CommentTargetType.BLOG) {
+      const data = targatData as BlogDoc;
+      return {
+        targetName: data?.blogTitle,
+        targetImage: data?.blogImage,
+      };
+    }
+    if (role === CommentTargetType.PROPERTY) {
+      const data = targatData as Property;
+      return {
+        targetName: data?.title,
+        targetImage: data?.images?.[0],
+      };
+    }
+
+    const data = targatData as Agent;
+    return {
+      targetName: data?.fullName,
+      targetImage: data?.avatar,
+    };
   }
 }
 export default CommentService;
