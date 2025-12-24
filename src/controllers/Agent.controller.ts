@@ -257,10 +257,10 @@ agentController.updateAgentProfile = async (
       }
     }
 
-    input.yearOfExperience = Number.isFinite(input.yearOfExperience)
-      ? input.yearOfExperience
-      : 0;
+    const exNum = Number(input.yearOfExperience);
+    input.yearOfExperience = Number.isFinite(exNum) ? exNum : 0;
 
+    console.log(typeof input.yearOfExperience, input.yearOfExperience);
     const result = await agentService.updateAgentProfile(input, memberId);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
