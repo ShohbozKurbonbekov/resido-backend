@@ -6,8 +6,6 @@ import path from "path";
 export const getTargetFileStorage = (address: string) => {
   const uploadPath = `./uploads/${address}`;
 
-  // create a folder  if no
-
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
   }
@@ -30,7 +28,7 @@ const makeUploader = (address: string) => {
   return multer({
     storage: storage,
     limits: {
-      fileSize: 5000_000,
+      fileSize: 1024 * 1024 * 5,
     },
 
     fileFilter: (req, file, cb) => {
@@ -43,7 +41,7 @@ const makeUploader = (address: string) => {
         );
       }
 
-      cb(null, true);
+      return cb(null, true);
     },
   });
 };

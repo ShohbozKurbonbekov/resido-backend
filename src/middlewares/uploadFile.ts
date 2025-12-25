@@ -1,5 +1,6 @@
 import { NextFunction, RequestHandler, Response, Request } from "express";
 import makeUploader from "../libs/utils/uploader";
+import { HttpCode } from "../libs/Errors";
 
 interface FieldValueType {
   name: string;
@@ -32,8 +33,9 @@ const uploadFiles = (
 
     upload(req, res, (error: any) => {
       if (error) {
-        return res.status(400).json({
-          error: error.message,
+        return res.status(HttpCode.BAD_REQUEST).json({
+          error: error.code,
+          message: error.message,
         });
       }
 

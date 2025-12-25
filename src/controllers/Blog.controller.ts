@@ -22,7 +22,7 @@ blogController.postBlog = async (req: UploadRequest, res: Response) => {
     if (req.files?.blogImage?.length) {
       input.blogImage = orrangeFiles(req.files?.blogImage)[0];
     }
-    console.log("/////////////////////////", input.blogTitle);
+
     const result = await blogService.postBlog(member, input);
 
     res.status(HttpCode.OK).json(result);
