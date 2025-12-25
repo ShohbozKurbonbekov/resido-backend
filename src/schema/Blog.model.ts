@@ -120,6 +120,8 @@ BlogSchema.index({
   blogTitle: 1,
   blogCategory: 1,
   blogTags: 1,
+  createdAt: 1,
+  blogAuthorType: 1,
 });
 
 export type BlogDoc = InferSchemaType<typeof BlogSchema>;

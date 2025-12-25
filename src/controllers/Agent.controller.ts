@@ -271,4 +271,28 @@ agentController.updateAgentProfile = async (
     }
   }
 };
+
+////////////////////////// ------------ AGENT MY BLOG -------------- /////////////////
+agentController.myBlogs = async (req: ExtendedRequest, res: Response) => {
+  try {
+    const member = req.member;
+    const { limit, page } = req.body;
+    const query: CommonPageInput = {
+      page: Number(page || 1),
+      limit: Number(limit || 6),
+    };
+
+    const result = await agentService.myBlogs(member, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agent myBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default agentController;

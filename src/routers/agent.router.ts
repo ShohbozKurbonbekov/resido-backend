@@ -78,4 +78,12 @@ agent.post(
   multerErrorHandler,
   agentController.updateAgentProfile
 );
+
+//////////////////// -- MY BLOGS --- ///////////////
+agent.post(
+  "/get/myBlogs",
+  memberController.verifyMember,
+  agentController.myBlogs
+);
+
 export default agent;

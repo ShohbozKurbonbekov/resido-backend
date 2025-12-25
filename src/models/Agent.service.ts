@@ -42,6 +42,9 @@ import { TargetGroup } from "../libs/enums/userSaving.enum";
 import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
 import { User } from "../libs/types/user";
 import UserModel from "../schema/members/User.model";
+import { Blogs } from "../libs/types/blog";
+import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
+import BlogModel from "../schema/Blog.model";
 
 class AgentService {
   private readonly agentModel;
@@ -50,6 +53,7 @@ class AgentService {
   public readonly saveService;
   public readonly saveModel;
   public readonly userModel;
+  private readonly blogModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -58,6 +62,7 @@ class AgentService {
     this.saveService = new UserSaving();
     this.saveModel = UserSavingModel;
     this.userModel = UserModel;
+    this.blogModel = BlogModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -759,6 +764,50 @@ class AgentService {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
 
+    return result;
+  }
+
+  // AGENT MY BLOGS
+  public async myBlogs(
+    member: CommonUsers,
+    query: CommonPageInput
+  ): Promise<Blogs> {
+    const { page, limit } = query;
+    const match: T = {
+      blogAuthorId: shapeIntoMongooseObjectId(member._id),
+      blogAuthorType: BlogAuthorType.AGENT,
+      blogStatus: BlogStatus.ACTIVE,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.blogModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
+    }
     return result;
   }
 }
