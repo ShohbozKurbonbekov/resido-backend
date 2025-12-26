@@ -44,7 +44,7 @@ import { User } from "../libs/types/user";
 import UserModel from "../schema/members/User.model";
 import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
-import BlogModel from "../schema/Blog.model";
+import BlogModel, { BlogDoc } from "../schema/Blog.model";
 
 class AgentService {
   private readonly agentModel;
@@ -807,6 +807,38 @@ class AgentService {
 
     if (!result.blogs.length) {
       return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
+    }
+    return result;
+  }
+
+  // UPDATE MY BLOG
+  public async agentUpdateMyBog(
+    member: CommonUsers,
+    input: BlogDoc
+  ): Promise<BlogDoc> {
+    const match: T = {
+      _id: member._id,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgentStatus.AVAILABLE,
+      isVerified: true,
+    };
+
+    const agent = await this.agentModel.findOne(match);
+
+    if (!agent) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    const result = await this.blogModel.findOneAndUpdate(
+      { blogAuthorId: agent._id },
+      input,
+      {
+        new: true,
+      }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
   }

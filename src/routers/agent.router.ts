@@ -6,6 +6,7 @@ import { MemberType } from "../libs/enums/member.enum";
 import { allowRoles } from "../middlewares/allowRoles";
 import uploadAgent from "../libs/utils/agentUploader";
 import multerErrorHandler from "../middlewares/errorHandler";
+import uploadFiles from "../middlewares/uploadFile";
 const agent = express.Router();
 
 ////////////////////// ---- AGENT DETAIL ---------- //////////////
@@ -84,6 +85,14 @@ agent.post(
   "/get/myBlogs",
   memberController.verifyMember,
   agentController.myBlogs
+);
+
+/////////////////////// UPDATE BLOGS ////////////////////
+agent.post(
+  "/update/myBlog",
+  memberController.verifyMember,
+  uploadFiles("blogs", "blogImage", 1, true),
+  agentController.agentUpdateMyBlog
 );
 
 export default agent;

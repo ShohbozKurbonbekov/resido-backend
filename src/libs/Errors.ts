@@ -44,6 +44,7 @@ export enum Message {
   INVALID_SOCIALS = "Invalid social networks data",
   AGENT_EXISTS = "Agent application already exists",
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
+  INVALID_BLOG_TAGS = "Invalid blog tags",
 }
 
 class Errors extends Error {
