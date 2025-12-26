@@ -326,4 +326,24 @@ agentController.agentUpdateMyBlog = async (
   }
 };
 
+/////////////////// ---- DELETE BLOG ------////////////////////
+agentController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("deleteMyBlog process");
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const targetId = shapeIntoMongooseObjectId(id);
+    const result = await agentService.deleteMyBlog(memberId, targetId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in deleteMyBlog process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default agentController;

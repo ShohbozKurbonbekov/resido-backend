@@ -95,4 +95,11 @@ agent.post(
   agentController.agentUpdateMyBlog
 );
 
+/////////////////////// DELETE BLOGS ////////////////////
+agent.post(
+  "/delete/myBlog/:id",
+  memberController.verifyMember,
+  agentController.deleteMyBlog
+);
+
 export default agent;

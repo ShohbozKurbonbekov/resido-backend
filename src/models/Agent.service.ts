@@ -842,5 +842,31 @@ class AgentService {
     }
     return result;
   }
+
+  ////////////////////////// --- DELETE BLOG ---/////////////////////
+  public async deleteMyBlog(
+    memberId: ObjectId,
+    targetId: ObjectId
+  ): Promise<BlogDoc> {
+    const match: T = {
+      _id: targetId,
+      blogAuthorId: memberId,
+      blogAuthorType: BlogAuthorType.AGENT,
+    };
+
+    const result = await this.blogModel.findOneAndUpdate(
+      match,
+      {
+        $set: { blogStatus: BlogStatus.DELETED },
+      },
+      { new: true }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+    return result;
+  }
+  // DELETE MY BLOG
 }
 export default AgentService;
