@@ -1,12 +1,7 @@
 import { ObjectId } from "mongoose";
-import {
-  CollectionName,
-  MessageReceiverType,
-  MessageSenderType,
-} from "../enums/message.enum";
-import { CommonUsers } from "./common";
-import { MessageDoc } from "../../schema/Message.model";
+import {} from "../enums/message.enum";
 import { TotalCounter } from "./property";
+import { MemberType } from "../enums/member.enum";
 
 export interface SenderReceiverType {
   _id: ObjectId;
@@ -16,12 +11,12 @@ export interface SenderReceiverType {
 
 export interface MessageInput {
   senderId?: ObjectId;
-  senderType: MessageSenderType;
+  senderType: MemberType;
   deletedBySender?: boolean;
   senderData?: SenderReceiverType;
 
   receiverId?: ObjectId;
-  receiverType: MessageReceiverType;
+  receiverType: MemberType;
   deletedByReceiver?: boolean;
   receiverData?: SenderReceiverType;
 

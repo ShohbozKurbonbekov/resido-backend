@@ -215,44 +215,15 @@ class MemberService {
     member: CommonUsers,
     input: MessageInput
   ): Promise<MessageDoc> {
-    const { receiverId, receiverType } = input;
+    const { receiverId, receiverType, senderType } = input;
     const userId = shapeIntoMongooseObjectId(member._id);
 
-    const receiverModel: T = {
-      USER: this.userModel,
-      AGENT: this.agentModel,
-      AGENCY: this.agencyModel,
-      REAL_ESTATE_ADMIN: this.userModel,
-    };
+    const receiver = await this.getMemberData(receiverType, receiverId!);
 
-    const Model = receiverModel[receiverType];
+    const sender = await this.getMemberData(senderType, userId!);
 
-    if (!Model) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
-    }
-
-    const query =
-      receiverType === (MemberType.REAL_ESTATE_ADMIN as string)
-        ? {
-            role: MemberType.REAL_ESTATE_ADMIN,
-            memberStatus: MemberStatus.ACTIVE,
-          }
-        : {
-            _id: shapeIntoMongooseObjectId(receiverId),
-            memberStatus: MemberStatus.ACTIVE,
-          };
-
-    const receiver = await Model.findOne(query);
-
-    if (!receiver) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MESSAGE_TO_MEMBER);
-    }
-
-    const receiverData: SenderReceiverType =
-      this.generateMessageReceiver(receiver);
-
-    const senderData: SenderReceiverType = this.generateMessageSender(member);
-
+    const receiverData = this.generateMessageReceiver(receiver);
+    const senderData = this.generateMessageSender(sender);
     try {
       const data: MessageInput = {
         ...input,
@@ -499,15 +470,15 @@ class MemberService {
         _id: receiverData._id!,
         avatar: receiverData?.avatar,
       };
+    } else {
+      const receiverData = receiver as Agent;
+
+      return {
+        name: receiverData?.fullName,
+        _id: receiverData._id,
+        avatar: receiverData?.avatar,
+      };
     }
-
-    const receiverData = receiver as Agent;
-
-    return {
-      name: receiverData?.fullName,
-      _id: receiverData._id,
-      avatar: receiverData?.avatar,
-    };
   }
 
   private generateMessageSender(sender: CommonUsers): SenderReceiverType {
@@ -522,15 +493,15 @@ class MemberService {
         _id: senderData._id!,
         avatar: senderData?.avatar,
       };
+    } else {
+      const senderData = sender as Agent;
+
+      return {
+        name: senderData?.fullName,
+        _id: senderData._id,
+        avatar: senderData?.avatar,
+      };
     }
-
-    const senderData = sender as Agent;
-
-    return {
-      name: senderData?.fullName,
-      _id: senderData._id,
-      avatar: senderData?.avatar,
-    };
   }
 
   ////////////////////////// - GET MEMBER FULL DATA --- //////////////////
@@ -550,7 +521,18 @@ class MemberService {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.INVALID_ROLE);
     }
 
-    const member = await CurrentModel.findById({ _id: id }).lean().exec();
+    const query =
+      role === (MemberType.REAL_ESTATE_ADMIN as string)
+        ? {
+            role: MemberType.REAL_ESTATE_ADMIN,
+            memberStatus: MemberStatus.ACTIVE,
+          }
+        : {
+            _id: shapeIntoMongooseObjectId(id),
+            memberStatus: MemberStatus.ACTIVE,
+          };
+
+    const member = await CurrentModel.findOne(query).lean().exec();
 
     if (!member) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);

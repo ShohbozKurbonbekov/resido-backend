@@ -1,10 +1,7 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { MessageInput, SenderReceiverType } from "../libs/types/message";
-import {
-  MessageSenderType,
-  MessageReceiverType,
-  CollectionName,
-} from "../libs/enums/message.enum";
+
+import { MemberType } from "../libs/enums/member.enum";
 
 const SenderReceiverDataSchema = new Schema<SenderReceiverType>(
   {
@@ -32,7 +29,7 @@ const MessageSchema = new Schema<MessageInput>(
 
     senderType: {
       type: String,
-      enum: MessageSenderType,
+      enum: MemberType,
       required: true,
     },
     deletedBySender: {
@@ -51,7 +48,7 @@ const MessageSchema = new Schema<MessageInput>(
 
     receiverType: {
       type: String,
-      enum: MessageReceiverType,
+      enum: MemberType,
       required: true,
     },
     receiverData: {
