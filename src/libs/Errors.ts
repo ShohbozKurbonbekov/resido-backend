@@ -45,6 +45,7 @@ export enum Message {
   AGENT_EXISTS = "Agent application already exists",
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
   INVALID_BLOG_TAGS = "Invalid blog tags",
+  ONLY_AGENTS = "Only agents are allowed here",
 }
 
 class Errors extends Error {

@@ -23,7 +23,7 @@ agent.post("/:id/properties", agentController.getAgentProperties);
 
 agent.post("/featured-agents", agentController.getFeaturedAgents);
 
-////////////////// ---- SEARCH AGENT ---------- /////////////
+////////////////// ----     SEARCH AGENT ---------- /////////////
 agent.post("/search/byLocation", agentController.getAgentByLocation);
 
 ////////////////// LIKE TARGET AGENT /////////////////
@@ -102,4 +102,11 @@ agent.post(
   agentController.deleteMyBlog
 );
 
+/////////////////////////  AGENT REVIEWS /////////////////////////
+agent.post(
+  "/get/my-reviews",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
+  agentController.getMyReviews
+);
 export default agent;

@@ -17,7 +17,7 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import { MemberStatus, UserCurrentStatus } from "../libs/enums/member.enum";
+import { MemberStatus } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
 import { ObjectId } from "mongoose";
@@ -45,6 +45,9 @@ import UserModel from "../schema/members/User.model";
 import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
+import { Comments } from "../libs/types/comment";
+import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
+import CommentModel from "../schema/Comment.model";
 
 class AgentService {
   private readonly agentModel;
@@ -54,6 +57,7 @@ class AgentService {
   public readonly saveModel;
   public readonly userModel;
   private readonly blogModel;
+  private readonly commentModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -63,6 +67,7 @@ class AgentService {
     this.saveModel = UserSavingModel;
     this.userModel = UserModel;
     this.blogModel = BlogModel;
+    this.commentModel = CommentModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -817,7 +822,11 @@ class AgentService {
     blogId: ObjectId,
     memberId: ObjectId
   ): Promise<BlogDoc> {
-    const match: T = { blogAuthorId: memberId, blogStatus: BlogStatus.ACTIVE };
+    const match: T = {
+      _id: blogId,
+      blogAuthorId: memberId,
+      blogStatus: BlogStatus.ACTIVE,
+    };
     const result = await this.blogModel.findOneAndUpdate(match, input, {
       new: true,
     });
@@ -852,6 +861,71 @@ class AgentService {
     }
     return result;
   }
-  // DELETE MY BLOG
+
+  //////////////////////////// -- MY REVIEWS -- /////////////////////
+  public async getMyReviews(
+    member: CommonUsers,
+    query: CommonPageInput
+  ): Promise<Comments> {
+    const { page, limit } = query;
+    const agentId = shapeIntoMongooseObjectId(member._id);
+    const match: T = {
+      status: CommentStatus.ACTIVE,
+      targetType: {
+        $in: [CommentTargetType.AGENT, CommentTargetType.PROPERTY],
+      },
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.commentModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "targetId",
+          foreignField: "_id",
+          as: "property",
+        },
+      },
+
+      {
+        $match: {
+          $or: [
+            {
+              targetType: CommentTargetType.AGENT,
+              targetId: agentId,
+            },
+            {
+              targetType: CommentTargetType.PROPERTY,
+              "property.agentId": agentId,
+            },
+          ],
+        },
+      },
+      {
+        $facet: {
+          comments: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    return result;
+  }
 }
 export default AgentService;

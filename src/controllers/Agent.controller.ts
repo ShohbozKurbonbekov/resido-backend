@@ -348,4 +348,25 @@ agentController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
+agentController.getMyReviews = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("getMyReviews process");
+    const member = req.member;
+    const { page, limit } = req.body;
+    const query = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 6,
+    };
+
+    const result = await agentService.getMyReviews(member, query);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getMyReviews: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agentController;
