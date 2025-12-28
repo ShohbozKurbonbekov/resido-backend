@@ -16,6 +16,8 @@ import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { Agent } from "http";
+import { CommentsSearchInput } from "../libs/types/comment";
+import { OrderRender } from "../libs/enums/common.enum";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -348,16 +350,21 @@ agentController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
+////////////////// ---- GET ALL COMMENTS ------- //////////////
 agentController.getMyReviews = async (req: ExtendedRequest, res: Response) => {
   try {
     console.log("getMyReviews process");
-    const member = req.member;
-    const { page, limit } = req.body;
-    const query = {
+    const member = req?.member;
+    const input: CommentsSearchInput = req.body;
+    const { page, limit, category, sort } = input;
+
+    const query: CommentsSearchInput = {
       page: Number(page) || 1,
       limit: Number(limit) || 6,
+      sort: sort || OrderRender.DESC,
     };
 
+    if (category) query.category = category;
     const result = await agentService.getMyReviews(member, query);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
@@ -369,4 +376,5 @@ agentController.getMyReviews = async (req: ExtendedRequest, res: Response) => {
     }
   }
 };
+
 export default agentController;

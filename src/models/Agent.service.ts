@@ -45,9 +45,10 @@ import UserModel from "../schema/members/User.model";
 import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
-import { Comments } from "../libs/types/comment";
+import { Comments, CommentsSearchInput } from "../libs/types/comment";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import CommentModel from "../schema/Comment.model";
+import { OrderRender } from "../libs/enums/common.enum";
 
 class AgentService {
   private readonly agentModel;
@@ -865,51 +866,88 @@ class AgentService {
   //////////////////////////// -- MY REVIEWS -- /////////////////////
   public async getMyReviews(
     member: CommonUsers,
-    query: CommonPageInput
+    query: CommentsSearchInput
   ): Promise<Comments> {
-    const { page, limit } = query;
-    const agentId = shapeIntoMongooseObjectId(member._id);
+    const memberId = shapeIntoMongooseObjectId(member._id);
+    const { page, limit, category, sort } = query;
     const match: T = {
       status: CommentStatus.ACTIVE,
-      targetType: {
-        $in: [CommentTargetType.AGENT, CommentTargetType.PROPERTY],
-      },
     };
+    let second_match: T = {};
 
-    const sort: T = {
-      createdAt: -1,
-    };
+    let lookFor: T = {};
 
-    const [result] = await this.commentModel.aggregate([
-      {
-        $match: match,
-      },
-      {
-        $sort: sort,
-      },
-      {
-        $lookup: {
+    if (category) {
+      if (category === CommentTargetType.BLOG) {
+        match.targetType = CommentTargetType.BLOG;
+
+        lookFor.$lookup = {
+          from: "blogs",
+          localField: "targetId",
+          foreignField: "_id",
+          as: "blog",
+        };
+        second_match.$match = {
+          "blog.blogAuthorId": memberId,
+        };
+      }
+      if (category === CommentTargetType.PROPERTY) {
+        match.targetType = CommentTargetType.PROPERTY;
+
+        lookFor.$lookup = {
           from: "properties",
           localField: "targetId",
           foreignField: "_id",
           as: "property",
-        },
-      },
+        };
+        second_match.$match = {
+          "property.agentId": memberId,
+        };
+      }
+      if (category === CommentTargetType.AGENT) {
+        match.targetType = CommentTargetType.AGENT;
+        match.targetId = memberId;
+      }
+    } else {
+      match.targetType = CommentTargetType.AGENT;
+      match.targetId = memberId;
+    }
 
+    const sortComment: T = {
+      createdAt: sort === OrderRender.DESC ? -1 : 1,
+    };
+
+    const pipeline: any[] = [
       {
-        $match: {
-          $or: [
+        $match: match,
+      },
+      ...(Object.keys(lookFor).length ? [lookFor] : []),
+      ...(Object.keys(second_match).length ? [second_match] : []),
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "senderData",
+          pipeline: [
             {
-              targetType: CommentTargetType.AGENT,
-              targetId: agentId,
-            },
-            {
-              targetType: CommentTargetType.PROPERTY,
-              "property.agentId": agentId,
+              $project: {
+                memberName: 1,
+                avatar: 1,
+              },
             },
           ],
         },
       },
+      {
+        $project: {
+          receiverData: 0,
+          property: 0,
+          blog: 0,
+        },
+      },
+      { $sort: sortComment },
+
       {
         $facet: {
           comments: [
@@ -923,7 +961,12 @@ class AgentService {
           metaCounter: [{ $count: "total" }],
         },
       },
-    ]);
+    ];
+    const [result] = await this.commentModel.aggregate(pipeline);
+
+    if (!result.comments.length) {
+      return { comments: [], metaCounter: [{ total: 0 }] };
+    }
 
     return result;
   }

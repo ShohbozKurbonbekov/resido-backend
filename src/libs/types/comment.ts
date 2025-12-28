@@ -3,6 +3,7 @@ import { CommentStatus, CommentTargetType } from "../enums/comment.enum";
 import { TotalCounter } from "./property";
 import { CommonPageInput } from "./common";
 import { CommentDocs } from "../../schema/Comment.model";
+import { OrderRender } from "../enums/common.enum";
 
 export interface ReceiverDataType {
   targetName: string;
@@ -29,4 +30,10 @@ export interface Comments {
 }
 export interface ItemComments extends CommonPageInput {
   commentTarget: CommentTargetType;
+}
+
+export interface CommentsSearchInput extends CommonPageInput {
+  // limit, page
+  sort: OrderRender;
+  category?: CommentTargetType;
 }

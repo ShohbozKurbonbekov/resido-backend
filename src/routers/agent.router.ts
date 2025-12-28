@@ -109,4 +109,5 @@ agent.post(
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
   agentController.getMyReviews
 );
+
 export default agent;
