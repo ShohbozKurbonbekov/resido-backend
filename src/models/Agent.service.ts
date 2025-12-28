@@ -813,29 +813,14 @@ class AgentService {
 
   // UPDATE MY BLOG
   public async agentUpdateMyBog(
-    member: CommonUsers,
-    input: BlogDoc
+    input: BlogDoc,
+    blogId: ObjectId,
+    memberId: ObjectId
   ): Promise<BlogDoc> {
-    const match: T = {
-      _id: member._id,
-      memberStatus: MemberStatus.ACTIVE,
-      currentStatus: AgentStatus.AVAILABLE,
-      isVerified: true,
-    };
-
-    const agent = await this.agentModel.findOne(match);
-
-    if (!agent) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-    }
-
-    const result = await this.blogModel.findOneAndUpdate(
-      { blogAuthorId: agent._id },
-      input,
-      {
-        new: true,
-      }
-    );
+    const match: T = { blogAuthorId: memberId, blogStatus: BlogStatus.ACTIVE };
+    const result = await this.blogModel.findOneAndUpdate(match, input, {
+      new: true,
+    });
 
     if (!result) {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);

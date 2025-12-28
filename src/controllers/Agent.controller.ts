@@ -301,7 +301,9 @@ agentController.agentUpdateMyBlog = async (
   res: Response
 ) => {
   try {
-    const member = req.member;
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const blogId = shapeIntoMongooseObjectId(id);
     const input = { ...req.body };
     const parsedTags = JSON.parse(req.body.blogTags);
     if (!Array.isArray(parsedTags)) {
@@ -313,7 +315,7 @@ agentController.agentUpdateMyBlog = async (
       input.blogImage = orrangeFiles(req.files?.blogImage)[0];
     }
 
-    const result = await agentService.agentUpdateMyBog(member, input);
+    const result = await agentService.agentUpdateMyBog(input, blogId, memberId);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {

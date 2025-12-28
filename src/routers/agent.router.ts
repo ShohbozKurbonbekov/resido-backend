@@ -89,7 +89,7 @@ agent.post(
 
 /////////////////////// UPDATE BLOGS ////////////////////
 agent.post(
-  "/update/myBlog",
+  "/update/myBlog/:id",
   memberController.verifyMember,
   uploadFiles("blogs", "blogImage", 1, true),
   agentController.agentUpdateMyBlog
