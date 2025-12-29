@@ -13,11 +13,11 @@ import {
 
 const PropertyAddressSchema = new Schema(
   {
-    street: { type: String },
-    district: { type: String },
-    city: { type: String },
-    postalCode: { type: String },
-    country: { type: String },
+    street: { type: String, required: true },
+    district: { type: String, required: true },
+    city: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    country: { type: String, required: true },
     geoCode: {
       lat: { type: String },
       long: { type: String },
@@ -31,18 +31,20 @@ const PropertySellingOptionSchema = new Schema(
       type: {
         type: String,
         enum: SellingTypeEnum.RENT,
+        required: true,
       },
-      monthlyPayment: { type: Number },
-      overalAmount: { type: Number },
-      devidedMonths: { type: Number },
+      monthlyPayment: { type: Number, required: true },
+      overalAmount: { type: Number, required: true },
+      devidedMonths: { type: Number, required: true },
     },
     optionSell: {
       type: {
         type: String,
         enum: SellingTypeEnum.SALE,
+        required: true,
       },
-      overalAmunt: { type: Number },
-      discount: { type: Number },
+      overalAmunt: { type: Number, required: true },
+      discount: { type: Number, required: true },
     },
   },
   { _id: false }
@@ -130,7 +132,7 @@ const PropertySchema = new Schema<PropertyInput>(
     },
     address: {
       type: PropertyAddressSchema,
-      default: () => ({}),
+      required: true,
     },
     description: {
       type: String,
@@ -149,12 +151,12 @@ const PropertySchema = new Schema<PropertyInput>(
     furnished: {
       type: String,
       enum: PropertyFurnature,
-      default: PropertyFurnature.NONE,
+      required: true,
     },
     security: {
       type: String,
       enum: PropertySecurity,
-      default: PropertySecurity.None,
+      required: true,
     },
     yearBuilt: {
       type: Number,
@@ -166,7 +168,7 @@ const PropertySchema = new Schema<PropertyInput>(
     },
     amenities: {
       type: PropertyAmenitiesSchema,
-      default: () => ({}),
+      required: true,
     },
     nearBySchools: {
       type: Boolean,
@@ -203,6 +205,7 @@ const PropertySchema = new Schema<PropertyInput>(
     mood: {
       type: String,
       enum: PropertyMood,
+      required: true,
     },
     firePlace: { type: Boolean, default: false },
     videos: {

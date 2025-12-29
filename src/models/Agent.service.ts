@@ -940,6 +940,9 @@ class AgentService {
         },
       },
       {
+        $unwind: { path: "$senderData", preserveNullAndEmptyArrays: true },
+      },
+      {
         $project: {
           receiverData: 0,
           property: 0,

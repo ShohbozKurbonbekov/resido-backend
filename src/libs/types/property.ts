@@ -16,11 +16,11 @@ import { CommonPageInput } from "./common";
 
 // PROPERTY TYPE FOR CREATING AND RETRIEVING
 export interface PropertyAddress {
-  street?: string;
-  city?: string;
-  district?: string;
-  postalCode?: string;
-  country?: string;
+  street: string;
+  city: string;
+  district: string;
+  postalCode: string;
+  country: string;
   geoCode?: GeocodeType;
 }
 
@@ -31,15 +31,15 @@ export interface GeocodeType {
 
 interface SellingType {
   optionRent?: {
-    type?: SellingTypeEnum.RENT;
-    overalAmunt?: number;
-    monthlyPayment?: number;
-    devidedMonths?: number;
+    type: SellingTypeEnum.RENT;
+    overalAmunt: number;
+    monthlyPayment: number;
+    devidedMonths: number;
   };
   optionSell?: {
-    type?: SellingTypeEnum.SALE;
-    overalAmount?: number;
-    discount?: string;
+    type: SellingTypeEnum.SALE;
+    overalAmount: number;
+    discount: string;
   };
 }
 
@@ -75,13 +75,13 @@ export interface PropertyInput {
   heating: PropertyHeating;
   cooling: PropertyCooling;
   address: PropertyAddress;
-  furnished?: PropertyFurnature;
-  images?: string[];
-  security?: PropertySecurity;
+  furnished: PropertyFurnature;
+  images: string[];
+  security: PropertySecurity;
   yearBuilt: number;
-  mood?: PropertyMood;
+  mood: PropertyMood;
   garageSpace: number;
-  amenities?: PropertyAmenities;
+  amenities: PropertyAmenities;
   nearBySchools?: boolean;
   nearByTransports?: boolean;
   views?: number;
@@ -89,7 +89,7 @@ export interface PropertyInput {
   status?: PropertyStatus;
   totalLikes?: number;
   totalComments?: number;
-  totalSavings: number;
+  totalSavings?: number;
   featuredScore?: number;
   recentBoost?: number;
   daysSinceCreated?: number;
