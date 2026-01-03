@@ -172,11 +172,11 @@ const PropertySchema = new Schema<PropertyInput>(
     },
     nearBySchools: {
       type: Boolean,
-      default: false,
+      required: true,
     },
     nearByTransports: {
       type: Boolean,
-      default: false,
+      required: true,
     },
     views: {
       type: Number,
@@ -207,7 +207,7 @@ const PropertySchema = new Schema<PropertyInput>(
       enum: PropertyMood,
       required: true,
     },
-    firePlace: { type: Boolean, default: false },
+    firePlace: { type: Boolean, required: true },
     videos: {
       type: [String],
       default: [],

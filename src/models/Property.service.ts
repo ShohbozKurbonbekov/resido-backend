@@ -38,6 +38,8 @@ import UserSaving from "./UserSaving.service";
 import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
+import MemberService from "./Member.service";
+import { Agent } from "../libs/types/agent";
 
 class PropertyService {
   private readonly propertyModel;
@@ -45,6 +47,7 @@ class PropertyService {
   public likeService;
   public saveService;
   private readonly saveModel;
+  public memberService;
 
   constructor() {
     this.propertyModel = PropertyModel;
@@ -52,6 +55,7 @@ class PropertyService {
     this.likeService = new LikeService();
     this.saveService = new UserSaving();
     this.saveModel = UserSavingModel;
+    this.memberService = new MemberService();
   }
 
   // UPDATE PROPERTY
@@ -204,9 +208,21 @@ class PropertyService {
   }
 
   // CREATE PROPERTY
-  public async createProperty(input: PropertyInput): Promise<Property> {
+  public async createProperty(
+    input: PropertyInput,
+    member: CommonUsers
+  ): Promise<Property> {
+    const agent = (await this.memberService.getMemberData(
+      member.role,
+      member._id!
+    )) as Agent;
     try {
-      const result = await this.propertyModel.create(input);
+      console.log("INPUT:", input);
+      const result = await this.propertyModel.create({
+        ...input,
+        agentId: agent._id,
+        agencyId: agent.agencyId,
+      });
       return result;
     } catch (error) {
       console.log("Error: in createProduct Model ", error);

@@ -132,6 +132,74 @@ export interface CommonPropertiesResult {
   totalPropertiesNumber: TotalCounter[];
 }
 
+export interface PropertyFrontEnd {
+  // Basic info
+  title: string;
+  description: string;
+
+  // Address
+  address: {
+    street: string;
+    district: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+
+  // Numeric fields (as strings from form inputs)
+  floors: string;
+  bathrooms: string;
+  bedrooms: string;
+  hall: string;
+  kitchen: string;
+  garageSpace: string;
+  area: string;
+  yearBuilt: string;
+
+  // Enum selects
+  propertyType: string; // PropertyType enum value
+  heating: string; // PropertyHeating enum value
+  cooling: string; // PropertyCooling enum value
+  furnished: string; // PropertyFurnature enum value
+  security: string; // PropertySecurity enum value
+  mood: string; // PropertyMood enum value
+
+  // Amenities
+  amenities: {
+    airConditioning: boolean;
+    swimmingPool: boolean;
+    centralHeating: boolean;
+    laundryRoom: boolean;
+    gym: boolean;
+    alarm: boolean;
+    windowCovering: boolean;
+    internet: boolean;
+    petsAllow: boolean;
+    freeWifi: boolean;
+    carParking: boolean;
+    spaMassage: boolean;
+  };
+
+  // Optional checkboxes
+  nearBySchools: boolean;
+  nearByTransports: boolean;
+  firePlace: boolean;
+
+  // Selling options (discriminated union)
+  sellingOption: SellingType;
+
+  // Media
+  images: {
+    image1: File | string;
+    image2: File | string;
+    image3: File | string;
+    image4: File | string;
+    image5: File | string;
+  };
+
+  videos?: File | string;
+}
+
 export type CommonPropertiesInput = CommonPageInput;
 
 export type RecentPropertyForRent = CommonPageInput;

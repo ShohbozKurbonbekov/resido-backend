@@ -17,39 +17,39 @@ import { shapeIntoMongooseObjectId } from "../libs/config";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
+import { handlePropertyFrontEndInput } from "../libs/utils/handlePropertyFrontEndInput";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
 //////////////////// --- CREATE PROPERTY -- //////////////
 propertyController.createProperty = async (
-  req: ExtendedRequest,
+  req: UploadRequest,
   res: Response
 ) => {
   try {
     console.log("createProperty process");
-    // if (!req.files?.length) {
-    //   throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATING_FAILED);
-    // }
+    const member = req.member;
+    const input = handlePropertyFrontEndInput(req.body) as PropertyInput;
+    const images = req.files?.images;
+    const video = req.files?.videos;
 
-    const input: PropertyInput = req.body;
-    // input.images = req.files.map((file) => file.path.replace(/\\/g, "/"));
+    if (images?.length) {
+      input.images = orrangeFiles(images);
+    }
 
-    await propertyService.createProperty(input);
-    res.send(`
-        <script>
-        alert("successful creation");
-        window.location.replace("/agent/properties/all")
-        </script>`);
+    if (video?.length) {
+      input.videos = orrangeFiles(video);
+    }
+
+    const result = await propertyService.createProperty(input, member);
+    res.status(HttpCode.CREATED).json(result);
   } catch (error) {
-    console.log("Error in createProperty controller: ", error);
-    const message =
-      error instanceof Errors ? error.message : Message.SOMETHING_WENT_WRONG;
-
-    res.send(`
-        <script>
-        alert("${message}");
-        window.location.replace("/agent/properties/all")
-        </script>`);
+    console.log("Error in updateProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
   }
 };
 
