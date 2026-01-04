@@ -19,8 +19,8 @@ const PropertyAddressSchema = new Schema(
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
     geoCode: {
-      lat: { type: String },
-      long: { type: String },
+      lat: { type: Number },
+      long: { type: Number },
     },
   },
   { _id: false }
@@ -31,20 +31,18 @@ const PropertySellingOptionSchema = new Schema(
       type: {
         type: String,
         enum: SellingTypeEnum.RENT,
-        required: true,
       },
-      monthlyPayment: { type: Number, required: true },
-      overalAmount: { type: Number, required: true },
-      devidedMonths: { type: Number, required: true },
+      monthlyPayment: { type: Number },
+      overalAmount: { type: Number },
+      devidedMonths: { type: Number },
     },
     optionSell: {
       type: {
         type: String,
         enum: SellingTypeEnum.SALE,
-        required: true,
       },
-      overalAmunt: { type: Number, required: true },
-      discount: { type: Number, required: true },
+      overalAmunt: { type: Number },
+      discount: { type: Number },
     },
   },
   { _id: false }

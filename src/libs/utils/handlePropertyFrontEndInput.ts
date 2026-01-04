@@ -11,7 +11,7 @@ export const handlePropertyFrontEndInput = (body: T) => {
     queries.title = body.title;
   }
   if (body.sellingOption) {
-    queries.sellingOption = JSON.stringify(body.sellingOption);
+    queries.sellingOption = JSON.parse(body.sellingOption);
   }
   if (body.floors) {
     queries.floors = Number(body.floors);
@@ -62,7 +62,7 @@ export const handlePropertyFrontEndInput = (body: T) => {
     queries.garageSpace = Number(body.garageSpace);
   }
   if (body.amenities) {
-    queries.amenities = JSON.stringify(body.amenities);
+    queries.amenities = JSON.parse(body.amenities);
   }
 
   if (body.nearBySchools) {

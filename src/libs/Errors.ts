@@ -46,6 +46,8 @@ export enum Message {
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
   INVALID_BLOG_TAGS = "Invalid blog tags",
   ONLY_AGENTS = "Only agents are allowed here",
+  NO_ADDDRESS_GEO = "Address could not be geocoded",
+  INVALID_GEO = "Invalid geocoding result",
 }
 
 class Errors extends Error {

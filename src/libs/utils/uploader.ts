@@ -28,7 +28,7 @@ const makeUploader = (address: string) => {
   return multer({
     storage: storage,
     limits: {
-      fileSize: 1024 * 1024 * 5,
+      fileSize: 1024 * 1024 * 10,
     },
 
     fileFilter: (req, file, cb) => {

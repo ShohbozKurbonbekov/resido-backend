@@ -44,7 +44,7 @@ propertyController.createProperty = async (
     const result = await propertyService.createProperty(input, member);
     res.status(HttpCode.CREATED).json(result);
   } catch (error) {
-    console.log("Error in updateProperty: ", error);
+    console.log("Error in createProperty: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

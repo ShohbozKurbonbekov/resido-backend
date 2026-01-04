@@ -40,6 +40,7 @@ import { TargetGroup } from "../libs/enums/userSaving.enum";
 import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
 import MemberService from "./Member.service";
 import { Agent } from "../libs/types/agent";
+import { geocodeAddress } from "../libs/utils/figureGeoPosition";
 
 class PropertyService {
   private readonly propertyModel;
@@ -216,10 +217,18 @@ class PropertyService {
       member.role,
       member._id!
     )) as Agent;
+
+    const { street, city, country } = input.address;
+    const address = [street, city, country].filter(Boolean).join(", ");
+
+    const geoCode = await geocodeAddress(address);
     try {
-      console.log("INPUT:", input);
       const result = await this.propertyModel.create({
         ...input,
+        address: {
+          ...input.address,
+          geoCode,
+        },
         agentId: agent._id,
         agencyId: agent.agencyId,
       });

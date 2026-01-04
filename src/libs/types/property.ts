@@ -25,8 +25,8 @@ export interface PropertyAddress {
 }
 
 export interface GeocodeType {
-  lat?: number;
-  long?: number;
+  lat: number;
+  long: number;
 }
 
 interface SellingType {
