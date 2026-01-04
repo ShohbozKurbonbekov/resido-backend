@@ -19,6 +19,14 @@ agent.get(
 //////////////////// ---------- AGENT PROPERTIES ---- ////////////////
 agent.post("/:id/properties", agentController.getAgentProperties);
 
+///////////////// -------------- AGENT PROPERTIES FOR THEIR DASHBOARD---------///////////////
+agent.get(
+  "/get/all-properties",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
+  agentController.getMyProperties
+);
+
 ////////////////// -- GET FEATURED AGENTS -- ////////////////
 
 agent.post("/featured-agents", agentController.getFeaturedAgents);

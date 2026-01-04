@@ -49,6 +49,9 @@ import { Comments, CommentsSearchInput } from "../libs/types/comment";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import CommentModel from "../schema/Comment.model";
 import { OrderRender } from "../libs/enums/common.enum";
+import { Properties } from "../libs/types/property";
+import PropertyModel from "../schema/Property.model";
+import MemberService from "./Member.service";
 
 class AgentService {
   private readonly agentModel;
@@ -59,6 +62,8 @@ class AgentService {
   public readonly userModel;
   private readonly blogModel;
   private readonly commentModel;
+  private readonly propertyModel;
+  public readonly memberService;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -69,6 +74,8 @@ class AgentService {
     this.userModel = UserModel;
     this.blogModel = BlogModel;
     this.commentModel = CommentModel;
+    this.propertyModel = PropertyModel;
+    this.memberService = new MemberService();
   }
 
   // UPDATE AGENT FIELDS
@@ -971,6 +978,63 @@ class AgentService {
       return { comments: [], metaCounter: [{ total: 0 }] };
     }
 
+    return result;
+  }
+
+  public async getMyProperties(
+    member: CommonUsers,
+    queries: CommonPageInput
+  ): Promise<Properties> {
+    const { page, limit } = queries;
+    const agentId = shapeIntoMongooseObjectId(member._id);
+    const agent = (await this.memberService.getMemberData(
+      member.role,
+      agentId
+    )) as Agent;
+
+    const match: T = {
+      agencyId: agent.agencyId,
+      agentId: agentId,
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.propertyModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $project: {
+          title: 1,
+          address: 1,
+          createdAt: 1,
+          propertyType: 1,
+          area: 1,
+        },
+      },
+      {
+        $sort: sort,
+      },
+
+      {
+        $facet: {
+          properties: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalPropertiesNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (result.properties.lenth) {
+      return { properties: [], totalPropertiesNumber: [{ total: 0 }] };
+    }
     return result;
   }
 }
