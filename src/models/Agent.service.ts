@@ -24,6 +24,7 @@ import { ObjectId } from "mongoose";
 import {
   addTotCommentsAvRatingFields,
   commentLookup,
+  priceValueField,
   shapeIntoMongooseObjectId,
 } from "../libs/config";
 import { ViewInput } from "../libs/types/view";
@@ -981,6 +982,7 @@ class AgentService {
     return result;
   }
 
+  /////////////////////////// -- MY PROPERTIES -- ///////////////////////////////////
   public async getMyProperties(
     member: CommonUsers,
     queries: CommonPageInput
@@ -1005,16 +1007,18 @@ class AgentService {
         $match: match,
       },
       {
+        $sort: sort,
+      },
+      priceValueField,
+      {
         $project: {
           title: 1,
           address: 1,
           createdAt: 1,
           propertyType: 1,
           area: 1,
+          priceValue: 1,
         },
-      },
-      {
-        $sort: sort,
       },
 
       {
@@ -1032,7 +1036,7 @@ class AgentService {
       },
     ]);
 
-    if (result.properties.lenth) {
+    if (result.properties.length) {
       return { properties: [], totalPropertiesNumber: [{ total: 0 }] };
     }
     return result;
