@@ -118,4 +118,12 @@ agent.post(
   agentController.getMyReviews
 );
 
+//////////////////////////// DELETE AGENT PROPERTY FROM DASHBOARD ///////////////////////////
+
+agent.post(
+  "/my-properties/archive/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
+  agentController.archiveMyProperty
+);
 export default agent;

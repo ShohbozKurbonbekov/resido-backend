@@ -32,15 +32,12 @@ export enum PropertySecurity {
 }
 export enum PropertyStatus {
   DRAFT = "draft",
-  INACTIVE = "inactive",
   PENDING_APPROVAL = "pending_approval",
   REJECTED = "rejected",
   AVAILABLE = "available",
   RENTED = "rented",
   SOLD = "sold",
   ARCHIVED = "archived",
-  EXPIRED = "expired",
-  UNDER_MAINTENANCE = "under_maintenance",
 }
 
 export enum SellingTypeEnum {

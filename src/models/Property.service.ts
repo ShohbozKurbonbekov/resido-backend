@@ -605,6 +605,28 @@ class PropertyService {
     return result;
   }
 
+  // GET A PUBLISHER PROPERTY
+  public async getPublisherProperty(
+    memberId: ObjectId,
+    propertyId: ObjectId
+  ): Promise<Property> {
+    const match: T = {
+      status: {
+        $in: [PropertyStatus.DRAFT, PropertyStatus.REJECTED],
+      },
+      agentId: memberId,
+      _id: propertyId,
+    };
+
+    let result = await this.propertyModel.findOne(match).lean().exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
+
+    return result;
+  }
+
   // SAVE TARGET PROPERTY
   public async toggleSaveProperty(
     propertyId: ObjectId,

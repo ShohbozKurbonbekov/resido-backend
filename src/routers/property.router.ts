@@ -48,6 +48,13 @@ property.get(
   propertyController.getProperty
 );
 
+////////////////// --  GET PUBLISHER PROPERTY -- /////////////
+property.get(
+  "/publisher/:propertyId",
+  memberController.verifyMember,
+  propertyController.getPublisherProperty
+);
+
 //////////////////// -- SAVE TARGET PROPERTY --- ///////////////
 property.get(
   "/:id/toggle-save",

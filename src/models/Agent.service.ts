@@ -51,7 +51,7 @@ import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import CommentModel from "../schema/Comment.model";
 import { OrderRender } from "../libs/enums/common.enum";
 import { Properties } from "../libs/types/property";
-import PropertyModel from "../schema/Property.model";
+import PropertyModel, { Property } from "../schema/Property.model";
 import MemberService from "./Member.service";
 
 class AgentService {
@@ -1012,12 +1012,15 @@ class AgentService {
       priceValueField,
       {
         $project: {
+          status: 1,
+          images: 1,
           title: 1,
           address: 1,
           createdAt: 1,
           propertyType: 1,
           area: 1,
           priceValue: 1,
+          views: 1,
         },
       },
 
@@ -1036,8 +1039,33 @@ class AgentService {
       },
     ]);
 
-    if (result.properties.length) {
+    if (!result.properties.length) {
       return { properties: [], totalPropertiesNumber: [{ total: 0 }] };
+    }
+    return result;
+  }
+
+  ////////////////////////--- DELETE MY PROPERTY ----- ///////////////////////
+  public async archiveMyProperty(
+    member: CommonUsers,
+    propertyId: ObjectId
+  ): Promise<Property> {
+    const match: T = {
+      _id: propertyId,
+      agentId: shapeIntoMongooseObjectId(member._id),
+      status: { $in: [PropertyStatus.DRAFT, PropertyStatus.REJECTED] },
+    };
+
+    const result = await this.propertyModel.findOneAndUpdate(
+      match,
+      { status: PropertyStatus.ARCHIVED },
+      {
+        new: true,
+      }
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
   }

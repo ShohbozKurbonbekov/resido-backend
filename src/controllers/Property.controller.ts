@@ -175,6 +175,31 @@ propertyController.getProperty = async (
   }
 };
 
+//////////////////// --- GET A PUBLISHER PROPERTY ////////////
+propertyController.getPublisherProperty = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("getPublisherProperty Process");
+    const propertyId = shapeIntoMongooseObjectId(req.params.propertyId);
+    const memberId = shapeIntoMongooseObjectId(req.member?._id);
+    const result = await propertyService.getPublisherProperty(
+      memberId,
+      propertyId
+    );
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getPublisherProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 /////////////////// ------ LIKE PROPERTY ---------- ///////////
 
 propertyController.likeTargetProperty = async (
