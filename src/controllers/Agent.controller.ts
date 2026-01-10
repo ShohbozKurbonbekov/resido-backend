@@ -8,7 +8,12 @@ import {
   FeaturedAgentsResult,
   SearchByLocationInput,
 } from "../libs/types/agent";
-import { ExtendedRequest, UploadRequest, User } from "../libs/types/user";
+import {
+  ExtendedRequest,
+  UploadFiles,
+  UploadRequest,
+  User,
+} from "../libs/types/user";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { ObjectId } from "mongoose";
 import { AgentPropertyType } from "../libs/enums/agent.enum";
@@ -18,6 +23,8 @@ import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { Agent } from "http";
 import { CommentsSearchInput } from "../libs/types/comment";
 import { OrderRender } from "../libs/enums/common.enum";
+import { handlePropertyFrontEndInput } from "../libs/utils/handlePropertyFrontEndInput";
+import { PropertyInput } from "../libs/types/property";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -418,6 +425,50 @@ agentController.archiveMyProperty = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in deleteMyProperty: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+//////////////////////// --------- UPDATE PUBLISHER PROPERTY -----------//////////////////
+agentController.updatePublisherProperty = async (
+  req: UploadRequest,
+  res: Response
+) => {
+  try {
+    console.log("updatePublisherProperty process: ");
+    const member = req.member;
+    const { id } = req.params;
+    const staticImages = req.body?.staticImages
+      ? JSON.parse(req.body.staticImages)
+      : [];
+    const propertyId = shapeIntoMongooseObjectId(id);
+    const input = handlePropertyFrontEndInput(req.body) as PropertyInput;
+
+    const images = req.files?.images;
+    const video = req.files?.videos;
+
+    if (images?.length) {
+      input.images = [...staticImages, ...orrangeFiles(images)];
+    } else {
+      input.images = [...staticImages];
+    }
+
+    if (video?.length) {
+      input.videos = orrangeFiles(video);
+    }
+
+    const queries = {
+      propertyId,
+      member,
+    };
+    const result = await agentService.updatePublisherProperty(input, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updatePublisherProperty: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

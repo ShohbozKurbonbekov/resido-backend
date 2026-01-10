@@ -126,4 +126,14 @@ agent.post(
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
   agentController.archiveMyProperty
 );
+
+//////////////////////////// UPDATE PUBLISHER PROPERTY FROM DASHBOARD ///////////////////////////
+
+agent.post(
+  "/update/my-property/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
+  uploadFiles("properties", "images", 5, true, true, "videos", 1),
+  agentController.updatePublisherProperty
+);
 export default agent;

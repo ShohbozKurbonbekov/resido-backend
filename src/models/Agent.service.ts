@@ -50,7 +50,7 @@ import { Comments, CommentsSearchInput } from "../libs/types/comment";
 import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import CommentModel from "../schema/Comment.model";
 import { OrderRender } from "../libs/enums/common.enum";
-import { Properties } from "../libs/types/property";
+import { Properties, PropertyInput } from "../libs/types/property";
 import PropertyModel, { Property } from "../schema/Property.model";
 import MemberService from "./Member.service";
 
@@ -1064,6 +1064,54 @@ class AgentService {
       }
     );
 
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+    return result;
+  }
+
+  ///////////////////////////// --------- UPDATE PUBLISHER PROPERTY ----- //////////////
+  public async updatePublisherProperty(
+    input: PropertyInput,
+    queries: { propertyId: ObjectId; member: CommonUsers }
+  ): Promise<Property> {
+    const match: T = {
+      _id: queries.propertyId,
+      agentId: shapeIntoMongooseObjectId(queries.member._id),
+      status: { $in: [PropertyStatus.DRAFT, PropertyStatus.REJECTED] },
+    };
+    const result = await this.propertyModel.findOneAndUpdate(
+      match,
+      [
+        {
+          $set: {
+            ...input,
+            priceValue: {
+              $ifNull: [
+                "$sellingOption.optionRent.overalAmount",
+                "$sellingOption.optionSell.overalAmunt",
+              ],
+            },
+          },
+        },
+      ],
+      {
+        new: true,
+        projection: {
+          status: 1,
+          images: 1,
+          title: 1,
+          address: 1,
+          createdAt: 1,
+          propertyType: 1,
+          area: 1,
+          priceValue: 1,
+          views: 1,
+        },
+      }
+    );
+
+    console.log(result);
     if (!result) {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
