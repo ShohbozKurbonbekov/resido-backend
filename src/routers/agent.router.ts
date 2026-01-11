@@ -136,4 +136,12 @@ agent.post(
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
   agentController.updatePublisherProperty
 );
+
+/////////////////////////////////// AGENT DASHBOARD OVERVIEW ////////////////////////////
+agent.get(
+  "/dashboard/overview",
+  memberController.verifyMember,
+  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
+  agentController.agentDashboardOverview
+);
 export default agent;

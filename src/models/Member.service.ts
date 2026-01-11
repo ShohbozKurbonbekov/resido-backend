@@ -397,7 +397,7 @@ class MemberService {
     return result;
   }
 
-  /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
+  /////////////////////////// -- USER DASHBOARD OVERVIEW -- //////////////////////////////
   public async userDashboardOverview(
     member: CommonUsers
   ): Promise<UserDashboardOverviewType> {

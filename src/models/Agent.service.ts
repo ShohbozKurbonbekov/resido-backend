@@ -1,5 +1,6 @@
 import {
   Agent,
+  AgentDashboardOverviewType,
   AgentDetailType,
   AgentInputUpdate,
   AgentPropertiesInput,
@@ -30,7 +31,7 @@ import {
 import { ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
-import { ViewDocs } from "../schema/View.model";
+import ViewModel, { ViewDocs } from "../schema/View.model";
 import { LikeInput } from "../libs/types/like";
 import { LikeGroup } from "../libs/enums/like.enum";
 import LikeService from "./Like.service";
@@ -53,6 +54,8 @@ import { OrderRender } from "../libs/enums/common.enum";
 import { Properties, PropertyInput } from "../libs/types/property";
 import PropertyModel, { Property } from "../schema/Property.model";
 import MemberService from "./Member.service";
+import MessageModel from "../schema/Message.model";
+import LikeModel from "../schema/Like.model";
 
 class AgentService {
   private readonly agentModel;
@@ -65,6 +68,9 @@ class AgentService {
   private readonly commentModel;
   private readonly propertyModel;
   public readonly memberService;
+  private readonly messageModel;
+  private readonly likeModel;
+  private readonly viewModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -77,6 +83,9 @@ class AgentService {
     this.commentModel = CommentModel;
     this.propertyModel = PropertyModel;
     this.memberService = new MemberService();
+    this.messageModel = MessageModel;
+    this.likeModel = LikeModel;
+    this.viewModel = ViewModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -997,6 +1006,7 @@ class AgentService {
     const match: T = {
       agencyId: agent.agencyId,
       agentId: agentId,
+      status: { $ne: PropertyStatus.DELETED },
     };
     const sort: T = {
       createdAt: -1,
@@ -1116,6 +1126,81 @@ class AgentService {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }
     return result;
+  }
+
+  //////////////////////////////// ------------ AGENT DASHBOARD OVERVIEW -------- ///////////////////
+  public async agentDashboardOverview(
+    agentId: ObjectId
+  ): Promise<AgentDashboardOverviewType> {
+    const [
+      myPropertiesCount,
+      myBlogsCount,
+      reviewsCount,
+      messagesCount,
+      // TO-DO FOR TRANSACTION
+
+      totalLikesCount,
+      totalViewsCount,
+    ] = await Promise.all([
+      this.propertyModel.countDocuments({
+        agentId,
+        status: { $ne: PropertyStatus.DELETED },
+      }),
+      this.blogModel.countDocuments({
+        blogAuthorId: agentId,
+        blogAuthorType: BlogAuthorType.AGENT,
+        blogStatus: { $ne: BlogStatus.DELETED },
+      }),
+      this.commentModel.countDocuments({
+        targetType: CommentTargetType.AGENT,
+        status: CommentStatus.ACTIVE,
+        targetId: agentId,
+      }),
+
+      this.messageModel.countDocuments({
+        $or: [
+          {
+            senderId: agentId,
+            deletedBySender: false,
+          },
+          { receiverId: agentId, deletedBySender: false },
+        ],
+      }),
+      this.likeModel.countDocuments({
+        targetId: agentId,
+        likeGroup: LikeGroup.AGENT,
+      }),
+      this.viewModel.countDocuments({
+        viewTargetId: agentId,
+        viewGroup: ViewGroup.AGENT,
+      }),
+    ]);
+
+    return {
+      myProperties: {
+        total: myPropertiesCount,
+      },
+      myBlogs: {
+        total: myBlogsCount,
+      },
+      reviews: {
+        total: reviewsCount,
+      },
+
+      messages: {
+        total: messagesCount,
+      },
+      totalLikes: {
+        total: totalLikesCount,
+      },
+      totalViews: {
+        total: totalViewsCount,
+      },
+      transactions: {
+        total: 0,
+      },
+      generatedAt: new Date(),
+    };
   }
 }
 export default AgentService;

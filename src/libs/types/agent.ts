@@ -109,3 +109,14 @@ export interface AgentPropertiesInput extends CommonPageInput {
   agentPropertyType?: AgentPropertyType;
   searchLocation?: string;
 }
+
+export interface AgentDashboardOverviewType {
+  myProperties: TotalCounter;
+  myBlogs: TotalCounter;
+  reviews: TotalCounter;
+  messages: TotalCounter;
+  transactions: TotalCounter;
+  totalLikes: TotalCounter;
+  totalViews: TotalCounter;
+  generatedAt: Date | null;
+}

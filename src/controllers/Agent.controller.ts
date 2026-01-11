@@ -476,4 +476,26 @@ agentController.updatePublisherProperty = async (
     }
   }
 };
+
+///////////////// --------------- AGENT DASHBOARD OVERVIEW ------------- ///////////////
+agentController.agentDashboardOverview = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("agentDashboardOverview process");
+    const agentId = shapeIntoMongooseObjectId(req.member._id);
+
+    const result = await agentService.agentDashboardOverview(agentId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agentDashboardOverview: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agentController;
