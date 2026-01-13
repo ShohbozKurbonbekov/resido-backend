@@ -38,6 +38,10 @@ const BillingSchema = new Schema(
 const AgencySchema = new Schema<AgencyAggregate>(
   {
     // REQUIRED DATA SETS
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
     role: {
       type: String,
       enum: MemberType,
@@ -45,7 +49,6 @@ const AgencySchema = new Schema<AgencyAggregate>(
     },
     memberName: {
       type: String,
-      index: true,
       required: true,
     },
     memberEmail: {

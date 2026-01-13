@@ -4,9 +4,9 @@ import agentController from "../controllers/Agent.controller";
 import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import { allowRoles } from "../middlewares/allowRoles";
-import uploadAgent from "../libs/utils/agentUploader";
 import multerErrorHandler from "../middlewares/errorHandler";
 import uploadFiles from "../middlewares/uploadFile";
+import uploadAvatarCerticateFiles from "../libs/utils/avatarCertificateUploader";
 const agent = express.Router();
 
 ////////////////////// ---- AGENT DETAIL ---------- //////////////
@@ -62,7 +62,7 @@ agent.post(
 agent.post(
   "/apply/become-agent",
   memberController.verifyMember,
-  uploadAgent("agents").fields([
+  uploadAvatarCerticateFiles("agents").fields([
     { name: "avatar", maxCount: 1 },
     {
       name: "certificate",
@@ -77,7 +77,7 @@ agent.post(
 agent.post(
   "/update/agent-profile",
   memberController.verifyMember,
-  uploadAgent("agents").fields([
+  uploadAvatarCerticateFiles("agents").fields([
     { name: "avatar", maxCount: 1 },
     {
       name: "certificate",

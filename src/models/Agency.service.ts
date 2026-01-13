@@ -24,6 +24,7 @@ import {
 import {
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
+  AgencyInputs,
   SearchByLocationAgency,
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
@@ -31,6 +32,7 @@ import PropertyModel from "../schema/Property.model";
 import { AgencyTargetType } from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
+import { Transaction } from "mongodb/mongodb";
 
 class AgencyService {
   private readonly agencyModel;
@@ -505,6 +507,33 @@ class AgencyService {
     const [result] = await this.agencyModel.aggregate(pipeline);
 
     return { agency: result };
+  }
+
+  // APPLY FOR AGENCY
+  public async applyAgency(
+    userId: ObjectId,
+    input: AgencyInputs
+  ): Promise<Agency> {
+    const target = await this.agencyModel
+      .findOne({ userId })
+      .select("memberName _id memberEmail");
+
+    if (target) {
+      throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
+    }
+
+    try {
+      const result = await this.agencyModel.create({ ...input, userId });
+
+      return result;
+    } catch (error) {
+      console.log("Error in applyAgency service: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      }
+    }
   }
 
   private filterAgencyItems(

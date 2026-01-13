@@ -44,6 +44,7 @@ import UserSavingModel from "../schema/UserSaving.model";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import CommentModel from "../schema/Comment.model";
 import { CommentStatus } from "../libs/enums/comment.enum";
+import { AgencyStatus } from "../libs/enums/agency.enum";
 
 class MemberService {
   private readonly userModel;
@@ -94,34 +95,6 @@ class MemberService {
 
   public async login(input: LoginInput): Promise<User | Agency | Agent> {
     const { memberEmail, memberPassword } = input;
-    //   TO-DO AGENCY LOGIN
-    // const agency = await this.agencyModel
-    //   .findOne(
-    //     {
-    //       memberEmail,
-    //       memberStatus: { $ne: MemberStatus.DELETED },
-    //     },
-    //     {
-    //       memberStatus: 1,
-    //       _id: 1,
-    //       memberPassword: 1,
-    //     }
-    //   )
-    //   .lean();
-
-    // if (agency) {
-    //   if (agency.memberStatus === MemberStatus.BLOCKED) {
-    //     throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
-    //   }
-
-    //   const ok = await bcrypt.compare(memberPassword, agency?.memberPassword);
-
-    //   if (!ok) {
-    //     throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
-    //   }
-
-    //   return (await this.agencyModel.findById(agency._id)) as Agency;
-    // }
 
     const user = await this.userModel
       .findOne(
@@ -136,6 +109,7 @@ class MemberService {
           _id: 1,
           memberPassword: 1,
           agentMode: 1,
+          agencyMode: 1,
         }
       )
       .lean();
@@ -152,6 +126,19 @@ class MemberService {
 
     if (!match) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
+    }
+    if (user.agencyMode === true) {
+      const agency = await this.agencyModel
+        .findOne({
+          userId: user._id,
+          currentStatus: AgencyStatus.AVAILABLE,
+        })
+        .lean();
+
+      if (!agency) {
+        throw new Errors(HttpCode.CONFLICT, Message.AGENCY_NOT_ACTIVE);
+      }
+      return agency;
     }
 
     if (user.agentMode === true) {

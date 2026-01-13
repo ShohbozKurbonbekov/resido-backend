@@ -123,7 +123,7 @@ const UserSchema = new Schema<User>(
 UserSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject();
-  delete userObject.user.memberPassword;
+  delete userObject.memberPassword;
 
   return userObject;
 };

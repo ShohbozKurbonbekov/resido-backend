@@ -1,41 +1,19 @@
 import {
   UserMemberInput,
-  User,
   LoginInput,
   ExtendedRequest,
-  UserInputUpdate,
   UploadRequest,
 } from "../libs/types/user";
-import {
-  CommonPageInput,
-  CommonUsers,
-  CommonUsersUpdateInput,
-  T,
-} from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
 import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
-
-import { AgencyInputUpdate, AgencyAggregate } from "../libs/types/agency";
-import {
-  Agent,
-  AgentInputUpdate,
-  AgentResults,
-  FeaturedAgentsInput,
-  FeaturedAgentsResult,
-  MemberAgentInput,
-} from "../libs/types/agent";
-import makeUploader from "../libs/utils/uploader";
-import { RecentPropertyForRent } from "../libs/types/property";
 import { MessageInput } from "../libs/types/message";
-import residoAdminController from "./resido-admin.controller";
 import { MemberType } from "../libs/enums/member.enum";
-import { Agency } from "../schema/members/Agency.model";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
-import { userInfo } from "os";
 
 const memberController: T = {};
 const memberService = new MemberService();

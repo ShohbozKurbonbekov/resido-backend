@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { getTargetFileStorage } from "./uploader";
 
-const uploadAgent = (address: string) => {
+const uploadAvatarCerticateFiles = (address: string) => {
   const storage = getTargetFileStorage(address);
 
   return multer({
@@ -32,4 +32,4 @@ const uploadAgent = (address: string) => {
   });
 };
 
-export default uploadAgent;
+export default uploadAvatarCerticateFiles;

@@ -43,7 +43,10 @@ export enum Message {
   USER_PAGE = "Sorry, Only common users are allowed to request to this page",
   INVALID_SOCIALS = "Invalid social networks data",
   AGENT_EXISTS = "Agent application already exists",
+  AGENCY_EXISTS = "Agency application already exists",
+
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
+  AGENCY_NOT_ACTIVE = "Agent mode active but agent not available",
   INVALID_BLOG_TAGS = "Invalid blog tags",
   ONLY_AGENTS = "Only agents are allowed here",
   NO_ADDDRESS_GEO = "Address could not be geocoded",

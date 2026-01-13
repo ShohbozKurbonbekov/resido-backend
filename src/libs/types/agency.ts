@@ -22,8 +22,10 @@ export interface AgencyToggleStateType {
   agents?: Agent[];
   properties?: Property[];
 }
-export interface AgencyAggregate {
+
+export interface AgencyInputs {
   // REQUIRED INPUTS
+  userId: ObjectId;
   role: MemberType;
   memberName: string;
   memberEmail: string;
@@ -34,7 +36,9 @@ export interface AgencyAggregate {
   registrationNumber: string;
   certificate: string;
   licenseNumber: string;
+}
 
+export interface AgencyAggregate extends AgencyInputs {
   // SERVER DEFAULT INPUTS
   views?: number;
   createdAt?: Date;
