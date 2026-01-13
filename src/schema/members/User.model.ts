@@ -1,10 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import {
-  MemberStatus,
-  MemberType,
-  UserCurrentStatus,
-} from "../../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
 import { User } from "../../libs/types/user";
 
@@ -45,6 +41,10 @@ const UserSchema = new Schema<User>(
     },
 
     agentMode: {
+      type: Boolean,
+      default: false,
+    },
+    agencyMode: {
       type: Boolean,
       default: false,
     },
@@ -117,17 +117,23 @@ const UserSchema = new Schema<User>(
   },
   {
     timestamps: true,
-  } // updatedAt, createdAt
+  }
 );
 
 UserSchema.methods.toJSON = function () {
   const user = this;
-  const userObject = user.toObject(); //  In Mongoose, the .toObject() method is used to convert a Mongoose document into a plain JavaScript object.
-  delete userObject.memberPassword;
+  const userObject = user.toObject();
+  delete userObject.user.memberPassword;
 
   return userObject;
 };
 
+UserSchema.index({
+  role: 1,
+  memberEmail: 1,
+  memberPassword: 1,
+  memberStatus: 1,
+});
 UserSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("memberPassword")) {

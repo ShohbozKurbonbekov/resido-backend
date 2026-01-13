@@ -20,3 +20,10 @@ export enum AgencyTargetType {
   AGENTS = "AGENTS",
   PROPERTIES = "PROPERTIES",
 }
+
+export enum AgencyStatus {
+  PENDING = "pending",
+  AVAILABLE = "available",
+  PAUSED = "paused",
+  REJECTED = "rejected",
+}

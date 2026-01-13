@@ -32,13 +32,13 @@ export interface UserMemberInput {
   memberEmail: string;
   memberPassword: string;
   role: MemberType;
+  occuption: string;
   memberStatus?: MemberStatus;
   memberAddress?: string;
   memberDescription?: string;
   memberSocials?: Social;
   userFullname?: string;
   avatar?: string;
-  occuption?: string;
 }
 
 export interface User {
@@ -48,8 +48,8 @@ export interface User {
   memberEmail: string;
   memberPassword: string;
   role: MemberType;
-  agentStatus: UserCurrentStatus;
   agentMode: boolean;
+  agencyMode: boolean;
   memberStatus: MemberStatus;
   memberSocials: Social;
   occupation: string;

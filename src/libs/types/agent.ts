@@ -3,8 +3,6 @@ import { MemberStatus, MemberType } from "../enums/member.enum";
 import { CommonPageInput, Social } from "./common";
 import { AgentPropertyType, AgentStatus } from "../enums/agent.enum";
 import { RecentPropertyForRent, TotalCounter } from "./property";
-import { Agency } from "../../schema/members/Agency.model";
-import { Property } from "../../schema/Property.model";
 
 export interface MemberAgentInput {
   userId: string;

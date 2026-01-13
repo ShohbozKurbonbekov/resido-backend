@@ -11,7 +11,7 @@ import UserModel from "../schema/members/User.model";
 import { HttpCode } from "../libs/Errors";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
 
-import { AgencyInputUpdate, AgencyMemberInput } from "../libs/types/agency";
+import { AgencyInputUpdate, AgencyAggregate } from "../libs/types/agency";
 import {
   AgentInputUpdate,
   FeaturedAgentsInput,
@@ -80,16 +80,9 @@ class MemberService {
   }
 
   /////////////////////////// --  MEMBER SIGN UP -- //////////////////////////////
-  public async signup(
-    input: UserMemberInput | AgencyMemberInput
-  ): Promise<User | Agency> {
-    let result;
+  public async signup(input: UserMemberInput): Promise<User> {
     try {
-      if (input.role === MemberType.AGENCY) {
-        result = (await this.agencyModel.create(input)).toObject();
-      }
-
-      result = (await this.userModel.create(input)).toObject();
+      const result = (await this.userModel.create(input)).toObject();
       return result;
     } catch (error) {
       console.log("Error in userSignup service model", error);
@@ -101,34 +94,34 @@ class MemberService {
 
   public async login(input: LoginInput): Promise<User | Agency | Agent> {
     const { memberEmail, memberPassword } = input;
-    // AGENCY LOGIN
-    const agency = await this.agencyModel
-      .findOne(
-        {
-          memberEmail,
-          memberStatus: { $ne: MemberStatus.DELETED },
-        },
-        {
-          memberStatus: 1,
-          _id: 1,
-          memberPassword: 1,
-        }
-      )
-      .lean();
+    //   TO-DO AGENCY LOGIN
+    // const agency = await this.agencyModel
+    //   .findOne(
+    //     {
+    //       memberEmail,
+    //       memberStatus: { $ne: MemberStatus.DELETED },
+    //     },
+    //     {
+    //       memberStatus: 1,
+    //       _id: 1,
+    //       memberPassword: 1,
+    //     }
+    //   )
+    //   .lean();
 
-    if (agency) {
-      if (agency.memberStatus === MemberStatus.BLOCKED) {
-        throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
-      }
+    // if (agency) {
+    //   if (agency.memberStatus === MemberStatus.BLOCKED) {
+    //     throw new Errors(HttpCode.FORBIDDEN, Message.BLOCKED_USER);
+    //   }
 
-      const ok = await bcrypt.compare(memberPassword, agency?.memberPassword);
+    //   const ok = await bcrypt.compare(memberPassword, agency?.memberPassword);
 
-      if (!ok) {
-        throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
-      }
+    //   if (!ok) {
+    //     throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
+    //   }
 
-      return (await this.agencyModel.findById(agency._id)) as Agency;
-    }
+    //   return (await this.agencyModel.findById(agency._id)) as Agency;
+    // }
 
     const user = await this.userModel
       .findOne(

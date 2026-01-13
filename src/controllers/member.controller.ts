@@ -19,7 +19,7 @@ import Errors from "../libs/Errors";
 import AuthService from "../models/Auth.service";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 
-import { AgencyInputUpdate, AgencyMemberInput } from "../libs/types/agency";
+import { AgencyInputUpdate, AgencyAggregate } from "../libs/types/agency";
 import {
   Agent,
   AgentInputUpdate,
@@ -61,12 +61,12 @@ memberController.getAdmin = async (req: Request, res: Response) => {
 memberController.getSignup = async (req: Request, res: Response) => {
   try {
     console.log("signup process");
-    const input: UserMemberInput | AgencyMemberInput = req.body;
+    const input: UserMemberInput = req.body;
     let result = await memberService.signup(input);
     const tokenPayload = {
       _id: result._id,
-      memberStatus: result.memberStatus,
       role: result.role,
+      memberStatus: result.memberStatus,
     };
     const token = await authService.createToken(tokenPayload);
     res.cookie("accessToken", token, {

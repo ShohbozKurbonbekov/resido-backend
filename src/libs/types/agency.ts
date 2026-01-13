@@ -1,6 +1,7 @@
 import { ObjectId } from "mongoose";
 import {
   AgencyCurrentBadge,
+  AgencyStatus,
   AgencyTargetType,
   SubscriptionStatus,
   SubscriptionTarrif,
@@ -21,35 +22,45 @@ export interface AgencyToggleStateType {
   agents?: Agent[];
   properties?: Property[];
 }
-export interface AgencyMemberInput {
+export interface AgencyAggregate {
+  // REQUIRED INPUTS
+  role: MemberType;
   memberName: string;
   memberEmail: string;
   memberPhone: string;
-  memberPassword: string;
-  role: MemberType;
-  agencyOwner: string;
-  country: string;
-  city: string;
+  yearOfExperience: number;
   address: string;
-  bioInfo: string;
-  billingInfo: BillingDetails;
-  socialLinks: Social;
+  agencyOwner: string;
+  registrationNumber: string;
+  certificate: string;
+  licenseNumber: string;
+
+  // SERVER DEFAULT INPUTS
   views?: number;
-  agencyBadge?: AgencyCurrentBadge;
-  isVerified?: boolean;
-  avatar?: string;
-  agencyItems?: AgencyToggleStateType;
-  registrationNumber?: string;
-  agentsTotalNumber?: number;
-  propertiesTotalNumber?: number;
-  featuredScore?: number;
-  memberSince?: Date;
-  permittedProperties?: number;
-  _id?: ObjectId;
-  memberStatus?: MemberStatus;
   createdAt?: Date;
   updatedAt?: Date;
-  yearOfExperience: number;
+  memberStatus?: MemberStatus;
+  currentStatus?: AgencyStatus;
+  memberSince?: Date;
+  featuredScore?: number;
+  _id?: ObjectId;
+  isVerified?: boolean;
+
+  // STEP  =>  2 AFTER ADMIN CHECK
+  permittedProperties?: number;
+  permittedAgents?: number;
+  billingInfo?: BillingDetails;
+
+  // STEPT =>  3 =>  AGENCY OPTIONAL INPUTS
+  socialLinks?: Social;
+  avatar?: string;
+  bioInfo?: string;
+
+  // SET-BYSERVER INPUTS FOR FRONT-END
+  agencyBadge?: AgencyCurrentBadge;
+  agencyItems?: AgencyToggleStateType;
+  agentsTotalNumber?: number;
+  propertiesTotalNumber?: number;
 }
 
 export interface AgencyInputUpdate {
