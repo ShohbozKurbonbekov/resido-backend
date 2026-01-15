@@ -29,7 +29,7 @@ import {
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
-import { AgencyTargetType } from "../libs/enums/agency.enum";
+import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import { Transaction } from "mongodb/mongodb";
@@ -507,6 +507,18 @@ class AgencyService {
     const [result] = await this.agencyModel.aggregate(pipeline);
 
     return { agency: result };
+  }
+
+  // VALIDATION - PREPAYMENT
+  public async validationPrePayment(id: ObjectId): Promise<boolean> {
+    const match: T = { userId: id, currentStatus: AgencyStatus.PAYMENT };
+    const result = await this.agencyModel.findOne(match).lean().exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.PAYMENT_NOT_ALLOWED);
+    }
+
+    return true;
   }
 
   // APPLY FOR AGENCY

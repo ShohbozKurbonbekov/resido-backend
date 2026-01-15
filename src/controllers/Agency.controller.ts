@@ -125,4 +125,25 @@ agencyController.applyAgency = async (req: UploadRequest, res: Response) => {
     }
   }
 };
+
+/////////////////// VALIDATION - PREPAYMENT ///////////
+agencyController.validationPrePayment = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    console.log("validationPrePayment proccess: ");
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+
+    const result = await agencyService.validationPrePayment(userId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in validationPrePayment: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agencyController;

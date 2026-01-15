@@ -36,4 +36,13 @@ agency.post(
   multerErrorHandler,
   agencyController.applyAgency
 );
+
+//////////////// --  AGENCY PRE-PAYMENT VALIDATION -- ////////////////////
+agency.get(
+  "/validation/pre-payment",
+  memberController.verifyMember,
+  allowRoles(Message.USER_PAGE, MemberType.USER),
+  agencyController.validationPrePayment
+);
+
 export default agency;

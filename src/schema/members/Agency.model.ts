@@ -95,6 +95,7 @@ const AgencySchema = new Schema<AgencyAggregate>(
     licenseNumber: {
       type: String,
       required: true,
+      unique: true,
     },
 
     //THEY ARE GONNA SET IN DB

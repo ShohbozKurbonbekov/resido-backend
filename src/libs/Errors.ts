@@ -51,6 +51,7 @@ export enum Message {
   ONLY_AGENTS = "Only agents are allowed here",
   NO_ADDDRESS_GEO = "Address could not be geocoded",
   INVALID_GEO = "Invalid geocoding result",
+  PAYMENT_NOT_ALLOWED = "Payment is not allowed for the current application state.",
 }
 
 class Errors extends Error {

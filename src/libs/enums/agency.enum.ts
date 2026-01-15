@@ -24,6 +24,7 @@ export enum AgencyTargetType {
 export enum AgencyStatus {
   PENDING = "pending",
   AVAILABLE = "available",
+  PAYMENT = "payment_waiting",
   PAUSED = "paused",
   REJECTED = "rejected",
 }
