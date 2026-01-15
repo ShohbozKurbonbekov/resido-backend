@@ -11,10 +11,14 @@ export enum SubscriptionStatus {
   CANCELLED = "CANCELLED",
 }
 
+export enum PaymentProvider {
+  MANUAL = "MANUAL",
+  STRIPE = "STRIPE",
+}
 export enum SubscriptionTarrif {
-  FREE = "FREE",
+  BASIC = "BASIC",
   STANDART = "STANDART",
-  PREMIUM = "PREMIUM",
+  PLATINUM = "PLATINUM",
 }
 export enum AgencyTargetType {
   AGENTS = "AGENTS",

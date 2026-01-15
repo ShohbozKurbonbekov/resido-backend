@@ -1,13 +1,8 @@
 import mongoose, { InferSchemaType, now, Schema } from "mongoose";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
-import {
-  AgencyCurrentBadge,
-  AgencyStatus,
-  SubscriptionStatus,
-  SubscriptionTarrif,
-} from "../../libs/enums/agency.enum";
-import { AgencyAggregate, BillingDetails } from "../../libs/types/agency";
+import { AgencyCurrentBadge, AgencyStatus } from "../../libs/enums/agency.enum";
+import { AgencyAggregate } from "../../libs/types/agency";
 
 const AgencySocials = new Schema(
   {
@@ -16,21 +11,6 @@ const AgencySocials = new Schema(
     instagram: { type: String, default: null },
     linkedin: { type: String, default: null },
     email: { type: String, default: null },
-  },
-  { _id: false }
-);
-
-const BillingSchema = new Schema(
-  {
-    planName: {
-      type: String,
-      enum: SubscriptionTarrif,
-    },
-    subscriptionDate: { type: Date },
-    subscriptionStatus: {
-      type: String,
-      enum: SubscriptionStatus,
-    },
   },
   { _id: false }
 );
@@ -138,10 +118,6 @@ const AgencySchema = new Schema<AgencyAggregate>(
 
     permittedAgents: {
       type: Number,
-    },
-
-    billingInfo: {
-      type: BillingSchema,
     },
 
     // THEY ARE GONNA SET BY SERVER  IN CALCULATION

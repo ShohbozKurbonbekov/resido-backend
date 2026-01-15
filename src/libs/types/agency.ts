@@ -3,6 +3,7 @@ import {
   AgencyCurrentBadge,
   AgencyStatus,
   AgencyTargetType,
+  PaymentProvider,
   SubscriptionStatus,
   SubscriptionTarrif,
 } from "../enums/agency.enum";
@@ -24,7 +25,6 @@ export interface AgencyToggleStateType {
 }
 
 export interface AgencyInputs {
-  // REQUIRED INPUTS
   userId: ObjectId;
   role: MemberType;
   memberName: string;
@@ -53,14 +53,13 @@ export interface AgencyAggregate extends AgencyInputs {
   // STEP  =>  2 AFTER ADMIN CHECK
   permittedProperties?: number;
   permittedAgents?: number;
-  billingInfo?: BillingDetails;
 
   // STEPT =>  3 =>  AGENCY OPTIONAL INPUTS
   socialLinks?: Social;
   avatar?: string;
   bioInfo?: string;
 
-  // SET-BYSERVER INPUTS FOR FRONT-END
+  // SET-BY-SERVER INPUTS FOR FRONT-END
   agencyBadge?: AgencyCurrentBadge;
   agencyItems?: AgencyToggleStateType;
   agentsTotalNumber?: number;
@@ -95,4 +94,19 @@ export interface AgencyAgePropertiesInput extends CommonPageInput {
 
 export interface AgencyAgePropertiesResult {
   agency: Agency;
+}
+
+/////////////////  SUBSCRIPTIONS /////////////
+export interface AgencySubscriptionInputs {
+  agencyId: ObjectId;
+  planName: SubscriptionTarrif;
+  billingName: string;
+  billingEmail: string;
+  billingAddress: string;
+  billingCountry: string;
+  subscriptionStatus: SubscriptionStatus;
+  paymentProvider: PaymentProvider;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  createdAt: Date;
 }
