@@ -45,4 +45,12 @@ agency.get(
   agencyController.validationPrePayment
 );
 
+////////////// ---- AGENCY PAYMENT INFO SUBMIT -- //////////////////
+agency.post(
+  "/payment/info/submit",
+  memberController.verifyMember,
+  allowRoles(Message.USER_PAGE, MemberType.USER),
+  agencyController.proceedPayment
+);
+
 export default agency;

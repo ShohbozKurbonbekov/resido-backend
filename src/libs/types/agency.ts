@@ -96,8 +96,13 @@ export interface AgencyAgePropertiesResult {
   agency: Agency;
 }
 
+export interface AgencyPrivilegesType {
+  permittedProperties: number;
+  permittedAgents: number;
+}
+
 /////////////////  SUBSCRIPTIONS /////////////
-export interface AgencySubscriptionInputs {
+export interface AgencySubscriptionSchemaInputs {
   agencyId: ObjectId;
   planName: SubscriptionTarrif;
   billingName: string;
@@ -110,3 +115,12 @@ export interface AgencySubscriptionInputs {
   stripeSubscriptionId?: string;
   createdAt: Date;
 }
+
+export type AgencyPaymentInfoInputs = Pick<
+  AgencySubscriptionSchemaInputs,
+  | "planName"
+  | "billingName"
+  | "billingEmail"
+  | "billingAddress"
+  | "billingCountry"
+>;

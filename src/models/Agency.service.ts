@@ -9,7 +9,7 @@ import ViewModel, { ViewDocs } from "../schema/View.model";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
-import { ObjectId } from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import { ViewInput } from "../libs/types/view";
 import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
@@ -17,22 +17,26 @@ import {
   agentsLookupByAgencyId,
   propertiesLookupByAgencyId,
 } from "../libs/config";
-import {
-  SearchByLocationInput,
-  SearchByLocationResult,
-} from "../libs/types/agent";
+import { SearchByLocationInput } from "../libs/types/agent";
 import {
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
   AgencyInputs,
+  AgencyPaymentInfoInputs,
+  AgencyPrivilegesType,
   SearchByLocationAgency,
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
-import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
+import {
+  AgencyStatus,
+  AgencyTargetType,
+  SubscriptionTarrif,
+} from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
-import { Transaction } from "mongodb/mongodb";
+import UserModel from "../schema/members/User.model";
+import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -40,6 +44,8 @@ class AgencyService {
   public readonly viewService;
   public readonly agentModel;
   public readonly propertyModel;
+  private readonly agencySubscriptionModel;
+  private readonly userModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -47,6 +53,8 @@ class AgencyService {
     this.viewService = new ViewService();
     this.agentModel = AgentModel;
     this.propertyModel = PropertyModel;
+    this.agencySubscriptionModel = AgencySubscriptionModel;
+    this.userModel = UserModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -548,6 +556,89 @@ class AgencyService {
     }
   }
 
+  // PAYMENT INFO
+  public async proceedPayment(
+    input: AgencyPaymentInfoInputs,
+    userId: ObjectId
+  ): Promise<Agency> {
+    const session = await mongoose.startSession();
+    const privileges = this.handlePrivileges(
+      input.billingName as SubscriptionTarrif
+    );
+
+    try {
+      session.startTransaction();
+      const currentSession = { session };
+
+      //1 - transaction
+      const agencyAvailable = await this.agencyModel.findOne(
+        {
+          userId,
+          memberStatus: MemberStatus.ACTIVE,
+          currentStatus: AgencyStatus.PAYMENT,
+        },
+        currentSession
+      );
+      if (!agencyAvailable) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.PAYMENT_NOT_ALLOWED);
+      }
+
+      // 2 - transaction
+      await this.agencySubscriptionModel.create(
+        [{ ...input, agencyId: agencyAvailable._id }],
+        currentSession
+      );
+
+      // 3 - transaction
+      const user = await this.userModel.findOneAndUpdate(
+        { _id: userId, currentStatus: MemberStatus.ACTIVE },
+        {
+          agencyMode: true,
+        },
+        {
+          new: true,
+          ...currentSession,
+        }
+      );
+
+      if (!user) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
+      }
+
+      // 4 - tranaction
+      const agency = await this.agencyModel.findOneAndUpdate(
+        {
+          _id: agencyAvailable._id,
+        },
+        {
+          currentStatus: AgencyStatus.AVAILABLE,
+          isVerified: true,
+          ...privileges,
+        },
+        {
+          new: true,
+          ...currentSession,
+        }
+      );
+
+      if (!agency) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      await session.commitTransaction();
+      return agency;
+    } catch (error) {
+      await session.abortTransaction();
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.PAYMENT_FAILED);
+      }
+    } finally {
+      session.endSession();
+    }
+  }
+
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,
@@ -629,6 +720,25 @@ class AgencyService {
       },
     ];
   };
+
+  private handlePrivileges(planType: SubscriptionTarrif): AgencyPrivilegesType {
+    if (planType === SubscriptionTarrif.BASIC) {
+      return {
+        permittedProperties: 5,
+        permittedAgents: 2,
+      };
+    }
+    if (planType === SubscriptionTarrif.STANDART) {
+      return {
+        permittedAgents: 5,
+        permittedProperties: 20,
+      };
+    }
+    return {
+      permittedAgents: 100000,
+      permittedProperties: 100000,
+    };
+  }
 }
 
 export default AgencyService;

@@ -1,16 +1,17 @@
-import { Schema } from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import {
   PaymentProvider,
   SubscriptionStatus,
   SubscriptionTarrif,
 } from "../libs/enums/agency.enum";
-import { AgencySubscriptionInputs } from "../libs/types/agency";
+import { AgencySubscriptionSchemaInputs } from "../libs/types/agency";
 
-const AgencySubscriptionSchema = new Schema<AgencySubscriptionInputs>({
+const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>({
   agencyId: {
     type: Schema.Types.ObjectId,
     ref: "agencies",
     required: true,
+    unique: true,
   },
   planName: {
     type: String,
@@ -48,3 +49,11 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionInputs>({
 AgencySubscriptionSchema.index({
   agencyId: 1,
 });
+
+export type AgencySubscriptionResult = InferSchemaType<
+  typeof AgencySubscriptionSchema
+>;
+export default mongoose.model<AgencySubscriptionResult>(
+  "AgencySubscription",
+  AgencySubscriptionSchema
+);

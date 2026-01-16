@@ -5,7 +5,7 @@ import Errors, { Message, HttpCode } from "../libs/Errors";
 import { CommonUsers, T } from "../libs/types/common";
 import AgencyService from "../models/Agency.service";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
-import { shapeIntoMongooseObjectId } from "../libs/config";
+import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { SearchByLocationInput } from "../libs/types/agent";
 import {
   AgencyAgePropertiesInput,
@@ -14,10 +14,11 @@ import {
 } from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
-import { Agency } from "../schema/members/Agency.model";
+import AuthService from "../models/Auth.service";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
+const authService = new AuthService();
 
 /////////////////// GET AGENCY BY LOCATION////////////////
 agencyController.getAgencyByLocation = async (req: Request, res: Response) => {
@@ -139,6 +140,39 @@ agencyController.validationPrePayment = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in validationPrePayment: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////// AGENCY PAYMENT INFO SUBMIT /////////////////
+agencyController.proceedPayment = async (
+  req: ExtendedRequest,
+  res: Response
+) => {
+  try {
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const inputs = req.body;
+    const result = await agencyService.proceedPayment(inputs, userId);
+
+    const tokenPayload = {
+      _id: result._id,
+      memberStatus: result.memberStatus,
+      role: result.role,
+    };
+    const token: string = await authService.createToken(tokenPayload);
+
+    res.cookie("accessToken", token, {
+      maxAge: jwtTime * 60 * 60 * 1000,
+      httpOnly: false,
+    });
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in proceedPayment: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

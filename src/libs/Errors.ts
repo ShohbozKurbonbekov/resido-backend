@@ -46,12 +46,13 @@ export enum Message {
   AGENCY_EXISTS = "Agency application already exists",
 
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
-  AGENCY_NOT_ACTIVE = "Agent mode active but agent not available",
+  AGENCY_NOT_ACTIVE = "Agency mode active but agency not available",
   INVALID_BLOG_TAGS = "Invalid blog tags",
   ONLY_AGENTS = "Only agents are allowed here",
   NO_ADDDRESS_GEO = "Address could not be geocoded",
   INVALID_GEO = "Invalid geocoding result",
   PAYMENT_NOT_ALLOWED = "Payment is not allowed for the current application state.",
+  PAYMENT_FAILED = "Payment process failed!, Please try later",
 }
 
 class Errors extends Error {
