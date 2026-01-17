@@ -156,8 +156,8 @@ agencyController.proceedPayment = async (
   try {
     const userId = shapeIntoMongooseObjectId(req.member._id);
     const inputs = req.body;
-    const result = await agencyService.proceedPayment(inputs, userId);
 
+    const result = await agencyService.proceedPayment(inputs, userId);
     const tokenPayload = {
       _id: result._id,
       memberStatus: result.memberStatus,

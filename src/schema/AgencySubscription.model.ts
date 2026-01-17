@@ -11,7 +11,6 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>({
     type: Schema.Types.ObjectId,
     ref: "agencies",
     required: true,
-    unique: true,
   },
   planName: {
     type: String,
@@ -46,9 +45,12 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>({
   createdAt: { type: Date, default: Date.now },
 });
 
-AgencySubscriptionSchema.index({
-  agencyId: 1,
-});
+AgencySubscriptionSchema.index(
+  {
+    agencyId: 1,
+  },
+  { unique: true }
+);
 
 export type AgencySubscriptionResult = InferSchemaType<
   typeof AgencySubscriptionSchema

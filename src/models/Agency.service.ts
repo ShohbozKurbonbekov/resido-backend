@@ -334,9 +334,8 @@ class AgencyService {
         viewTargetId: agencyId,
       };
 
-      const exist: null | ViewDocs = await this.viewService.checkViewExistance(
-        input
-      );
+      const exist: null | ViewDocs =
+        await this.viewService.checkViewExistance(input);
 
       if (!exist) {
         await this.viewService.insertUserView(input);
@@ -577,8 +576,13 @@ class AgencyService {
           memberStatus: MemberStatus.ACTIVE,
           currentStatus: AgencyStatus.PAYMENT,
         },
+        {
+          _id: 1,
+          userId: 1,
+        },
         currentSession
       );
+
       if (!agencyAvailable) {
         throw new Errors(HttpCode.FORBIDDEN, Message.PAYMENT_NOT_ALLOWED);
       }
@@ -591,7 +595,7 @@ class AgencyService {
 
       // 3 - transaction
       const user = await this.userModel.findOneAndUpdate(
-        { _id: userId, currentStatus: MemberStatus.ACTIVE },
+        { _id: userId, memberStatus: MemberStatus.ACTIVE },
         {
           agencyMode: true,
         },
@@ -632,6 +636,7 @@ class AgencyService {
       if (error instanceof Errors) {
         throw error;
       } else {
+        console.log("⛔ERROR: ", error);
         throw new Errors(HttpCode.BAD_REQUEST, Message.PAYMENT_FAILED);
       }
     } finally {
@@ -647,8 +652,8 @@ class AgencyService {
   ): void {
     //  AGENT FILTER
     if (agencyTarget === AgencyTargetType.AGENTS) {
-      (filter.currentStatus = AgentStatus.AVAILABLE),
-        (filter.memberStatus = MemberStatus.ACTIVE);
+      ((filter.currentStatus = AgentStatus.AVAILABLE),
+        (filter.memberStatus = MemberStatus.ACTIVE));
 
       if (location) {
         filter.address = {
