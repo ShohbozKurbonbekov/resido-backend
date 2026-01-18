@@ -16,6 +16,7 @@ import ViewService from "./View.service";
 import {
   agentsLookupByAgencyId,
   propertiesLookupByAgencyId,
+  shapeIntoMongooseObjectId,
 } from "../libs/config";
 import { SearchByLocationInput } from "../libs/types/agent";
 import {
@@ -38,6 +39,9 @@ import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import UserModel from "../schema/members/User.model";
 import AgencySubscriptionModel from "../schema/AgencySubscription.model";
+import { Blogs } from "../libs/types/blog";
+import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
+import BlogModel, { BlogDoc } from "../schema/Blog.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -47,6 +51,7 @@ class AgencyService {
   public readonly propertyModel;
   private readonly agencySubscriptionModel;
   private readonly userModel;
+  private readonly blogModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -56,6 +61,7 @@ class AgencyService {
     this.propertyModel = PropertyModel;
     this.agencySubscriptionModel = AgencySubscriptionModel;
     this.userModel = UserModel;
+    this.blogModel = BlogModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -667,6 +673,75 @@ class AgencyService {
       throw new Errors(HttpCode.BAD_REQUEST, Message.AGENCY_NOT_ACTIVE);
     }
 
+    return result;
+  }
+
+  // AGENCY MY BLOGS
+  public async myBlogs(
+    member: CommonUsers,
+    query: CommonPageInput,
+  ): Promise<Blogs> {
+    const { page, limit } = query;
+    const match: T = {
+      blogAuthorId: shapeIntoMongooseObjectId(member._id),
+      blogAuthorType: BlogAuthorType.AGENCY,
+      blogStatus: BlogStatus.ACTIVE,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.blogModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
+    }
+    return result;
+  }
+
+  ////////////////////////// --- AGENCY DELETE BLOG ---/////////////////////
+  public async deleteMyBlog(
+    memberId: ObjectId,
+    targetId: ObjectId,
+  ): Promise<BlogDoc> {
+    const match: T = {
+      _id: targetId,
+      blogAuthorId: memberId,
+      blogAuthorType: BlogAuthorType.AGENCY,
+    };
+
+    const result = await this.blogModel.findOneAndUpdate(
+      match,
+      {
+        $set: { blogStatus: BlogStatus.DELETED },
+      },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+    }
     return result;
   }
 

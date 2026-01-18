@@ -51,7 +51,7 @@ agentController.getAgentByLocation = async (req: Request, res: Response) => {
 
 agentController.getAgentDetail = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getAgentDetail process");
@@ -74,7 +74,7 @@ agentController.getAgentDetail = async (
 /////////////////////---- --  LIKE TARGET AGENT ------ ////////////////////////
 agentController.likeTargetAgent = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("likeTargetAgent process");
@@ -100,9 +100,8 @@ agentController.getFeaturedAgents = async (req: Request, res: Response) => {
     console.log("getFeaturedAgents process");
     const input: FeaturedAgentsInput = req.body;
 
-    const result: FeaturedAgentsResult = await agentService.getFeaturedAgents(
-      input
-    );
+    const result: FeaturedAgentsResult =
+      await agentService.getFeaturedAgents(input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getFeaturedAgents process: ", error);
@@ -147,7 +146,7 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
 /////////////////////// --------------- GET MY PROPERTIES --------//////////////////////////
 agentController.getMyProperties = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getMyProperties process");
@@ -174,7 +173,7 @@ agentController.getMyProperties = async (
 ////////////// -------------- SAVE TARGET BLOG --------------//////////////
 agentController.saveToggleAgent = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("saveToggleAgent proccess");
@@ -200,7 +199,7 @@ agentController.saveToggleAgent = async (
 //////////////// --- GET SAVED PROPERTIES -----------------
 agentController.getFollowedAgents = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getFollowedAgents proccess");
@@ -268,7 +267,7 @@ agentController.agentApply = async (req: UploadRequest, res: Response) => {
 ////////////////////////// ------------ AGENT UPDATE -------------- /////////////////
 agentController.updateAgentProfile = async (
   req: UploadRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("updateAgentProfile process");
@@ -333,7 +332,7 @@ agentController.myBlogs = async (req: ExtendedRequest, res: Response) => {
 ///////////// -------- UPDATE MY BLOG ---------- ////////////
 agentController.agentUpdateMyBlog = async (
   req: UploadRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const memberId = shapeIntoMongooseObjectId(req.member._id);
@@ -413,7 +412,7 @@ agentController.getMyReviews = async (req: ExtendedRequest, res: Response) => {
 ///////////////////////// -------- DELETE MY PROPERTY ------ /////////////////////////
 agentController.archiveMyProperty = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("archiveMyProperty process");
@@ -436,7 +435,7 @@ agentController.archiveMyProperty = async (
 //////////////////////// --------- UPDATE PUBLISHER PROPERTY -----------//////////////////
 agentController.updatePublisherProperty = async (
   req: UploadRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("updatePublisherProperty process: ");
@@ -480,7 +479,7 @@ agentController.updatePublisherProperty = async (
 ///////////////// --------------- AGENT DASHBOARD OVERVIEW ------------- ///////////////
 agentController.agentDashboardOverview = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("agentDashboardOverview process");

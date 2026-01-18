@@ -68,4 +68,18 @@ agency.post(
   agencyController.updateAgencyProfile,
 );
 
+//////////////////// -- MY BLOGS --- ///////////////
+agency.get(
+  "/get/myBlogs",
+  memberController.verifyMember,
+  agencyController.myBlogs,
+);
+
+/////////////////////// DELETE BLOGS ////////////////////
+agency.post(
+  "/delete/myBlog/:id",
+  memberController.verifyMember,
+  agencyController.deleteMyBlog,
+);
+
 export default agency;

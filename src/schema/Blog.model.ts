@@ -26,7 +26,7 @@ const BlogAuthorSchema = new Schema<BlogAuthor>(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const BlogSchema = new Schema<BlogInput>(
@@ -105,7 +105,7 @@ const BlogSchema = new Schema<BlogInput>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // BlogSchema.virtual("author", {
@@ -118,9 +118,10 @@ const BlogSchema = new Schema<BlogInput>(
 BlogSchema.index({
   blogAuthorId: 1,
   blogTitle: 1,
+  blogStatus: 1,
   blogCategory: 1,
   blogTags: 1,
-  createdAt: 1,
+  createdAt: -1,
   blogAuthorType: 1,
 });
 

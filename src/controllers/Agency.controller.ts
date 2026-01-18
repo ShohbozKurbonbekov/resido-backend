@@ -2,16 +2,12 @@ import { Request, Response } from "express";
 import chalk from "chalk";
 
 import Errors, { Message, HttpCode } from "../libs/Errors";
-import { CommonUsers, T } from "../libs/types/common";
+import { CommonPageInput, CommonUsers, T } from "../libs/types/common";
 import AgencyService from "../models/Agency.service";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { SearchByLocationInput } from "../libs/types/agent";
-import {
-  AgencyAgePropertiesInput,
-  AgencyAggregate,
-  AgencyInputs,
-} from "../libs/types/agency";
+import { AgencyAgePropertiesInput, AgencyInputs } from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
 import AuthService from "../models/Auth.service";
@@ -208,6 +204,49 @@ agencyController.updateAgencyProfile = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in updateAgencyProfile: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////// ------------ AGENCY MY BLOG -------------- /////////////////
+agencyController.myBlogs = async (req: ExtendedRequest, res: Response) => {
+  try {
+    const member = req.member;
+    const { limit, page } = req.query;
+    const query: CommonPageInput = {
+      page: Number(page || 1),
+      limit: Number(limit || 6),
+    };
+
+    const result = await agencyService.myBlogs(member, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agency myBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////// ---- DELETE MY BLOG ------////////////////////
+agencyController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("deleteMyBlog process in agencyController");
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const targetId = shapeIntoMongooseObjectId(id);
+    const result = await agencyService.deleteMyBlog(memberId, targetId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in deleteMyBlog process of agencyController: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
