@@ -12,7 +12,7 @@ const AgencySocials = new Schema(
     linkedin: { type: String, default: null },
     email: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const AgencySchema = new Schema<AgencyAggregate>(
@@ -137,6 +137,7 @@ const AgencySchema = new Schema<AgencyAggregate>(
     // OPTIONAL INPUTS BY AGENCY
     socialLinks: {
       type: AgencySocials,
+      default: () => ({}),
     },
     bioInfo: {
       type: String,
@@ -148,7 +149,7 @@ const AgencySchema = new Schema<AgencyAggregate>(
 
   {
     timestamps: true,
-  } // updatedAt, createdAt
+  }, // updatedAt, createdAt
 );
 
 AgencySchema.pre("save", async function (next) {

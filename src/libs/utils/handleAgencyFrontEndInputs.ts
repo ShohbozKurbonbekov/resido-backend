@@ -17,7 +17,8 @@ export const handleAgencyFrontEndInput = (body: Partial<AgencyAggregate>) => {
   }
 
   if (body.yearOfExperience) {
-    queries.yearOfExperience = Number(body.yearOfExperience);
+    const exNum = Number(body.yearOfExperience);
+    queries.yearOfExperience = Number.isFinite(exNum) ? exNum : 0;
   }
 
   if (body.address) {
@@ -34,6 +35,10 @@ export const handleAgencyFrontEndInput = (body: Partial<AgencyAggregate>) => {
 
   if (body.licenseNumber) {
     queries.licenseNumber = body.licenseNumber;
+  }
+
+  if (body.bioInfo) {
+    queries.bioInfo = body.bioInfo;
   }
 
   return queries;

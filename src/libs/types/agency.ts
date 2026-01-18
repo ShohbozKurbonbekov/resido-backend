@@ -66,20 +66,8 @@ export interface AgencyAggregate extends AgencyInputs {
   propertiesTotalNumber?: number;
 }
 
-export interface AgencyInputUpdate {
-  _id: ObjectId;
-  memberName?: string;
-  memberEmail?: string;
-  memberPhone?: string;
-  memberPassword?: string;
-  bioInfo?: string;
-  address?: string;
-  agencyOwner?: string;
-  country?: string;
-  socialLinks?: Social;
-  city?: string;
-  avatar?: string;
-}
+export type AgencyInputUpdate = Partial<Omit<AgencyInputs, "role" | "userId">> &
+  Partial<Pick<AgencyAggregate, "socialLinks" | "avatar" | "bioInfo">>;
 
 export interface AgencyResults {
   agencies: Agency[];

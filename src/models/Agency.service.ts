@@ -22,6 +22,7 @@ import {
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
   AgencyInputs,
+  AgencyInputUpdate,
   AgencyPaymentInfoInputs,
   AgencyPrivilegesType,
   SearchByLocationAgency,
@@ -246,7 +247,7 @@ class AgencyService {
 
   // GET AGENCY BY LOCATION
   public async getAgencyByLocation(
-    input: SearchByLocationInput
+    input: SearchByLocationInput,
   ): Promise<SearchByLocationAgency> {
     const { page, limit, location } = input;
     const match: T = {
@@ -314,7 +315,7 @@ class AgencyService {
   // GET AGENCY DETAIL
   public async getAgencyDetail(
     member: CommonUsers | null,
-    agencyId: ObjectId
+    agencyId: ObjectId,
   ): Promise<Agency> {
     const match: T = {
       memberStatus: MemberStatus.ACTIVE,
@@ -392,7 +393,7 @@ class AgencyService {
         },
         {
           new: true,
-        }
+        },
       )
 
       .exec();
@@ -402,7 +403,7 @@ class AgencyService {
   // GET AGENCY AGENTS AND PROPERTIES
   public async getAgentsProperties(
     agencyId: ObjectId,
-    input: AgencyAgePropertiesInput
+    input: AgencyAgePropertiesInput,
   ): Promise<AgencyAgePropertiesResult> {
     console.log(input);
     const { page, limit, location, agencyTarget } = input;
@@ -531,7 +532,7 @@ class AgencyService {
   // APPLY FOR AGENCY
   public async applyAgency(
     userId: ObjectId,
-    input: AgencyInputs
+    input: AgencyInputs,
   ): Promise<Agency> {
     const target = await this.agencyModel
       .findOne({ userId })
@@ -558,12 +559,10 @@ class AgencyService {
   // PAYMENT INFO
   public async proceedPayment(
     input: AgencyPaymentInfoInputs,
-    userId: ObjectId
+    userId: ObjectId,
   ): Promise<Agency> {
     const session = await mongoose.startSession();
-    const privileges = this.handlePrivileges(
-      input.billingName as SubscriptionTarrif
-    );
+    const privileges = this.handlePrivileges(input.planName);
 
     try {
       session.startTransaction();
@@ -580,7 +579,7 @@ class AgencyService {
           _id: 1,
           userId: 1,
         },
-        currentSession
+        currentSession,
       );
 
       if (!agencyAvailable) {
@@ -590,7 +589,7 @@ class AgencyService {
       // 2 - transaction
       await this.agencySubscriptionModel.create(
         [{ ...input, agencyId: agencyAvailable._id }],
-        currentSession
+        currentSession,
       );
 
       // 3 - transaction
@@ -602,7 +601,7 @@ class AgencyService {
         {
           new: true,
           ...currentSession,
-        }
+        },
       );
 
       if (!user) {
@@ -622,7 +621,7 @@ class AgencyService {
         {
           new: true,
           ...currentSession,
-        }
+        },
       );
 
       if (!agency) {
@@ -644,11 +643,38 @@ class AgencyService {
     }
   }
 
+  // UPDATE AGENCY PROFILE
+  public async updateAgencyProfile(
+    input: AgencyInputUpdate,
+    agencyId: ObjectId,
+  ): Promise<Agency> {
+    const result = await this.agencyModel
+      .findOneAndUpdate(
+        {
+          _id: agencyId,
+          memberStatus: MemberStatus.ACTIVE,
+          currentStatus: AgencyStatus.AVAILABLE,
+        },
+        {
+          $set: input,
+        },
+        { new: true, runValidators: true },
+      )
+      .lean()
+      .exec();
+
+    if (!result) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    return result;
+  }
+
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,
     location: string | undefined,
-    agencyTarget: AgencyTargetType
+    agencyTarget: AgencyTargetType,
   ): void {
     //  AGENT FILTER
     if (agencyTarget === AgencyTargetType.AGENTS) {
@@ -687,10 +713,11 @@ class AgencyService {
       }
     }
   }
+
   private generateLimitedItemsSearch = (
     filter: T,
     sort: T,
-    input: CommonPageInput
+    input: CommonPageInput,
   ) => {
     const { page, limit } = input;
     return [
@@ -738,11 +765,11 @@ class AgencyService {
         permittedAgents: 5,
         permittedProperties: 20,
       };
-    }
-    return {
-      permittedAgents: 100000,
-      permittedProperties: 100000,
-    };
+    } else
+      return {
+        permittedAgents: 100000,
+        permittedProperties: 100000,
+      };
   }
 }
 

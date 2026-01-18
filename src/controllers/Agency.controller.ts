@@ -53,7 +53,7 @@ agencyController.getAgencyByLocation = async (req: Request, res: Response) => {
 ////////////////// GET AGENCY DETAIL ///////////////////
 agencyController.getAgencyDetail = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log(chalk.bgGreen("getAgencyDetail process"));
@@ -130,7 +130,7 @@ agencyController.applyAgency = async (req: UploadRequest, res: Response) => {
 /////////////////// VALIDATION - PREPAYMENT ///////////
 agencyController.validationPrePayment = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("validationPrePayment proccess: ");
@@ -151,7 +151,7 @@ agencyController.validationPrePayment = async (
 ////////////////// AGENCY PAYMENT INFO SUBMIT /////////////////
 agencyController.proceedPayment = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const userId = shapeIntoMongooseObjectId(req.member._id);
@@ -180,4 +180,40 @@ agencyController.proceedPayment = async (
     }
   }
 };
+
+////////////////////////// ------------ AGENCY PROFILE UPDATE -------------- /////////////////
+agencyController.updateAgencyProfile = async (
+  req: UploadRequest,
+  res: Response,
+) => {
+  try {
+    console.log("updateAgencyProfile process");
+    const input = handleAgencyFrontEndInput(req.body);
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+
+    const avatar = req.files?.avatar;
+    const certificate = req.files?.certificate;
+    if (avatar?.length) {
+      input.avatar = orrangeFiles(avatar)[0];
+    }
+    if (certificate?.length) {
+      input.certificate = orrangeFiles(certificate)[0];
+    }
+
+    if (req.body?.socialLinks) {
+      input.socialLinks = JSON.parse(req.body.socialLinks);
+    }
+
+    const result = await agencyService.updateAgencyProfile(input, agencyId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateAgencyProfile: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default agencyController;

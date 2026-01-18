@@ -13,7 +13,7 @@ const agency = express.Router();
 agency.get(
   "/:id",
   memberController.checkMemberAuth,
-  agencyController.getAgencyDetail
+  agencyController.getAgencyDetail,
 );
 
 //////////////// --  GET AGENCY PROPERTIES -- ////////////////////
@@ -34,7 +34,7 @@ agency.post(
     },
   ]),
   multerErrorHandler,
-  agencyController.applyAgency
+  agencyController.applyAgency,
 );
 
 //////////////// --  AGENCY PRE-PAYMENT VALIDATION -- ////////////////////
@@ -42,7 +42,7 @@ agency.get(
   "/validation/pre-payment",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
-  agencyController.validationPrePayment
+  agencyController.validationPrePayment,
 );
 
 ////////////// ---- AGENCY PAYMENT INFO SUBMIT -- //////////////////
@@ -50,7 +50,22 @@ agency.post(
   "/payment/info/submit",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
-  agencyController.proceedPayment
+  agencyController.proceedPayment,
+);
+
+////////////////// -- AGENCY PTOFILE UPDATE --- ///////////////
+agency.post(
+  "/update/agency-profile",
+  memberController.verifyMember,
+  uploadAvatarCerticateFiles("agencies").fields([
+    { name: "avatar", maxCount: 1 },
+    {
+      name: "certificate",
+      maxCount: 1,
+    },
+  ]),
+  multerErrorHandler,
+  agencyController.updateAgencyProfile,
 );
 
 export default agency;
