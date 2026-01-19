@@ -2,7 +2,11 @@ import { TarrifInputType } from "../libs/types/payment";
 import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
-import { TarrifName, TarrifStatus } from "../libs/enums/payment.enum";
+import {
+  TarrifCurrencyType,
+  TarrifName,
+  TarrifStatus,
+} from "../libs/enums/payment.enum";
 import { T } from "../libs/types/common";
 
 class TarrifService {
@@ -11,13 +15,16 @@ class TarrifService {
     this.tarrifModel = TarrifModel;
   }
 
-  public async AdminInsertTarrif(input: TarrifInputType): Promise<Tarrif> {
+  public async adminInsertTarrif(input: TarrifInputType): Promise<Tarrif> {
     const match: T = {
-      name: {
-        $in: [TarrifName.BASIC, TarrifName.PLATINUM, TarrifName.STANDART],
-      },
+      name: input.name,
       status: TarrifStatus.ACTIVE,
     };
+
+    const allowedCurrencies = Object.keys(TarrifCurrencyType);
+    if (!allowedCurrencies.includes(input.currency)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_CURRENCY);
+    }
     const target = await this.tarrifModel.findOne(match).exec();
     if (target) {
       throw new Errors(HttpCode.CONFLICT, Message.TARRIF_EXIST);

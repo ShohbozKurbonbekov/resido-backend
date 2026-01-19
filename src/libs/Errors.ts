@@ -54,6 +54,8 @@ export enum Message {
   PAYMENT_NOT_ALLOWED = "Payment is not allowed for the current application state.",
   PAYMENT_FAILED = "Payment process failed!, Please try later",
   TARRIF_EXIST = "Tarrif already exists!",
+  ADMIN_ONLY = "Admin page!",
+  INVALID_CURRENCY = "Invalid Currency Name!",
 }
 
 class Errors extends Error {

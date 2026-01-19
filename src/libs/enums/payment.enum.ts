@@ -5,9 +5,9 @@ export enum TarrifName {
 }
 
 export enum TarrifCurrencyType {
-  DOLLAR = "USD",
-  WON = "KRW",
-  UZBEK_SUM = "UZS",
+  USD = "USD",
+  KRW = "KRW",
+  UZS = "UZS",
 }
 
 export enum MemberTarrifStatus {

@@ -6,6 +6,7 @@ import Errors, { Message, HttpCode } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import { TarrifInputType } from "../libs/types/payment";
 
 const residoAdminController: T = {};
 const adminService = new AdminService();
@@ -20,7 +21,7 @@ residoAdminController.goHome = async function (req: Request, res: Response) {
 
 residoAdminController.getDashboard = async (
   req: AdminRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const admin = req.session.member.memberName;
@@ -44,7 +45,7 @@ residoAdminController.getLogin = async function (req: Request, res: Response) {
 
 residoAdminController.processLogin = async (
   req: AdminRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("admin process login");
@@ -76,18 +77,18 @@ residoAdminController.getSignup = async function (res: Response, req: Request) {
 
 residoAdminController.processSignup = async (
   req: AdminRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("process signup for Admin");
-    const adminAvatar = req.files?.avatar;
+    // const adminAvatar = req.files?.avatar;
 
-    if (!adminAvatar?.length) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
-    }
+    // if (!adminAvatar?.length) {
+    //   throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
+    // }
 
     const input = req.body;
-    input.avatar = orrangeFiles(adminAvatar)[0];
+    // input.avatar = orrangeFiles(adminAvatar)[0];
     input.role = MemberType.REAL_ESTATE_ADMIN;
 
     const result = await adminService.processSignup(input);
@@ -102,6 +103,21 @@ residoAdminController.processSignup = async (
       error instanceof Errors ? error.message : Message.SOMETHING_WENT_WRONG;
     res.send(`<script> alert("${message}"); window.location.replace("/admin/signup")
       </script>`);
+  }
+};
+
+residoAdminController.addTarrif = async (req: Request, res: Response) => {
+  try {
+    const input: TarrifInputType = req.body;
+    const result = await adminService.addTarrif(input);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in addTarrif process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
   }
 };
 

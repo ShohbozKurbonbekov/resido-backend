@@ -8,6 +8,9 @@ import { HttpCode } from "../libs/Errors";
 import bcrypt from "bcrypt";
 import { LoginInput, User, UserMemberInput } from "../libs/types/user";
 import { MemberType } from "../libs/enums/member.enum";
+import { TarrifInputType } from "../libs/types/payment";
+import { Tarrif } from "../schema/Tarrif.model";
+import TarrifService from "./Tarrif.service";
 
 class AdminService {
   private readonly agentModel;
@@ -15,6 +18,7 @@ class AdminService {
   private readonly userModel;
   private readonly propertyModel;
   private readonly commentProperty;
+  public readonly tarrifService;
 
   //FOR BLOG
   // private readonly blogModel
@@ -24,6 +28,7 @@ class AdminService {
     this.userModel = UserModel;
     this.propertyModel = PropertyModel;
     this.commentProperty = CommentModel;
+    this.tarrifService = new TarrifService();
   }
 
   public async processSignup(input: UserMemberInput): Promise<User> {
@@ -54,7 +59,7 @@ class AdminService {
       {
         memberName: 1,
         memberPassword: 1,
-      }
+      },
     );
 
     if (!member) {
@@ -63,13 +68,35 @@ class AdminService {
 
     const isMatch: boolean = await bcrypt.compare(
       input.memberPassword,
-      member.memberPassword
+      member.memberPassword,
     );
 
     if (!isMatch) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
     }
     return (await this.userModel.findById(member._id).exec()) as User;
+  }
+
+  //////////////////////// INSERT TARRIF ///////////////////
+  public async addTarrif(input: TarrifInputType): Promise<Tarrif> {
+    const { agents, properties } = input.limits;
+    const agentsNum = Number(agents);
+    const propertiesNum = Number(properties);
+
+    const entityInput: TarrifInputType = {
+      billingCycle: input.billingCycle,
+      currency: input.currency,
+      features: input.features.map((feature) => feature.trim()),
+      limits: {
+        agents: Number.isFinite(agentsNum) ? agentsNum : 0,
+        properties: Number.isFinite(propertiesNum) ? propertiesNum : 0,
+      },
+      name: input.name,
+      price: Number.isFinite(Number(input.price)) ? Number(input.price) : 0,
+    };
+
+    const result = await this.tarrifService.adminInsertTarrif(entityInput);
+    return result;
   }
 }
 

@@ -57,7 +57,7 @@ const TarriffSchema = new Schema<TarrifSchemaType>(
     currency: {
       type: String,
       enum: TarrifCurrencyType,
-      default: TarrifCurrencyType.DOLLAR,
+      default: TarrifCurrencyType.USD,
     },
     durationDays: {
       type: Number,

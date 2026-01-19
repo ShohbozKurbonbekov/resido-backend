@@ -1,6 +1,10 @@
 import express from "express";
 import residoAdminController from "../controllers/resido-admin.controller";
 import uploadFiles from "../middlewares/uploadFile";
+import memberController from "../controllers/member.controller";
+import { allowRoles } from "../middlewares/allowRoles";
+import { Message } from "../libs/Errors";
+import { MemberType } from "../libs/enums/member.enum";
 const adminRouter = express.Router();
 
 // Home
@@ -16,7 +20,14 @@ adminRouter.get("/signup", residoAdminController.getSignup);
 adminRouter.post(
   "/signup",
   uploadFiles("members", "avatar", 1, true),
-  residoAdminController.processSignup
+  residoAdminController.processSignup,
+);
+
+adminRouter.post(
+  "/tarrifs",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  residoAdminController.addTarrif,
 );
 
 export default adminRouter;
