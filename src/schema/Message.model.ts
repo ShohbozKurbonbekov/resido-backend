@@ -17,7 +17,7 @@ const SenderReceiverDataSchema = new Schema<SenderReceiverType>(
       type: String,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const MessageSchema = new Schema<MessageInput>(
@@ -93,7 +93,7 @@ const MessageSchema = new Schema<MessageInput>(
 
   {
     timestamps: true,
-  }
+  },
 );
 MessageSchema.index({
   senderId: 1,

@@ -53,6 +53,7 @@ export enum Message {
   INVALID_GEO = "Invalid geocoding result",
   PAYMENT_NOT_ALLOWED = "Payment is not allowed for the current application state.",
   PAYMENT_FAILED = "Payment process failed!, Please try later",
+  TARRIF_EXIST = "Tarrif already exists!",
 }
 
 class Errors extends Error {
