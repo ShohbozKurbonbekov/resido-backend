@@ -13,6 +13,8 @@ import { Agent } from "./agent";
 import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
+import { BillingSnapShotType } from "./payment";
+import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -92,23 +94,41 @@ export interface AgencyPrivilegesType {
 /////////////////  SUBSCRIPTIONS /////////////
 export interface AgencySubscriptionSchemaInputs {
   agencyId: ObjectId;
-  planName: SubscriptionTarrif;
-  billingName: string;
-  billingEmail: string;
-  billingAddress: string;
-  billingCountry: string;
-  subscriptionStatus: SubscriptionStatus;
+  amount: number;
+  billingSnapshot: BillingSnapShotType;
+  currency: TarrifCurrencyType;
   paymentProvider: PaymentProvider;
+  subscriptionStatus: SubscriptionStatus;
+
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  billingTariffId?: string;
+
+  billingName: string;
+  billingEmail: string;
+  billingCity: string;
+  billingCountry: string;
+  billingPostalCode: string;
+  billingCyle: BillingCycle;
+
+  updatedAt: Date;
   createdAt: Date;
+  startedAt: Date;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  lastPaymentAt: Date;
+  nextPaymentAt: Date;
+  cancelledAt: Date | null;
 }
 
 export type AgencyPaymentInfoInputs = Pick<
   AgencySubscriptionSchemaInputs,
-  | "planName"
   | "billingName"
   | "billingEmail"
-  | "billingAddress"
+  | "billingCity"
   | "billingCountry"
+  | "billingPostalCode"
+  | "billingTariffId"
 >;
+
+export type RequiredSubscribeInputs = Partial<AgencySubscriptionSchemaInputs>;

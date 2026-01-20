@@ -11,10 +11,12 @@ import { AgencyAgePropertiesInput, AgencyInputs } from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
 import AuthService from "../models/Auth.service";
+import AgencySubscribeService from "../models/AgencySubscribe.service";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
 const authService = new AuthService();
+const agencySubscribeService = new AgencySubscribeService();
 
 /////////////////// GET AGENCY BY LOCATION////////////////
 agencyController.getAgencyByLocation = async (req: Request, res: Response) => {
@@ -153,7 +155,11 @@ agencyController.proceedPayment = async (
     const userId = shapeIntoMongooseObjectId(req.member._id);
     const inputs = req.body;
 
-    const result = await agencyService.proceedPayment(inputs, userId);
+    const result = await agencySubscribeService.createSubscription(
+      inputs,
+      userId,
+    );
+
     const tokenPayload = {
       _id: result._id,
       memberStatus: result.memberStatus,

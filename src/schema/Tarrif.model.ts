@@ -7,7 +7,7 @@ import {
   TarrifStatus,
 } from "../libs/enums/payment.enum";
 
-const TarrifLimitsSchema = new Schema<TarrifLimitsType>(
+export const TarrifLimitsSchema = new Schema<TarrifLimitsType>(
   {
     agents: {
       type: Number,

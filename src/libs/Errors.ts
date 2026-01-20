@@ -56,6 +56,8 @@ export enum Message {
   TARRIF_EXIST = "Tarrif already exists!",
   ADMIN_ONLY = "Admin page!",
   INVALID_CURRENCY = "Invalid Currency Name!",
+
+  TARIFF_NOT_ACTIVE = "No active tariff found!",
 }
 
 class Errors extends Error {

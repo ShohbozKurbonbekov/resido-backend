@@ -87,6 +87,9 @@ member.post(
 ///////////////////////////// PUBLIC TARIFF PLANS ///////////////////////
 member.get("/public/tariffs", memberController.getPublicTariffs);
 
+///////////////////////////// GET TARIFF  ONE ///////////////////////
+member.get("/public/tariffs/:id", memberController.getPublicTariffOne);
+
 /////////////////////// USER MEMBER DASHBOARD ////////////////////
 member.get(
   "/dashboard/overview",

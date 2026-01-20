@@ -42,6 +42,7 @@ import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
+import TarrifModel from "../schema/Tarrif.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -52,6 +53,7 @@ class AgencyService {
   private readonly agencySubscriptionModel;
   private readonly userModel;
   private readonly blogModel;
+  private readonly tariffModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -62,6 +64,7 @@ class AgencyService {
     this.agencySubscriptionModel = AgencySubscriptionModel;
     this.userModel = UserModel;
     this.blogModel = BlogModel;
+    this.tariffModel = TarrifModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -559,93 +562,6 @@ class AgencyService {
       } else {
         throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
       }
-    }
-  }
-
-  // PAYMENT INFO
-  public async proceedPayment(
-    input: AgencyPaymentInfoInputs,
-    userId: ObjectId,
-  ): Promise<Agency> {
-    const session = await mongoose.startSession();
-    const privileges = this.handlePrivileges(input.planName);
-
-    try {
-      session.startTransaction();
-      const currentSession = { session };
-
-      //1 - transaction
-      const agencyAvailable = await this.agencyModel.findOne(
-        {
-          userId,
-          memberStatus: MemberStatus.ACTIVE,
-          currentStatus: AgencyStatus.PAYMENT,
-        },
-        {
-          _id: 1,
-          userId: 1,
-        },
-        currentSession,
-      );
-
-      if (!agencyAvailable) {
-        throw new Errors(HttpCode.FORBIDDEN, Message.PAYMENT_NOT_ALLOWED);
-      }
-
-      // 2 - transaction
-      await this.agencySubscriptionModel.create(
-        [{ ...input, agencyId: agencyAvailable._id }],
-        currentSession,
-      );
-
-      // 3 - transaction
-      const user = await this.userModel.findOneAndUpdate(
-        { _id: userId, memberStatus: MemberStatus.ACTIVE },
-        {
-          agencyMode: true,
-        },
-        {
-          new: true,
-          ...currentSession,
-        },
-      );
-
-      if (!user) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
-      }
-
-      // 4 - tranaction
-      const agency = await this.agencyModel.findOneAndUpdate(
-        {
-          _id: agencyAvailable._id,
-        },
-        {
-          currentStatus: AgencyStatus.AVAILABLE,
-          isVerified: true,
-          ...privileges,
-        },
-        {
-          new: true,
-          ...currentSession,
-        },
-      );
-
-      if (!agency) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
-      }
-
-      await session.commitTransaction();
-      return agency;
-    } catch (error) {
-      await session.abortTransaction();
-      if (error instanceof Errors) {
-        throw error;
-      } else {
-        console.log("⛔ERROR: ", error);
-        throw new Errors(HttpCode.BAD_REQUEST, Message.PAYMENT_FAILED);
-      }
-    } finally {
-      session.endSession();
     }
   }
 

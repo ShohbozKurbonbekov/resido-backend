@@ -305,6 +305,25 @@ memberController.getPublicTariffs = async (req: Request, res: Response) => {
     }
   }
 };
+
+/////////////////////////// GET PUBLIC TARIFF ONE /////////////////////
+memberController.getPublicTariffOne = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const tarrifId = shapeIntoMongooseObjectId(id);
+
+    const result = await tariffService.getPublicTariffOne(tarrifId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getPublicTariffOne: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 //////////////////// VERIFY MEMBER ////////////////
 memberController.verifyMember = async (
   req: ExtendedRequest,

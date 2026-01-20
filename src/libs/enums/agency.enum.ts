@@ -9,6 +9,7 @@ export enum SubscriptionStatus {
   INACTIVE = "INACTIVE",
   ACTIVE = "ACTIVE",
   CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
 }
 
 export enum PaymentProvider {
