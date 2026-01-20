@@ -23,8 +23,9 @@ adminRouter.post(
   residoAdminController.processSignup,
 );
 
+//////////////////////////////////// ADMIN TARIFFS PLAN ///////////////////////
 adminRouter.post(
-  "/tarrifs",
+  "/tariffs",
   memberController.verifyMember,
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   residoAdminController.addTarrif,

@@ -1,9 +1,11 @@
+import { Tarrif } from "../../schema/Tarrif.model";
 import {
   BillingCycle,
   TarrifCurrencyType,
   TarrifName,
   TarrifStatus,
 } from "../enums/payment.enum";
+import { TotalCounter } from "./property";
 
 export interface TarrifLimitsType {
   properties: number;
@@ -25,3 +27,8 @@ export interface TarrifServerSetInput {
   updatedAt: Date;
 }
 export type TarrifSchemaType = TarrifInputType & TarrifServerSetInput;
+
+export interface TarrifOutputType {
+  paymentTariffs: Tarrif[];
+  metaCounter: TotalCounter[];
+}

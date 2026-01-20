@@ -14,10 +14,12 @@ import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { MessageInput } from "../libs/types/message";
 import { MemberType } from "../libs/enums/member.enum";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
+import TarrifService from "../models/Tarrif.service";
 
 const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
+const tariffService = new TarrifService();
 /////////////////////////////// ----- PUBLIC ADMIN ---- ///////////////////////////////////////////////////
 memberController.getAdmin = async (req: Request, res: Response) => {
   try {
@@ -101,7 +103,7 @@ memberController.login = async (req: Request, res: Response) => {
 //////////////////////////////// ------- GET MEMBER DETAIL--- /////////////////////////////////////
 memberController.getMemberDetail = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   console.log("getting a specific member detail");
   try {
@@ -176,7 +178,7 @@ memberController.logout = async (req: Request, res: Response) => {
 // ---- WRITE A MESSAGE TO MEMBER ------////////////////////
 memberController.WriteMessageToMember = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("WriteMessageToMember process");
@@ -199,7 +201,7 @@ memberController.WriteMessageToMember = async (
 /////////////////// ---- GET  ALL  MEMBER MESSAGES ------////////////////////
 memberController.getMemberMessages = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getMemberMessages process");
@@ -222,7 +224,7 @@ memberController.getMemberMessages = async (
 /////////////////// ---- DELETE MEMBER MESSAGE ------////////////////////
 memberController.messageDelete = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("messageDelete process");
@@ -284,11 +286,30 @@ memberController.messageRead = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
+/////////////////////////// GET PUBLIC TARIFFS /////////////////////
+memberController.getPublicTariffs = async (req: Request, res: Response) => {
+  try {
+    const { page, limit } = req.query;
+    const queries: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 3,
+    };
+    const result = await tariffService.getPublicTariffs(queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getPublicTariffs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 //////////////////// VERIFY MEMBER ////////////////
 memberController.verifyMember = async (
   req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const token: string | undefined = req.cookies?.accessToken;
@@ -315,7 +336,7 @@ memberController.verifyMember = async (
 memberController.checkMemberAuth = async (
   req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const token: string = await req.cookies?.accessToken;
@@ -332,7 +353,7 @@ memberController.checkMemberAuth = async (
 //////////////////////// USER DASHBOARD -//////////////////////////
 memberController.userDashboardOverview = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("userDashboardOverview process");

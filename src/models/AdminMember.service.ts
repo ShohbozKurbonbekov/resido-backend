@@ -9,8 +9,10 @@ import bcrypt from "bcrypt";
 import { LoginInput, User, UserMemberInput } from "../libs/types/user";
 import { MemberType } from "../libs/enums/member.enum";
 import { TarrifInputType } from "../libs/types/payment";
-import { Tarrif } from "../schema/Tarrif.model";
+import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import TarrifService from "./Tarrif.service";
+import { TarrifStatus } from "../libs/enums/payment.enum";
+import { T } from "../libs/types/common";
 
 class AdminService {
   private readonly agentModel;
@@ -19,6 +21,7 @@ class AdminService {
   private readonly propertyModel;
   private readonly commentProperty;
   public readonly tarrifService;
+  private readonly tarrifModel;
 
   //FOR BLOG
   // private readonly blogModel
@@ -29,6 +32,7 @@ class AdminService {
     this.propertyModel = PropertyModel;
     this.commentProperty = CommentModel;
     this.tarrifService = new TarrifService();
+    this.tarrifModel = TarrifModel;
   }
 
   public async processSignup(input: UserMemberInput): Promise<User> {

@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import makeUploader from "../libs/utils/uploader";
 import { AdminRequest } from "../libs/types/admin";
 import Errors, { Message, HttpCode } from "../libs/Errors";
@@ -7,10 +7,13 @@ import { MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { TarrifInputType } from "../libs/types/payment";
+import TarrifService from "../models/Tarrif.service";
 
 const residoAdminController: T = {};
 const adminService = new AdminService();
+const tarrifService = new TarrifService();
 
+///////////////////////////// GO GOME /////////////////////
 residoAdminController.goHome = async function (req: Request, res: Response) {
   try {
     res.send("Welcome Home");
@@ -19,6 +22,7 @@ residoAdminController.goHome = async function (req: Request, res: Response) {
   }
 };
 
+//////////////////////////// SET DASHOARD ///////////////////
 residoAdminController.getDashboard = async (
   req: AdminRequest,
   res: Response,
@@ -35,6 +39,7 @@ residoAdminController.getDashboard = async (
   }
 };
 
+/////////////////////////// GET LOGIN ///////////////////////
 residoAdminController.getLogin = async function (req: Request, res: Response) {
   try {
     res.send("You have just logged in");
@@ -43,6 +48,7 @@ residoAdminController.getLogin = async function (req: Request, res: Response) {
   }
 };
 
+////////////////////////// PROCESS LOGIN ////////////////////
 residoAdminController.processLogin = async (
   req: AdminRequest,
   res: Response,
@@ -67,6 +73,7 @@ residoAdminController.processLogin = async (
   }
 };
 
+////////////////////////// GET SINGUP ///////////////////////
 residoAdminController.getSignup = async function (res: Response, req: Request) {
   try {
     res.send("You have just signed up");
@@ -75,6 +82,7 @@ residoAdminController.getSignup = async function (res: Response, req: Request) {
   }
 };
 
+///////////////////////// PROCESS SINGNUP ///////////////////
 residoAdminController.processSignup = async (
   req: AdminRequest,
   res: Response,
@@ -106,6 +114,7 @@ residoAdminController.processSignup = async (
   }
 };
 
+////////////////////////// ADD TARIFF///////////////////////
 residoAdminController.addTarrif = async (req: Request, res: Response) => {
   try {
     const input: TarrifInputType = req.body;

@@ -22,7 +22,7 @@ member.post("/login", memberController.login);
 member.get(
   "/detail",
   memberController.verifyMember,
-  memberController.getMemberDetail
+  memberController.getMemberDetail,
 );
 
 /////////////////// --  MEMBER UPDATE -- ///////////////////
@@ -30,7 +30,7 @@ member.post(
   "/update",
   memberController.verifyMember,
   uploadFiles("members", "avatar", 1, true),
-  memberController.updateMember
+  memberController.updateMember,
 );
 
 ////////////////// -- LOGOUT -- //////////////////
@@ -40,35 +40,35 @@ member.post("/logout", memberController.verifyMember, memberController.logout);
 member.post(
   "/get/all-messages",
   memberController.verifyMember,
-  memberController.getMemberMessages
+  memberController.getMemberMessages,
 );
 
 //////////////// - DELETE MEMBER MESSAGE -- ////////////
 member.post(
   "/message/:id/delete",
   memberController.verifyMember,
-  memberController.messageDelete
+  memberController.messageDelete,
 );
 
 //////////////// - EDIT MEMBER MESSAGE -- ////////////
 member.post(
   "/message/:id/edit",
   memberController.verifyMember,
-  memberController.messageEdit
+  memberController.messageEdit,
 );
 
 //////////////// -  WRITE A MESSAGE TO  MEMBER -- ////////////
 member.post(
   "/write/message",
   memberController.verifyMember,
-  memberController.WriteMessageToMember
+  memberController.WriteMessageToMember,
 );
 
 //////////////////// - READ MESSAGE - /////////////////
 member.post(
   "/message/:id/read",
   memberController.verifyMember,
-  memberController.messageRead
+  memberController.messageRead,
 );
 /////////////////////// BLOG  ENDPOINTS ////////////////////
 member.post(
@@ -78,16 +78,19 @@ member.post(
     undefined,
     MemberType.AGENCY,
     MemberType.AGENT,
-    MemberType.REAL_ESTATE_ADMIN
+    MemberType.REAL_ESTATE_ADMIN,
   ),
   uploadFiles("blogs", "blogImage", 1, true),
-  blogController.postBlog
+  blogController.postBlog,
 );
+
+///////////////////////////// PUBLIC TARIFF PLANS ///////////////////////
+member.get("/public/tariffs", memberController.getPublicTariffs);
 
 /////////////////////// USER MEMBER DASHBOARD ////////////////////
 member.get(
   "/dashboard/overview",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
-  memberController.userDashboardOverview
+  memberController.userDashboardOverview,
 );
