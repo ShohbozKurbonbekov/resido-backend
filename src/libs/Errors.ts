@@ -55,8 +55,10 @@ export enum Message {
   PAYMENT_FAILED = "Payment process failed!, Please try later",
   TARRIF_EXIST = "Tarrif already exists!",
   ADMIN_ONLY = "Admin page!",
+  AGENCY_ONLY = "Private agency page!",
   INVALID_CURRENCY = "Invalid Currency Name!",
 
+  NO_ACTIVE_SUBSCRIPTION = "No active subscription found!",
   TARIFF_NOT_ACTIVE = "No active tariff found!",
 }
 

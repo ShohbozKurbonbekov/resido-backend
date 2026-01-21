@@ -53,6 +53,14 @@ agency.post(
   agencyController.proceedPayment,
 );
 
+////////////// ---- AGENCY SUBCRIPTION INFO  -- //////////////////
+agency.get(
+  "/subscription/info",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.getSubscriptionInfo,
+);
+
 ////////////////// -- AGENCY PTOFILE UPDATE --- ///////////////
 agency.post(
   "/update/agency-profile",

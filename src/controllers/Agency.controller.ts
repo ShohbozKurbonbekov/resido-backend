@@ -183,6 +183,27 @@ agencyController.proceedPayment = async (
   }
 };
 
+////////////////// AGENCY  SUBCRIPTION INFO /////////////////
+agencyController.getSubscriptionInfo = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("getSubscriptionInfo procces");
+    const agencyMember = req.member;
+    const result =
+      await agencySubscribeService.getSubscriptionInfo(agencyMember);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getSubscriptionInfo: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 ////////////////////////// ------------ AGENCY PROFILE UPDATE -------------- /////////////////
 agencyController.updateAgencyProfile = async (
   req: UploadRequest,

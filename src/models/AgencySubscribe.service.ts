@@ -1,5 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
-import AgencySubscriptionModel from "../schema/AgencySubscription.model";
+import AgencySubscriptionModel, {
+  AgencySubscriptionResult,
+} from "../schema/AgencySubscription.model";
 import AgencyModel from "../schema/members/Agency.model";
 import {
   AgencyPaymentInfoInputs,
@@ -16,6 +18,7 @@ import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { BillingCycle, TarrifStatus } from "../libs/enums/payment.enum";
 import UserModel from "../schema/members/User.model";
+import { CommonUsers, T } from "../libs/types/common";
 
 class AgencySubscribeService {
   public readonly agencySubscribeModel;
@@ -30,6 +33,7 @@ class AgencySubscribeService {
     this.userModel = UserModel;
   }
 
+  /////////////////////////////////////// CREATE SUNSCRIPTION ////////////////////////
   public async createSubscription(
     input: AgencyPaymentInfoInputs,
     userId: ObjectId,
@@ -138,7 +142,50 @@ class AgencySubscribeService {
     }
   }
 
+  ///////////////////////////////////// GET SUBSCRIPTION ///////////////////////////////////
+  public async getSubscriptionInfo(
+    agencyMember: CommonUsers,
+  ): Promise<AgencySubscriptionResult> {
+    const agencyId = shapeIntoMongooseObjectId(agencyMember._id);
+    const agencyValidMatch: T = {
+      _id: agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
+      isValid: true,
+    };
+
+    const isSubscribedMatch: T = {
+      agencyId,
+      subscriptionStatus: {
+        $ne: SubscriptionStatus.INACTIVE,
+      },
+    };
+    const isAgencyValid = await this.agencyModel
+      .findOne(agencyValidMatch)
+      .lean()
+      .exec();
+
+    if (!isAgencyValid) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    const isAgencySubscribed = await this.agencySubscribeModel
+      .findOne(isSubscribedMatch)
+      .lean()
+      .exec();
+
+    if (!isAgencySubscribed) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.NO_ACTIVE_SUBSCRIPTION);
+    }
+
+    return isAgencySubscribed;
+  }
+
+  ///////////////////////////////////// RENEW SUBSCRIPTION ///////////////////////////////////
   public async renewSubscription() {}
+
+  ///////////////////////////////////// CANCEL SUBSCRIPTION ///////////////////////////////////
+
   public async cancelSubscription() {}
 
   ////////////////////////////// HELPER FUNCTIONS ////////////////
