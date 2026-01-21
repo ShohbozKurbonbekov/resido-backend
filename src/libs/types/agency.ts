@@ -94,6 +94,8 @@ export interface AgencyPrivilegesType {
 /////////////////  SUBSCRIPTIONS /////////////
 export interface AgencySubscriptionSchemaInputs {
   agencyId: ObjectId;
+  billingTariffId: ObjectId;
+
   amount: number;
   billingSnapshot: BillingSnapShotType;
   currency: TarrifCurrencyType;
@@ -102,7 +104,6 @@ export interface AgencySubscriptionSchemaInputs {
 
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
-  billingTariffId?: string;
 
   billingName: string;
   billingEmail: string;

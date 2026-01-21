@@ -48,7 +48,6 @@ class AgencySubscribeService {
         null,
         currentSession,
       );
-      console.log("PLAN:", tariffPlan);
       if (!tariffPlan) {
         throw new Errors(HttpCode.NOT_FOUND, Message.TARIFF_NOT_ACTIVE);
       }
@@ -73,9 +72,14 @@ class AgencySubscribeService {
 
       // 3 - transaction
       const entityFields = this.organiseSubscribeInputs(input, tariffPlan);
-      console.log("Entity fields: ", entityFields);
       await this.agencySubscribeModel.create(
-        [{ ...entityFields, agencyId: agencyAvailable._id }],
+        [
+          {
+            ...entityFields,
+            agencyId: agencyAvailable._id,
+            billingTariffId: tariffPlan._id,
+          },
+        ],
         currentSession,
       );
 

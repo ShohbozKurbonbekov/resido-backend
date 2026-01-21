@@ -7,7 +7,7 @@ import {
 import { AgencySubscriptionSchemaInputs } from "../libs/types/agency";
 import { BillingSnapShotType } from "../libs/types/payment";
 import { TarrifLimitsSchema } from "./Tarrif.model";
-import { TarrifCurrencyType } from "../libs/enums/payment.enum";
+import { BillingCycle, TarrifCurrencyType } from "../libs/enums/payment.enum";
 
 const BillingSnapshotSchema = new Schema<BillingSnapShotType>({
   features: {
@@ -30,6 +30,11 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>(
     agencyId: {
       type: Schema.Types.ObjectId,
       ref: "agencies",
+      required: true,
+    },
+    billingTariffId: {
+      type: Schema.Types.ObjectId,
+      ref: "agencySubscriptions",
       required: true,
     },
     amount: {
@@ -55,6 +60,11 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>(
     },
     billingCountry: {
       type: String,
+      required: true,
+    },
+    billingCyle: {
+      type: String,
+      enum: BillingCycle,
       required: true,
     },
     paymentProvider: {
