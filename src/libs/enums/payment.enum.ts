@@ -24,3 +24,8 @@ export enum TarrifStatus {
 export enum BillingCycle {
   MONTHLY = "MONTHLY",
 }
+
+export enum SubscriptionMode {
+  RE_SUBSCRIBE = "RE_SUBSCRIBE",
+  FIRST_SUBSCRIBE = "FIRST_SUBSCRIBE",
+}

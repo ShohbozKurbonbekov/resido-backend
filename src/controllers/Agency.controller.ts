@@ -12,6 +12,11 @@ import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
 import AuthService from "../models/Auth.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
+import { SubscriptionMode } from "../libs/enums/payment.enum";
+import { MemberType } from "../libs/enums/member.enum";
+import { AgencySubscriptionResult } from "../schema/AgencySubscription.model";
+import { Agency } from "../schema/members/Agency.model";
+import { SubscriptionStatus } from "../libs/enums/agency.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -153,25 +158,32 @@ agencyController.proceedPayment = async (
 ) => {
   try {
     const userId = shapeIntoMongooseObjectId(req.member._id);
+
     const inputs = req.body;
+
+    const mode: SubscriptionMode =
+      await agencySubscribeService.getLatestSubscription(req.member);
 
     const result = await agencySubscribeService.createSubscription(
       inputs,
       userId,
+      mode,
     );
 
-    const tokenPayload = {
-      _id: result._id,
-      memberStatus: result.memberStatus,
-      role: result.role,
-    };
-    const token: string = await authService.createToken(tokenPayload);
+    if (mode === SubscriptionMode.FIRST_SUBSCRIBE) {
+      const user = result as CommonUsers;
+      const tokenPayload = {
+        _id: user._id,
+        memberStatus: user.memberStatus,
+        role: user.role,
+      };
+      const token: string = await authService.createToken(tokenPayload);
 
-    res.cookie("accessToken", token, {
-      maxAge: jwtTime * 60 * 60 * 1000,
-      httpOnly: false,
-    });
-
+      res.cookie("accessToken", token, {
+        maxAge: jwtTime * 60 * 60 * 1000,
+        httpOnly: false,
+      });
+    }
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in proceedPayment: ", error);

@@ -59,6 +59,8 @@ export enum Message {
   INVALID_CURRENCY = "Invalid Currency Name!",
 
   NO_ACTIVE_SUBSCRIPTION = "No active subscription found!",
+  SUBSCRIPTION_EXIST = "Subscription already exists!",
+
   TARIFF_NOT_ACTIVE = "No active tariff found!",
 }
 

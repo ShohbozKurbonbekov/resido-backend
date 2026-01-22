@@ -2,13 +2,13 @@ import mongoose, { ObjectId } from "mongoose";
 import AgencySubscriptionModel, {
   AgencySubscriptionResult,
 } from "../schema/AgencySubscription.model";
-import AgencyModel from "../schema/members/Agency.model";
+import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import {
   AgencyPaymentInfoInputs,
   AgencySubscriptionInfoType,
   RequiredSubscribeInputs,
 } from "../libs/types/agency";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import {
   AgencyStatus,
   PaymentProvider,
@@ -17,7 +17,11 @@ import {
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { BillingCycle, TarrifStatus } from "../libs/enums/payment.enum";
+import {
+  BillingCycle,
+  SubscriptionMode,
+  TarrifStatus,
+} from "../libs/enums/payment.enum";
 import UserModel from "../schema/members/User.model";
 import { CommonUsers, T } from "../libs/types/common";
 
@@ -38,7 +42,8 @@ class AgencySubscribeService {
   public async createSubscription(
     input: AgencyPaymentInfoInputs,
     userId: ObjectId,
-  ) {
+    mode: SubscriptionMode,
+  ): Promise<Agency | AgencySubscriptionResult> {
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
@@ -53,23 +58,39 @@ class AgencySubscribeService {
         null,
         currentSession,
       );
+
       if (!tariffPlan) {
         throw new Errors(HttpCode.NOT_FOUND, Message.TARIFF_NOT_ACTIVE);
       }
 
       // Transaction 2
-      const agencyAvailable = await this.agencyModel.findOne(
-        {
-          userId,
-          memberStatus: MemberStatus.ACTIVE,
-          currentStatus: AgencyStatus.PAYMENT,
-        },
-        {
-          _id: 1,
-          userId: 1,
-        },
-        currentSession,
-      );
+      let agencyAvailable;
+
+      switch (mode) {
+        case SubscriptionMode.FIRST_SUBSCRIBE:
+          agencyAvailable = await this.agencyModel.findOne(
+            {
+              userId,
+              memberStatus: MemberStatus.ACTIVE,
+              currentStatus: AgencyStatus.PAYMENT,
+            },
+            null,
+            currentSession,
+          );
+          break;
+
+        default:
+          agencyAvailable = await this.agencyModel.findOne(
+            {
+              _id: userId,
+              memberStatus: MemberStatus.ACTIVE,
+              currentStatus: AgencyStatus.AVAILABLE,
+            },
+            null,
+            currentSession,
+          );
+          break;
+      }
 
       if (!agencyAvailable) {
         throw new Errors(HttpCode.FORBIDDEN, Message.PAYMENT_NOT_ALLOWED);
@@ -77,7 +98,23 @@ class AgencySubscribeService {
 
       // 3 - transaction
       const entityFields = this.organiseSubscribeInputs(input, tariffPlan);
-      await this.agencySubscribeModel.create(
+
+      const subscriptionAvailable = await this.agencySubscribeModel.findOne(
+        {
+          agencyId: agencyAvailable._id,
+          subscriptionStatus: {
+            $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.INACTIVE],
+          },
+        },
+        null,
+        currentSession,
+      );
+
+      if (subscriptionAvailable) {
+        throw new Errors(HttpCode.CONFLICT, Message.SUBSCRIPTION_EXIST);
+      }
+
+      const subscription = await this.agencySubscribeModel.create(
         [
           {
             ...entityFields,
@@ -89,47 +126,57 @@ class AgencySubscribeService {
       );
 
       // 4 - transaction
-      const user = await this.userModel.findOneAndUpdate(
-        { _id: userId, memberStatus: MemberStatus.ACTIVE },
-        {
-          $set: {
-            agencyMode: true,
+      if (mode === SubscriptionMode.FIRST_SUBSCRIBE) {
+        const user = await this.userModel.findOneAndUpdate(
+          { _id: userId, memberStatus: MemberStatus.ACTIVE },
+          {
+            $set: {
+              agencyMode: true,
+            },
           },
-        },
-        {
-          new: true,
-          ...currentSession,
-        },
-      );
+          {
+            new: true,
+            ...currentSession,
+          },
+        );
 
-      if (!user) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
+        if (!user) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
+        }
       }
 
+      let result;
       // 5 - tranaction
-      const agency = await this.agencyModel.findOneAndUpdate(
-        {
-          _id: agencyAvailable._id,
-          currentStatus: AgencyStatus.PAYMENT,
-        },
-        {
-          $set: {
-            currentStatus: AgencyStatus.AVAILABLE,
-            isVerified: true,
+      if (mode === SubscriptionMode.FIRST_SUBSCRIBE) {
+        const agency = await this.agencyModel.findOneAndUpdate(
+          {
+            _id: agencyAvailable._id,
+            currentStatus: AgencyStatus.PAYMENT,
+            memberStatus: MemberStatus.ACTIVE,
           },
-        },
-        {
-          new: true,
-          ...currentSession,
-        },
-      );
+          {
+            $set: {
+              currentStatus: AgencyStatus.AVAILABLE,
+              isVerified: true,
+            },
+          },
+          {
+            new: true,
+            ...currentSession,
+          },
+        );
 
-      if (!agency) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
+        if (!agency) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
+        }
+
+        result = agency;
+      } else {
+        result = subscription[0];
       }
 
       await session.commitTransaction();
-      return agency;
+      return result;
     } catch (error) {
       await session.abortTransaction();
       if (error instanceof Errors) {
@@ -271,6 +318,47 @@ class AgencySubscribeService {
       subscriptionStatus: SubscriptionStatus.ACTIVE,
     };
     return entityInput;
+  }
+
+  public async getLatestSubscription(
+    member: CommonUsers,
+  ): Promise<SubscriptionMode> {
+    const memberId = shapeIntoMongooseObjectId(member._id);
+
+    let mode: SubscriptionMode = SubscriptionMode.FIRST_SUBSCRIBE;
+
+    if (member.role === MemberType.USER) {
+      const agency = await this.agencyModel.findOne({
+        userId: memberId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.PAYMENT,
+      });
+
+      if (!agency) {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.PAYMENT_NOT_ALLOWED);
+      }
+
+      const subscription = await this.agencySubscribeModel.findOne({
+        agencyId: agency._id,
+      });
+
+      if (subscription) {
+        throw new Errors(HttpCode.CONFLICT, Message.SUBSCRIPTION_EXIST);
+      }
+    } else {
+      const subscription = await this.agencySubscribeModel.findOne({
+        agencyId: memberId,
+      });
+
+      if (subscription) {
+        if (subscription.subscriptionStatus === SubscriptionStatus.CANCELLED) {
+          mode = SubscriptionMode.RE_SUBSCRIBE;
+        } else {
+          throw new Errors(HttpCode.CONFLICT, Message.SUBSCRIPTION_EXIST);
+        }
+      }
+    }
+    return mode;
   }
 }
 export default AgencySubscribeService;

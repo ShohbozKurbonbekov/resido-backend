@@ -60,6 +60,13 @@ agency.get(
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.getSubscriptionInfo,
 );
+////////////// ---- AGENCY SUBCRIPTION INFO  -- //////////////////
+agency.post(
+  "/subscription/resubscribe",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.proceedPayment,
+);
 
 ////////////// ---- AGENCY SUBCRIPTION CANCEL  -- //////////////////
 agency.post(

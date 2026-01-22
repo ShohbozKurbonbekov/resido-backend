@@ -116,12 +116,11 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>(
   },
 );
 
-AgencySubscriptionSchema.index(
-  {
-    agencyId: 1,
-  },
-  { unique: true },
-);
+AgencySubscriptionSchema.index({
+  agencyId: 1,
+  subscriptionStatus: 1,
+  cancelledAt: 1,
+});
 
 export type AgencySubscriptionResult = InferSchemaType<
   typeof AgencySubscriptionSchema
