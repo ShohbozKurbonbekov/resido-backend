@@ -5,6 +5,7 @@ import AgencySubscriptionModel, {
 import AgencyModel from "../schema/members/Agency.model";
 import {
   AgencyPaymentInfoInputs,
+  AgencySubscriptionInfoType,
   RequiredSubscribeInputs,
 } from "../libs/types/agency";
 import { MemberStatus } from "../libs/enums/member.enum";
@@ -145,13 +146,15 @@ class AgencySubscribeService {
   ///////////////////////////////////// GET SUBSCRIPTION ///////////////////////////////////
   public async getSubscriptionInfo(
     agencyMember: CommonUsers,
-  ): Promise<AgencySubscriptionResult> {
+  ): Promise<AgencySubscriptionInfoType> {
     const agencyId = shapeIntoMongooseObjectId(agencyMember._id);
+
+    // Match quries
     const agencyValidMatch: T = {
       _id: agencyId,
       memberStatus: MemberStatus.ACTIVE,
       currentStatus: AgencyStatus.AVAILABLE,
-      isValid: true,
+      isVerified: true,
     };
 
     const isSubscribedMatch: T = {
@@ -160,6 +163,7 @@ class AgencySubscribeService {
         $ne: SubscriptionStatus.INACTIVE,
       },
     };
+
     const isAgencyValid = await this.agencyModel
       .findOne(agencyValidMatch)
       .lean()
@@ -178,7 +182,18 @@ class AgencySubscribeService {
       throw new Errors(HttpCode.BAD_REQUEST, Message.NO_ACTIVE_SUBSCRIPTION);
     }
 
-    return isAgencySubscribed;
+    const tariffPlans = await this.tariffModel.aggregate([
+      {
+        $match: {
+          status: TarrifStatus.ACTIVE,
+        },
+      },
+      {
+        $sort: { price: 1 },
+      },
+    ]);
+
+    return { tariffPlans, agencySubscription: isAgencySubscribed };
   }
 
   ///////////////////////////////////// RENEW SUBSCRIPTION ///////////////////////////////////
@@ -186,7 +201,35 @@ class AgencySubscribeService {
 
   ///////////////////////////////////// CANCEL SUBSCRIPTION ///////////////////////////////////
 
-  public async cancelSubscription() {}
+  public async subscriptionCancel(
+    member: CommonUsers,
+  ): Promise<AgencySubscriptionResult> {
+    const now = new Date();
+    const agencyId = shapeIntoMongooseObjectId(member._id);
+    const match: T = {
+      agencyId,
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
+      cancelledAt: null,
+    };
+
+    const subscription = await this.agencySubscribeModel.findOneAndUpdate(
+      match,
+      {
+        $set: {
+          subscriptionStatus: SubscriptionStatus.CANCELLED,
+          cancelledAt: now,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+
+    if (!subscription) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_ACTIVE_SUBSCRIPTION);
+    }
+    return subscription;
+  }
 
   ////////////////////////////// HELPER FUNCTIONS ////////////////
   private addMonths(date: Date, month: number) {

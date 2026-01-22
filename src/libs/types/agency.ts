@@ -15,6 +15,8 @@ import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
 import { BillingSnapShotType } from "./payment";
 import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
+import { Tarrif } from "../../schema/Tarrif.model";
+import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -133,3 +135,8 @@ export type AgencyPaymentInfoInputs = Pick<
 >;
 
 export type RequiredSubscribeInputs = Partial<AgencySubscriptionSchemaInputs>;
+
+export interface AgencySubscriptionInfoType {
+  tariffPlans: Tarrif[];
+  agencySubscription: AgencySubscriptionResult;
+}

@@ -61,6 +61,14 @@ agency.get(
   agencyController.getSubscriptionInfo,
 );
 
+////////////// ---- AGENCY SUBCRIPTION CANCEL  -- //////////////////
+agency.post(
+  "/subscription/cancel",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.subscriptionCancel,
+);
+
 ////////////////// -- AGENCY PTOFILE UPDATE --- ///////////////
 agency.post(
   "/update/agency-profile",
