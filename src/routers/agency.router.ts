@@ -114,4 +114,8 @@ agency.post(
   agencyController.deleteMyBlog,
 );
 
+
+/////////////////////// MY AGENTS' APPLICATIONS//////////////
+agency.get("/get/my-agents/applications", memberController.verifyMember, allowRoles(Message.AGENCY_ONLY,MemberType.AGENCY),agencyController.agentsApplications) 
+
 export default agency;

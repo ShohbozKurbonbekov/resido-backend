@@ -7,12 +7,17 @@ import AgencyService from "../models/Agency.service";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { SearchByLocationInput } from "../libs/types/agent";
-import { AgencyAgePropertiesInput, AgencyInputs } from "../libs/types/agency";
+import {
+  AgencyAgentsApplicationInput,
+  AgencyAgePropertiesInput,
+  AgencyInputs,
+} from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
 import AuthService from "../models/Auth.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
 import { SubscriptionMode } from "../libs/enums/payment.enum";
+import { AgentStatus } from "../libs/enums/agent.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -233,29 +238,34 @@ agencyController.subscriptionCancel = async (
   }
 };
 
-
 /////////////////// RE SUBSCRIPTION ///////////////////////
-agencyController.renewSubscription = async (req:ExtendedRequest, res:Response) => {
+agencyController.renewSubscription = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
   try {
-    console.log("resubscription proccess")
-    const memberId =  shapeIntoMongooseObjectId(req.member._id);
-    const {id}= req.body;
-    const subId = shapeIntoMongooseObjectId(id)
+    console.log("resubscription proccess");
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.body;
+    const subId = shapeIntoMongooseObjectId(id);
 
-    if(!subId) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_INPUT)
+    if (!subId) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_INPUT);
     }
-    const result =  await agencySubscribeService.renewSubscription(memberId, subId)
+    const result = await agencySubscribeService.renewSubscription(
+      memberId,
+      subId,
+    );
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in resubscription: ", error)
-    if(error instanceof Errors) {
-      res.status(error.code).json(error)
+    console.log("Error in resubscription: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
     } else {
-      res.status(Errors.standart.code).json(Errors.standart)
+      res.status(Errors.standart.code).json(Errors.standart);
     }
   }
-}
+};
 
 ////////////////////////// ------------ AGENCY PROFILE UPDATE -------------- /////////////////
 agencyController.updateAgencyProfile = async (
@@ -327,6 +337,33 @@ agencyController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in deleteMyBlog process of agencyController: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////------  AGENCY AGENTS APPLICATIONS ----///////////////////////
+agencyController.agentsApplications = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("agentsApplications proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { currentStatus, page, limit } = req.query;
+    const queries: AgencyAgentsApplicationInput = {
+      limit: Number(limit) || 6,
+      page: Number(page) || 1,
+      currentStatus: (currentStatus as AgentStatus) || AgentStatus.AVAILABLE,
+    };
+
+    const result = await agencyService.agentsApplications(agencyId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agentsApplications: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

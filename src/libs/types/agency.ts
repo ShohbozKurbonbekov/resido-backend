@@ -17,6 +17,7 @@ import { BillingSnapShotType, TarrifLimitsType } from "./payment";
 import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
 import { Tarrif } from "../../schema/Tarrif.model";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
+import { AgentStatus } from "../enums/agent.enum";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -98,7 +99,6 @@ export interface AgencySubscriptionSchemaInputs {
   agencyId: ObjectId;
   billingTariffId: ObjectId;
 
-
   amount: number;
   billingSnapshot: BillingSnapShotType;
   currency: TarrifCurrencyType;
@@ -142,12 +142,22 @@ export interface AgencySubscriptionInfoType {
   agencySubscription: AgencySubscriptionResult;
 }
 
-export  type SubscriptionRenewType  = Pick<AgencySubscriptionSchemaInputs, "subscriptionStatus"|
-"cancelledAt" | "currentPeriodEnd"|"currentPeriodStart" | "lastPaymentAt" | 'nextPaymentAt' | "billingSnapshot">
+export type SubscriptionRenewType = Pick<
+  AgencySubscriptionSchemaInputs,
+  | "subscriptionStatus"
+  | "cancelledAt"
+  | "currentPeriodEnd"
+  | "currentPeriodStart"
+  | "lastPaymentAt"
+  | "nextPaymentAt"
+  | "billingSnapshot"
+>;
 
-export interface RenewSubscriptionInput  {
-  id:string,
+export interface RenewSubscriptionInput {
+  id: string;
   currentPeriodEnd: string;
   billingSnapshot: BillingSnapShotType;
-
+}
+export interface AgencyAgentsApplicationInput extends CommonPageInput {
+  currentStatus: AgentStatus;
 }

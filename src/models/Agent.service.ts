@@ -759,6 +759,8 @@ class AgentService {
     if (target) {
       throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
     }
+
+    
     try {
       const agent = await this.agentModel.create({
         ...input,

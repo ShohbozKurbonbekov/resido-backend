@@ -248,8 +248,8 @@ agentController.agentApply = async (req: UploadRequest, res: Response) => {
       }
     }
 
-    input.yearOfExperience = Number.isFinite(input.yearOfExperience)
-      ? input.yearOfExperience
+    input.yearOfExperience = Number.isFinite(Number(input.yearOfExperience))
+      ? Number(input.yearOfExperience)
       : 0;
 
     const result = await agentService.agentApply(input, member);
