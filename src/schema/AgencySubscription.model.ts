@@ -2,7 +2,6 @@ import mongoose, { InferSchemaType, Schema } from "mongoose";
 import {
   PaymentProvider,
   SubscriptionStatus,
-  SubscriptionTarrif,
 } from "../libs/enums/agency.enum";
 import { AgencySubscriptionSchemaInputs } from "../libs/types/agency";
 import { BillingSnapShotType } from "../libs/types/payment";
@@ -19,6 +18,10 @@ const BillingSnapshotSchema = new Schema<BillingSnapShotType>({
     type: TarrifLimitsSchema,
     required: true,
   },
+  usage:{
+      type:TarrifLimitsSchema,
+       required:true
+    },
   name: {
     type: String,
     required: true,
@@ -84,6 +87,7 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>(
     stripeSubscriptionId: {
       type: String,
     },
+
     cancelledAt: {
       type: Date,
     },

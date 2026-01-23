@@ -13,10 +13,6 @@ import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInp
 import AuthService from "../models/Auth.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
 import { SubscriptionMode } from "../libs/enums/payment.enum";
-import { MemberType } from "../libs/enums/member.enum";
-import { AgencySubscriptionResult } from "../schema/AgencySubscription.model";
-import { Agency } from "../schema/members/Agency.model";
-import { SubscriptionStatus } from "../libs/enums/agency.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -216,7 +212,7 @@ agencyController.getSubscriptionInfo = async (
   }
 };
 
-////////////////// AGENCY  SUBCRIPTION INFO /////////////////
+////////////////// AGENCY  SUBCRIPTION  CANCEL /////////////////
 agencyController.subscriptionCancel = async (
   req: ExtendedRequest,
   res: Response,
@@ -236,6 +232,30 @@ agencyController.subscriptionCancel = async (
     }
   }
 };
+
+
+/////////////////// RE SUBSCRIPTION ///////////////////////
+agencyController.renewSubscription = async (req:ExtendedRequest, res:Response) => {
+  try {
+    console.log("resubscription proccess")
+    const memberId =  shapeIntoMongooseObjectId(req.member._id);
+    const {id}= req.body;
+    const subId = shapeIntoMongooseObjectId(id)
+
+    if(!subId) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_INPUT)
+    }
+    const result =  await agencySubscribeService.renewSubscription(memberId, subId)
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in resubscription: ", error)
+    if(error instanceof Errors) {
+      res.status(error.code).json(error)
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart)
+    }
+  }
+}
 
 ////////////////////////// ------------ AGENCY PROFILE UPDATE -------------- /////////////////
 agencyController.updateAgencyProfile = async (

@@ -13,7 +13,7 @@ import { Agent } from "./agent";
 import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
-import { BillingSnapShotType } from "./payment";
+import { BillingSnapShotType, TarrifLimitsType } from "./payment";
 import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
 import { Tarrif } from "../../schema/Tarrif.model";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
@@ -98,6 +98,7 @@ export interface AgencySubscriptionSchemaInputs {
   agencyId: ObjectId;
   billingTariffId: ObjectId;
 
+
   amount: number;
   billingSnapshot: BillingSnapShotType;
   currency: TarrifCurrencyType;
@@ -139,4 +140,14 @@ export type RequiredSubscribeInputs = Partial<AgencySubscriptionSchemaInputs>;
 export interface AgencySubscriptionInfoType {
   tariffPlans: Tarrif[];
   agencySubscription: AgencySubscriptionResult;
+}
+
+export  type SubscriptionRenewType  = Pick<AgencySubscriptionSchemaInputs, "subscriptionStatus"|
+"cancelledAt" | "currentPeriodEnd"|"currentPeriodStart" | "lastPaymentAt" | 'nextPaymentAt' | "billingSnapshot">
+
+export interface RenewSubscriptionInput  {
+  id:string,
+  currentPeriodEnd: string;
+  billingSnapshot: BillingSnapShotType;
+
 }
