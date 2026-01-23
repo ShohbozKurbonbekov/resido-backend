@@ -62,7 +62,10 @@ export enum Message {
   SUBSCRIPTION_EXIST = "Subscription already exists!",
 
   TARIFF_NOT_ACTIVE = "No active tariff found!",
-  INVALID_INPUT="Invalid input provided!"
+  INVALID_INPUT = "Invalid input provided!",
+
+  APPLICATION_ALREADY_EXISTS = "Application already exists!",
+  NOTIFICATION_ALREADY_SENT = "Notification already sent, Please wait!",
 }
 
 class Errors extends Error {

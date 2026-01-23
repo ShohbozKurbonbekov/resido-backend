@@ -29,7 +29,7 @@ const Socials = new Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const UserSchema = new Schema<User>(
@@ -103,6 +103,9 @@ const UserSchema = new Schema<User>(
       type: Socials,
       default: () => ({}),
     },
+    agentApplicationId: {
+      type: Schema.Types.ObjectId,
+    },
     avatar: {
       type: String,
     },
@@ -117,7 +120,7 @@ const UserSchema = new Schema<User>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 UserSchema.methods.toJSON = function () {

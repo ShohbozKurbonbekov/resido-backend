@@ -68,7 +68,6 @@ agency.post(
   agencyController.proceedPayment,
 );
 
-
 ////////////// ---- AGENCY RENEW SUBCRIPTION  -- //////////////////
 agency.post(
   "/subscription/renew",
@@ -114,8 +113,28 @@ agency.post(
   agencyController.deleteMyBlog,
 );
 
-
 /////////////////////// MY AGENTS' APPLICATIONS//////////////
-agency.get("/get/my-agents/applications", memberController.verifyMember, allowRoles(Message.AGENCY_ONLY,MemberType.AGENCY),agencyController.agentsApplications) 
+agency.get(
+  "/get/my-agents/applications",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.agentsApplications,
+);
+
+/////////////////////// AGENCY APPLICATIONS APPROVE//////////////
+// agency.post(
+//   "/agent-applications/:id/approve",
+//   memberController.verifyMember,
+//   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+//   agencyController.applicationApprove,
+// );
+
+/////////////////////// AGENCY APPLICATIONS REJECT //////////////
+// agency.get(
+//   "/agent-applications/:id/reject",
+//   memberController.verifyMember,
+//   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+//   agencyController.agentsApplications,
+// );
 
 export default agency;

@@ -18,10 +18,10 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import Errors, { HttpCode } from "../libs/Errors";
 import { Message } from "../libs/Errors";
-import { ObjectId } from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import {
   addTotCommentsAvRatingFields,
   commentLookup,
@@ -56,6 +56,17 @@ import PropertyModel, { Property } from "../schema/Property.model";
 import MemberService from "./Member.service";
 import MessageModel from "../schema/Message.model";
 import LikeModel from "../schema/Like.model";
+import AgentApplicationModel, {
+  AgentApplicationOutput,
+} from "../schema/AgentApplication.model";
+import { AgentApplicationInput } from "../libs/types/agentApplication";
+import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
+import NotificationModel from "../schema/Notification.model";
+import { AgentNotificationInput } from "../libs/types/notification";
+import {
+  AgentNotificationEntityType,
+  AgentNotificationType,
+} from "../libs/enums/notification.enum";
 
 class AgentService {
   private readonly agentModel;
@@ -71,6 +82,8 @@ class AgentService {
   private readonly messageModel;
   private readonly likeModel;
   private readonly viewModel;
+  private readonly agentApplicationModel;
+  private readonly notificationModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -86,6 +99,8 @@ class AgentService {
     this.messageModel = MessageModel;
     this.likeModel = LikeModel;
     this.viewModel = ViewModel;
+    this.agentApplicationModel = AgentApplicationModel;
+    this.notificationModel = NotificationModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -191,7 +206,7 @@ class AgentService {
 
   // GET AGENTS BY LOCATION
   public async getAgentByLocation(
-    input: SearchByLocationInput
+    input: SearchByLocationInput,
   ): Promise<SearchByLocationResult> {
     const { limit, page } = input;
     const match: T = {
@@ -236,7 +251,7 @@ class AgentService {
   // GET AGENT DETAIL
   public async getAgentDetail(
     agentId: ObjectId,
-    member: CommonUsers
+    member: CommonUsers,
   ): Promise<AgentDetailType> {
     const match: T = {
       _id: agentId,
@@ -257,9 +272,8 @@ class AgentService {
         viewTargetId: agentId,
       };
 
-      const exist: null | ViewDocs = await this.viewService.checkViewExistance(
-        input
-      );
+      const exist: null | ViewDocs =
+        await this.viewService.checkViewExistance(input);
 
       if (!exist) {
         await this.viewService.insertUserView(input);
@@ -364,7 +378,7 @@ class AgentService {
         },
         {
           new: true,
-        }
+        },
       )
 
       .exec();
@@ -375,7 +389,7 @@ class AgentService {
   // LIKE AN AGENT
   public async likeTargetAgent(
     userId: ObjectId,
-    agentId: ObjectId
+    agentId: ObjectId,
   ): Promise<Agent> {
     const match: T = {
       _id: agentId,
@@ -408,7 +422,7 @@ class AgentService {
   // SAVE TARGET BLOG
   public async saveToggleAgent(
     agentId: ObjectId,
-    query: SavingInput
+    query: SavingInput,
   ): Promise<Agent> {
     const match: T = {
       currentStatus: AgentStatus.AVAILABLE,
@@ -434,7 +448,7 @@ class AgentService {
   // GET FOLLOWED AGENTS
   public async getFollowedAgents(
     user: CommonUsers,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<AgentResults> {
     const { limit, page } = query;
     const match: T = {
@@ -566,7 +580,7 @@ class AgentService {
 
   // GET FEATURED AGENTS
   public async getFeaturedAgents(
-    input: FeaturedAgentsInput
+    input: FeaturedAgentsInput,
   ): Promise<FeaturedAgentsResult> {
     const { page, limit } = input;
     const match: T = {
@@ -629,7 +643,7 @@ class AgentService {
   // GET AGENT PROPERTIES
   public async getAgentProperties(
     agentId: ObjectId,
-    input: AgentPropertiesInput
+    input: AgentPropertiesInput,
   ): Promise<AgentDetailType> {
     const match: T = {
       currentStatus: AgentStatus.AVAILABLE,
@@ -749,35 +763,111 @@ class AgentService {
   // AGENT APPLY
   public async agentApply(
     input: MemberAgentInput,
-    member: User
-  ): Promise<Agent> {
-    const _id = shapeIntoMongooseObjectId(member._id);
-    const target = await this.agentModel
-      .findOne({ userId: _id })
-      .select("memberPassword _id memberEmail");
-
-    if (target) {
-      throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
-    }
-
-    
+    member: User,
+  ): Promise<AgentApplicationOutput> {
+    const session = await mongoose.startSession();
     try {
-      const agent = await this.agentModel.create({
-        ...input,
-        userId: member._id,
-      });
+      session.startTransaction();
+      const currentSession = { session };
 
-      return agent;
+      // Transction 1
+      const _id = shapeIntoMongooseObjectId(member._id);
+      const target = await this.agentModel.findOne(
+        { userId: _id },
+        null,
+        currentSession,
+      );
+
+      if (target) {
+        throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
+      }
+
+      // Transaction 2
+      const existingApplication = await this.agentApplicationModel.findOne(
+        {
+          userId: _id,
+          status: AgentApplicationStatus.APPLIED,
+          agencyId: shapeIntoMongooseObjectId(input.agencyId),
+        },
+        null,
+        currentSession,
+      );
+
+      if (existingApplication) {
+        throw new Errors(HttpCode.CONFLICT, Message.APPLICATION_ALREADY_EXISTS);
+      }
+
+      // Transction 3
+      const [agent] = await this.agentModel.create(
+        [
+          {
+            ...input,
+            userId: _id,
+            isVerified: false,
+            currentStatus: AgentStatus.PENDING,
+          },
+        ],
+        currentSession,
+      );
+
+      // Transaction 4
+      const agentApplicationInput: AgentApplicationInput = {
+        agencyId: shapeIntoMongooseObjectId(input.agencyId),
+        agentId: agent._id,
+        userId: shapeIntoMongooseObjectId(_id),
+      };
+
+      const [agentApplication] = await this.agentApplicationModel.create(
+        [agentApplicationInput],
+        currentSession,
+      );
+
+      //Transaction 5
+      const notificationInput: AgentNotificationInput = {
+        actionRequired: true,
+        entityId: agentApplication._id,
+        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        recipientId: shapeIntoMongooseObjectId(input.agencyId),
+        recipientRole: MemberType.AGENCY,
+        type: AgentNotificationType.AGENT_APPILICATION_SUBMITED,
+      };
+
+      const notificationAvailable = await this.notificationModel.findOne(
+        {
+          recipientId: shapeIntoMongooseObjectId(input.agencyId),
+          recipientRole: MemberType.AGENCY,
+          entityId: agentApplication._id,
+          type: AgentNotificationType.AGENT_APPILICATION_SUBMITED,
+        },
+        null,
+        currentSession,
+      );
+
+      if (notificationAvailable) {
+        throw new Errors(HttpCode.CONFLICT, Message.NOTIFICATION_ALREADY_SENT);
+      }
+
+      await this.notificationModel.create([notificationInput], currentSession);
+      await session.commitTransaction();
+
+      return agentApplication;
     } catch (error) {
+      await session.abortTransaction();
       console.log("Error in agentApply service: ", error);
-      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      }
+    } finally {
+      session.endSession();
     }
   }
 
   // AGENT CHANGE
   public async updateAgentProfile(
     input: AgentInputUpdate,
-    memberId: ObjectId
+    memberId: ObjectId,
   ): Promise<Agent> {
     const result = await this.agentModel
       .findByIdAndUpdate({ _id: memberId }, input, { new: true })
@@ -794,7 +884,7 @@ class AgentService {
   // AGENT MY BLOGS
   public async myBlogs(
     member: CommonUsers,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<Blogs> {
     const { page, limit } = query;
     const match: T = {
@@ -839,7 +929,7 @@ class AgentService {
   public async agentUpdateMyBog(
     input: BlogDoc,
     blogId: ObjectId,
-    memberId: ObjectId
+    memberId: ObjectId,
   ): Promise<BlogDoc> {
     const match: T = {
       _id: blogId,
@@ -859,7 +949,7 @@ class AgentService {
   ////////////////////////// --- DELETE BLOG ---/////////////////////
   public async deleteMyBlog(
     memberId: ObjectId,
-    targetId: ObjectId
+    targetId: ObjectId,
   ): Promise<BlogDoc> {
     const match: T = {
       _id: targetId,
@@ -872,7 +962,7 @@ class AgentService {
       {
         $set: { blogStatus: BlogStatus.DELETED },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -884,7 +974,7 @@ class AgentService {
   //////////////////////////// -- MY REVIEWS -- /////////////////////
   public async getMyReviews(
     member: CommonUsers,
-    query: CommentsSearchInput
+    query: CommentsSearchInput,
   ): Promise<Comments> {
     const memberId = shapeIntoMongooseObjectId(member._id);
     const { page, limit, category, sort } = query;
@@ -995,13 +1085,13 @@ class AgentService {
   /////////////////////////// -- MY PROPERTIES -- ///////////////////////////////////
   public async getMyProperties(
     member: CommonUsers,
-    queries: CommonPageInput
+    queries: CommonPageInput,
   ): Promise<Properties> {
     const { page, limit } = queries;
     const agentId = shapeIntoMongooseObjectId(member._id);
     const agent = (await this.memberService.getMemberData(
       member.role,
-      agentId
+      agentId,
     )) as Agent;
 
     const match: T = {
@@ -1059,7 +1149,7 @@ class AgentService {
   ////////////////////////--- DELETE MY PROPERTY ----- ///////////////////////
   public async archiveMyProperty(
     member: CommonUsers,
-    propertyId: ObjectId
+    propertyId: ObjectId,
   ): Promise<Property> {
     const match: T = {
       _id: propertyId,
@@ -1072,7 +1162,7 @@ class AgentService {
       { status: PropertyStatus.ARCHIVED },
       {
         new: true,
-      }
+      },
     );
 
     if (!result) {
@@ -1084,7 +1174,7 @@ class AgentService {
   ///////////////////////////// --------- UPDATE PUBLISHER PROPERTY ----- //////////////
   public async updatePublisherProperty(
     input: PropertyInput,
-    queries: { propertyId: ObjectId; member: CommonUsers }
+    queries: { propertyId: ObjectId; member: CommonUsers },
   ): Promise<Property> {
     const match: T = {
       _id: queries.propertyId,
@@ -1119,7 +1209,7 @@ class AgentService {
           priceValue: 1,
           views: 1,
         },
-      }
+      },
     );
 
     console.log(result);
@@ -1131,7 +1221,7 @@ class AgentService {
 
   //////////////////////////////// ------------ AGENT DASHBOARD OVERVIEW -------- ///////////////////
   public async agentDashboardOverview(
-    agentId: ObjectId
+    agentId: ObjectId,
   ): Promise<AgentDashboardOverviewType> {
     const [
       myPropertiesCount,

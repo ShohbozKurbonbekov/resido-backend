@@ -107,7 +107,8 @@ const AgentSchema = new Schema<Agent>(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
+export type AgentDoc = InferSchemaType<typeof AgentSchema>;
 export default mongoose.model("Agent", AgentSchema);

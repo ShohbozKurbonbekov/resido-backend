@@ -1,0 +1,7 @@
+export enum AgentApplicationStatus {
+  APPLIED = "APPLIED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  CONFIRMED = "CONFIRMED",
+}

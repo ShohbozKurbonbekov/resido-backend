@@ -43,6 +43,7 @@ export interface UserMemberInput {
 
 export interface User {
   _id: ObjectId;
+  agentApplicationId?: ObjectId;
   memberName: string;
   memberPhone: string;
   memberEmail: string;

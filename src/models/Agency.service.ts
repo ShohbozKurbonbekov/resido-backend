@@ -719,6 +719,64 @@ class AgencyService {
     }
     return result;
   }
+
+  //////////////////////// ------- AGENTS' APPLICATIONS  APPROVE-----//////////////////
+  // public async applicationApprove(
+  //   agencyId: ObjectId,
+  //   agentId: ObjectId,
+  // ): Promise<AgentResults> {
+  //   const { page, limit, currentStatus } = queries;
+  //   const agenyMatch: T = {
+  //     _id: agencyId,
+  //     memberStatus: MemberStatus.ACTIVE,
+  //     currentStatus: AgencyStatus.AVAILABLE,
+  //     isVerified: true,
+  //   };
+  //   const agentMatch: T = {
+  //     memberStatus: MemberStatus.ACTIVE,
+  //     agencyId,
+  //   };
+  //   if (currentStatus) {
+  //     agentMatch.currentStatus = currentStatus;
+  //   }
+
+  //   const sort: T = {
+  //     createdAt: -1,
+  //   };
+
+  //   const agency = await this.agencyModel.findOne(agenyMatch).lean().exec();
+  //   if (!agency) {
+  //     throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+  //   }
+
+  //   const [result] = await this.agentModel.aggregate([
+  //     {
+  //       $match: agentMatch,
+  //     },
+  //     {
+  //       $sort: sort,
+  //     },
+  //     {
+  //       $facet: {
+  //         agents: [
+  //           { $skip: (page - 1) * limit },
+  //           {
+  //             $limit: limit,
+  //           },
+  //         ],
+  //         totalNumbers: [{ $count: "total" }],
+  //       },
+  //     },
+  //   ]);
+
+  //   if (!result.agents.length) {
+  //     return {
+  //       agents: [],
+  //       totalNumbers: [{ total: 0 }],
+  //     };
+  //   }
+  //   return result;
+  // }
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,
