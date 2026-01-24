@@ -740,6 +740,7 @@ class AgencyService {
       entityType: AgentNotificationEntityType.AGENT_APPLICATION,
       type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
     };
+
     const sort: T = {
       createdAt: 1,
     };
@@ -759,6 +760,68 @@ class AgencyService {
     const [result] = await this.notificationModel.aggregate([
       {
         $match: notificationMatch,
+      },
+      {
+        $lookup: {
+          from: "agentApplication",
+          let: {
+            applicationId: "$entityId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$applicationId"],
+                },
+              },
+            },
+            {
+              $project: {
+                agentId: 1,
+              },
+            },
+          ],
+          as: "application",
+        },
+      },
+      {
+        $unwind: { path: "$application", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "agents",
+          let: {
+            agentId: "$application.agentId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$agentId"],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                fullName: 1,
+                currentStatus: 1,
+                address: 1,
+                avatar: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: "agent",
+        },
+      },
+      {
+        $unwind: { path: "$agent", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          application: 0,
+        },
       },
       {
         $sort: sort,
