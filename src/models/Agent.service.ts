@@ -829,7 +829,7 @@ class AgentService {
         entityType: AgentNotificationEntityType.AGENT_APPLICATION,
         recipientId: shapeIntoMongooseObjectId(input.agencyId),
         recipientRole: MemberType.AGENCY,
-        type: AgentNotificationType.AGENT_APPILICATION_SUBMITED,
+        type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
       };
 
       const notificationAvailable = await this.notificationModel.findOne(
@@ -837,7 +837,7 @@ class AgentService {
           recipientId: shapeIntoMongooseObjectId(input.agencyId),
           recipientRole: MemberType.AGENCY,
           entityId: agentApplication._id,
-          type: AgentNotificationType.AGENT_APPILICATION_SUBMITED,
+          type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
         },
         null,
         currentSession,

@@ -4,7 +4,7 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import ViewModel, { ViewDocs } from "../schema/View.model";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import Errors, { Message } from "../libs/Errors";
@@ -44,6 +44,12 @@ import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import TarrifModel from "../schema/Tarrif.model";
+import { MyNotifications } from "../libs/types/notification";
+import {
+  AgentNotificationEntityType,
+  AgentNotificationType,
+} from "../libs/enums/notification.enum";
+import NotificationModel from "../schema/Notification.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -55,6 +61,7 @@ class AgencyService {
   private readonly userModel;
   private readonly blogModel;
   private readonly tariffModel;
+  private readonly notificationModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -66,6 +73,7 @@ class AgencyService {
     this.userModel = UserModel;
     this.blogModel = BlogModel;
     this.tariffModel = TarrifModel;
+    this.notificationModel = NotificationModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -720,6 +728,62 @@ class AgencyService {
     return result;
   }
 
+  /////////////////////////// ---- AGENT NOTIFICATIONS  --- ///////////////
+  public async agencyNotifications(
+    agencyId: ObjectId,
+    queries: CommonPageInput,
+  ): Promise<MyNotifications> {
+    const { page, limit } = queries;
+    const notificationMatch: T = {
+      recipientId: agencyId,
+      recipientRole: MemberType.AGENCY,
+      entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+      type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
+    };
+    const sort: T = {
+      createdAt: 1,
+    };
+
+    const agencyMatch: T = {
+      currentStatus: AgencyStatus.AVAILABLE,
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agencyId,
+    };
+
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    const [result] = await this.notificationModel.aggregate([
+      {
+        $match: notificationMatch,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          notifications: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.notifications.length) {
+      return {
+        notifications: [],
+        metaCounter: [{ total: 0 }],
+      };
+    }
+    return result;
+  }
   //////////////////////// ------- AGENTS' APPLICATIONS  APPROVE-----//////////////////
   // public async applicationApprove(
   //   agencyId: ObjectId,
@@ -859,25 +923,6 @@ class AgencyService {
       },
     ];
   };
-
-  private handlePrivileges(planType: SubscriptionTarrif): AgencyPrivilegesType {
-    if (planType === SubscriptionTarrif.BASIC) {
-      return {
-        permittedProperties: 5,
-        permittedAgents: 2,
-      };
-    }
-    if (planType === SubscriptionTarrif.STANDART) {
-      return {
-        permittedAgents: 5,
-        permittedProperties: 20,
-      };
-    } else
-      return {
-        permittedAgents: 100000,
-        permittedProperties: 100000,
-      };
-  }
 }
 
 export default AgencyService;

@@ -372,6 +372,32 @@ agencyController.agentsApplications = async (
   }
 };
 
+/////////////////// ---- AGENCY NOTIFICATIONS ////////////////
+agencyController.agencyNotifications = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("agencyNotifications proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { page, limit } = req.query;
+    const queries: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 5,
+    };
+
+    const result = await agencyService.agencyNotifications(agencyId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agencyNotifications: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 ////////////////////------  AGENCY APPLICATIONS APPROVE ----///////////////////////
 // agencyController.applicationApprove = async (
 //   req: ExtendedRequest,

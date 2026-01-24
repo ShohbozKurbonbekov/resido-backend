@@ -121,6 +121,14 @@ agency.get(
   agencyController.agentsApplications,
 );
 
+/////////////////////// GET AGENCY NOTIFICATIONS ///////////////
+agency.get(
+  "/get/notifications",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.agencyNotifications,
+);
+
 /////////////////////// AGENCY APPLICATIONS APPROVE//////////////
 // agency.post(
 //   "/agent-applications/:id/approve",

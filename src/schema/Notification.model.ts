@@ -21,39 +21,50 @@ const NotificationPayloadSchema = new Schema<AgentNotificationPayload>(
   { _id: false },
 );
 
-export const NotificationSchema = new Schema<AgentNotificationCreation>({
-  actionRequired: {
-    type: Boolean,
-    required: true,
+export const NotificationSchema = new Schema<AgentNotificationCreation>(
+  {
+    actionRequired: {
+      type: Boolean,
+      required: true,
+    },
+    entityId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    entityType: {
+      type: String,
+      enum: AgentNotificationEntityType,
+      required: true,
+    },
+    payload: {
+      type: NotificationPayloadSchema,
+    },
+    recipientId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    recipientRole: {
+      type: String,
+      enum: MemberType,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: AgentNotificationType,
+      required: true,
+    },
   },
-  entityId: {
-    type: Schema.Types.ObjectId,
-    required: true,
+  {
+    timestamps: true,
   },
-  entityType: {
-    type: String,
-    enum: AgentNotificationEntityType,
-    required: true,
-  },
-  payload: {
-    type: NotificationPayloadSchema,
-  },
-  recipientId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-  },
-  recipientRole: {
-    type: String,
-    enum: MemberType,
-    required: true,
-  },
-  type: {
-    type: String,
-    enum: AgentNotificationType,
-    required: true,
-  },
-});
+);
 
-NotificationSchema.index({ recipientId: 1 });
+NotificationSchema.index({
+  recipientId: 1,
+  entityType: 1,
+  type: 1,
+  recipientRole: 1,
+  createdAt: 1,
+});
 export type NotificationOutput = InferSchemaType<typeof NotificationSchema>;
 export default mongoose.model("Notification", NotificationSchema);

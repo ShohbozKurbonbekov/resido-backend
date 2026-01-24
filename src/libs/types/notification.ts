@@ -1,7 +1,11 @@
 import { ObjectId } from "mongoose";
 import { MemberType } from "../enums/member.enum";
-import { AgentNotificationType } from "../enums/notification.enum";
-import { AgentNotificationEntityType } from "../enums/agentApplication.enum";
+import {
+  AgentNotificationEntityType,
+  AgentNotificationType,
+} from "../enums/notification.enum";
+import { NotificationOutput } from "../../schema/Notification.model";
+import { TotalCounter } from "./property";
 
 export interface AgentApprovePayload {
   agencyName: string;
@@ -27,3 +31,8 @@ export interface AgentNotificationCreation {
 }
 
 export type AgentNotificationInput = Omit<AgentNotificationCreation, "payload">;
+
+export interface MyNotifications {
+  notifications: NotificationOutput[];
+  metaCounter: TotalCounter[];
+}
