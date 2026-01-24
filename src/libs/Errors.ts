@@ -65,7 +65,10 @@ export enum Message {
   INVALID_INPUT = "Invalid input provided!",
 
   APPLICATION_ALREADY_EXISTS = "Application already exists!",
+
+  APPLICATION_NOT_FOUND = "Application not found!",
   NOTIFICATION_ALREADY_SENT = "Notification already sent, Please wait!",
+  NOTIFICATION_NOT_FOUND = "Notification not found!",
 }
 
 class Errors extends Error {

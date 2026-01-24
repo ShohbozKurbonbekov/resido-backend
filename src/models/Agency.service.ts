@@ -4,7 +4,11 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import { MemberStatus, MemberType } from "../libs/enums/member.enum";
+import {
+  MemberStatus,
+  MemberType,
+  UserCurrentStatus,
+} from "../libs/enums/member.enum";
 import ViewModel, { ViewDocs } from "../schema/View.model";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import Errors, { Message } from "../libs/Errors";
@@ -18,24 +22,22 @@ import {
   propertiesLookupByAgencyId,
   shapeIntoMongooseObjectId,
 } from "../libs/config";
-import { AgentResults, SearchByLocationInput } from "../libs/types/agent";
+import {
+  Agent,
+  AgentResults,
+  SearchByLocationInput,
+} from "../libs/types/agent";
 import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
   AgencyInputs,
   AgencyInputUpdate,
-  AgencyPaymentInfoInputs,
-  AgencyPrivilegesType,
   SearchByLocationAgency,
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel from "../schema/Property.model";
-import {
-  AgencyStatus,
-  AgencyTargetType,
-  SubscriptionTarrif,
-} from "../libs/enums/agency.enum";
+import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import UserModel from "../schema/members/User.model";
@@ -44,12 +46,17 @@ import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import TarrifModel from "../schema/Tarrif.model";
-import { MyNotifications } from "../libs/types/notification";
+import {
+  MyNotifications,
+  ReviewNotificationType,
+} from "../libs/types/notification";
 import {
   AgentNotificationEntityType,
   AgentNotificationType,
 } from "../libs/enums/notification.enum";
 import NotificationModel from "../schema/Notification.model";
+import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
+import AgentApplicationModel from "../schema/AgentApplication.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -62,6 +69,7 @@ class AgencyService {
   private readonly blogModel;
   private readonly tariffModel;
   private readonly notificationModel;
+  private readonly agentApplicationModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -74,6 +82,7 @@ class AgencyService {
     this.blogModel = BlogModel;
     this.tariffModel = TarrifModel;
     this.notificationModel = NotificationModel;
+    this.agentApplicationModel = AgentApplicationModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -803,20 +812,24 @@ class AgencyService {
             },
             {
               $project: {
-                _id: 1,
-                fullName: 1,
-                currentStatus: 1,
+                ownerId: "$_id",
+                ownerType: 1,
+                name: "$fullName",
+                status: "$currentStatus",
                 address: 1,
                 avatar: 1,
                 createdAt: 1,
               },
             },
           ],
-          as: "agent",
+          as: "notificationOwner",
         },
       },
       {
-        $unwind: { path: "$agent", preserveNullAndEmptyArrays: true },
+        $unwind: {
+          path: "$notificationOwner",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
@@ -847,6 +860,120 @@ class AgencyService {
     }
     return result;
   }
+
+  /////////////////////////// ---- REVIEW NOTIFICATION --- ///////////////
+  public async reviewNotification(
+    agencyId: ObjectId,
+    entityId: string,
+  ): Promise<ReviewNotificationType> {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      const currentSession = { session };
+      // Get agency
+      const agencyMatch: T = {
+        _id: agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.AVAILABLE,
+      };
+      const agency = await this.agencyModel
+        .findOne(agencyMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agency) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      const notificationMatch: T = {
+        recipientId: agency._id,
+        recipientRole: MemberType.AGENCY,
+        entityId,
+      };
+
+      const notification = await this.notificationModel
+        .findOneAndUpdate(
+          notificationMatch,
+          {
+            $set: {
+              actionRequired: false,
+              type: AgentNotificationType.AGENT_APPLICATION_CONFIRMED,
+            },
+          },
+          {
+            new: true,
+            runValidators: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!notification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      const applicationMatch: T = {
+        _id: shapeIntoMongooseObjectId(entityId),
+        agencyId: agency._id,
+        status: AgentApplicationStatus.APPLIED,
+      };
+
+      const application = await this.agentApplicationModel
+        .findOneAndUpdate(
+          applicationMatch,
+          {
+            $set: {
+              reviewedAt: new Date(),
+              reviewedBy: agency._id,
+              status: AgentApplicationStatus.UNDER_REVIEW,
+            },
+          },
+
+          {
+            new: true,
+            runValidators: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const agentMatch: T = {
+        _id: application.agentId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.PENDING,
+        agencyId: agency._id,
+      };
+
+      const agent = await this.agentModel
+        .findOne(agentMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agent) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
+      }
+
+      await session.commitTransaction();
+      return {
+        notification,
+        agent,
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in reviewNotification: ", error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
   //////////////////////// ------- AGENTS' APPLICATIONS  APPROVE-----//////////////////
   // public async applicationApprove(
   //   agencyId: ObjectId,

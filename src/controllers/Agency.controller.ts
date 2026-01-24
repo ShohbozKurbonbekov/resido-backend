@@ -398,6 +398,27 @@ agencyController.agencyNotifications = async (
   }
 };
 
+/////////////////// ---- REVIEW NOTIFICATIONS////////////////
+agencyController.reviewNotification = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("reviewNotification proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { entityId } = req.params;
+
+    const result = await agencyService.reviewNotification(agencyId, entityId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in reviewNotification: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 ////////////////////------  AGENCY APPLICATIONS APPROVE ----///////////////////////
 // agencyController.applicationApprove = async (
 //   req: ExtendedRequest,

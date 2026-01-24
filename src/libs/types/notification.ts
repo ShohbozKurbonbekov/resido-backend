@@ -6,7 +6,7 @@ import {
 } from "../enums/notification.enum";
 import { NotificationOutput } from "../../schema/Notification.model";
 import { TotalCounter } from "./property";
-
+import { AgentDoc } from "../../schema/members/Agent.model";
 export interface AgentApprovePayload {
   agencyName: string;
 }
@@ -35,4 +35,9 @@ export type AgentNotificationInput = Omit<AgentNotificationCreation, "payload">;
 export interface MyNotifications {
   notifications: NotificationOutput[];
   metaCounter: TotalCounter[];
+}
+
+export interface ReviewNotificationType {
+  agent: AgentDoc;
+  notification: NotificationOutput;
 }
