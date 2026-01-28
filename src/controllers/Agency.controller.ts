@@ -445,4 +445,29 @@ agencyController.agencyApproveApplication = async (
   }
 };
 
+////////////////////------  AGENCY APPLICATION REJECT ----///////////////////////
+agencyController.agencyRejectApplication = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("agencyRejectApplication proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const agentId = shapeIntoMongooseObjectId(id);
+
+    const result = await agencyService.agencyRejectApplication(
+      agencyId,
+      agentId,
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agencyRejectApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agencyController;

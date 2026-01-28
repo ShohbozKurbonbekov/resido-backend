@@ -137,7 +137,7 @@ agency.post(
   agencyController.reviewNotification,
 );
 
-///////////////////// AGENCY APPLICATIONS APPROVE//////////////
+///////////////////// AGENCY APPLICATION APPROVE//////////////
 agency.post(
   "/approve/application/:id",
   memberController.verifyMember,
@@ -145,12 +145,11 @@ agency.post(
   agencyController.agencyApproveApplication,
 );
 
-/////////////////////// AGENCY APPLICATIONS REJECT //////////////
-// agency.get(
-//   "/agent-applications/:id/reject",
-//   memberController.verifyMember,
-//   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
-//   agencyController.agentsApplications,
-// );
-
+///////////////////// AGENCY APPLICATION REJECT //////////////
+agency.post(
+  "/reject/application/:id",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.agencyRejectApplication,
+);
 export default agency;

@@ -4,3 +4,8 @@ export enum AgentApplicationStatus {
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",
 }
+
+export enum ApplicationStatusMessage {
+  APPROVED_MESSAGE = "You got approved. Press OK to confirm and re-login to activate your agent account.",
+  REJECTED_MESSAGE = "Sorry, you got the rejection, we found some incompetence in your data",
+}

@@ -58,7 +58,10 @@ import {
 import NotificationModel, {
   NotificationOutput,
 } from "../schema/Notification.model";
-import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
+import {
+  AgentApplicationStatus,
+  ApplicationStatusMessage,
+} from "../libs/enums/agentApplication.enum";
 import AgentApplicationModel, {
   AgentApplicationOutput,
 } from "../schema/AgentApplication.model";
@@ -976,7 +979,7 @@ class AgencyService {
     }
   }
 
-  //////////////////////// ------- AGENTS' APPLICATIONS  APPROVE-----//////////////////
+  //////////////////////// ------- AGENT APPLICATION  APPROVE-----//////////////////
   public async agencyApproveApplication(
     agencyId: ObjectId,
     agentId: ObjectId,
@@ -1067,8 +1070,7 @@ class AgencyService {
         type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
         payload: {
           agencyName: agency.memberName,
-          reason:
-            "You got approved. Press OK to confirm and re-login to activate your agent account.",
+          reason: ApplicationStatusMessage.APPROVED_MESSAGE,
         },
       };
 
@@ -1095,6 +1097,131 @@ class AgencyService {
       session.endSession();
     }
   }
+
+  //////////////////////// ------- AGENT APPLICATION REJECT-----//////////////////
+  public async agencyRejectApplication(
+    agencyId: ObjectId,
+    agentId: ObjectId,
+  ): Promise<NotificationOutput> {
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+      const currentSession = { session };
+
+      // Agency validation
+      const agencyMatch: T = {
+        _id: agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.AVAILABLE,
+      };
+
+      const agency = await this.agencyModel
+        .findOne(agencyMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agency) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      // Check application exists
+      const applicationMatch: T = {
+        agencyId,
+        agentId,
+        status: AgentApplicationStatus.UNDER_REVIEW,
+      };
+
+      const application = await this.agentApplicationModel
+        .findOneAndUpdate(
+          applicationMatch,
+          {
+            $set: {
+              reviewedAt: new Date(),
+              reviewedBy: agency._id,
+              status: AgentApplicationStatus.REJECTED,
+              rejectionReason: ApplicationStatusMessage.REJECTED_MESSAGE,
+            },
+          },
+          {
+            new: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const rejectedNotificationMatch = {
+        recipientId: agencyId,
+        recipientRole: MemberType.AGENCY,
+        entityId: application._id,
+        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+      };
+
+      const rejectedNotification = await this.notificationModel
+        .findOneAndUpdate(
+          rejectedNotificationMatch,
+          {
+            $set: {
+              type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+              payload: {
+                agencyName: agency.memberName,
+                reason: ApplicationStatusMessage.REJECTED_MESSAGE,
+              },
+              actionRequired: false,
+              resolvedAt: new Date(),
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!rejectedNotification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      const newNotificationInput: Partial<AgentNotificationCreation> = {
+        actionRequired: false,
+        entityId: application._id,
+        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        recipientId: agentId,
+        recipientRole: MemberType.AGENT,
+        type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+        payload: {
+          agencyName: agency.memberName,
+          reason: ApplicationStatusMessage.REJECTED_MESSAGE,
+        },
+      };
+
+      await this.notificationModel.create(
+        [newNotificationInput],
+        currentSession,
+      );
+
+      await session.commitTransaction();
+
+      return rejectedNotification;
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in agencyRejectApplication: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(
+          HttpCode.BAD_REQUEST,
+          Message.APPLICATION_REJECTION_FAILED,
+        );
+      }
+    } finally {
+      session.endSession();
+    }
+  }
+
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,
