@@ -40,7 +40,7 @@ class AgencySubscribeService {
     this.userModel = UserModel;
   }
 
-  /////////////////////////////////////// CREATE SUNSCRIPTION ////////////////////////
+  /////////////////////////////////////// CREATE SUBSCRIPTION ////////////////////////
   public async createSubscription(
     input: AgencyPaymentInfoInputs,
     userId: ObjectId,
@@ -211,12 +211,11 @@ class AgencySubscribeService {
       subscriptionStatus: {
         $ne: SubscriptionStatus.INACTIVE,
       },
-
     };
 
     const isAgencyValid = await this.agencyModel
-      .findOne(agencyValidMatch).
-      lean()
+      .findOne(agencyValidMatch)
+      .lean()
       .exec();
 
     if (!isAgencyValid) {
@@ -224,7 +223,8 @@ class AgencySubscribeService {
     }
 
     const isAgencySubscribed = await this.agencySubscribeModel
-      .findOne(isSubscribedMatch).sort({createdAt:-1})
+      .findOne(isSubscribedMatch)
+      .sort({ createdAt: -1 })
       .lean()
       .exec();
 
@@ -247,47 +247,55 @@ class AgencySubscribeService {
   }
 
   ///////////////////////////////////// RENEW SUBSCRIPTION ///////////////////////////////////
-  public async renewSubscription(agencyId:ObjectId, subId:ObjectId) {
+  public async renewSubscription(agencyId: ObjectId, subId: ObjectId) {
+    // AGENCY VALIDATION
+    const agencyMatch: T = {
+      _id: agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
+    };
 
-// AGENCY VALIDATION
-const agencyMatch:T = {
-  _id:agencyId,
-  memberStatus:MemberStatus.ACTIVE,
-  currentStatus:AgencyStatus.AVAILABLE,
-}
-
-     const agency =  await this.agencyModel.findOne(agencyMatch).lean().exec();
-      if(!agency) {
-  throw new Errors(HttpCode.FORBIDDEN,Message.AGENCY_NOT_ACTIVE)
-}
-
-     const subMatch:T = {
-      agencyId,
-      subscriptionStatus:SubscriptionStatus.EXPIRED,
-      billingTariffId:subId
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
     }
-      const now =  new Date()
-    const timeEnd = this.addMonths(now, 1)
 
-    const subscription =  await this.agencySubscribeModel.findOneAndUpdate(subMatch, {
-      $set:{
- cancelledAt:null,
-      currentPeriodEnd:timeEnd,
-      currentPeriodStart:now,
-      lastPaymentAt:now,
-      nextPaymentAt:timeEnd,
-      subscriptionStatus:SubscriptionStatus.ACTIVE,
-    "billingSnapshot.usage":{
-      agents:0,
-      properties:0
-    }}}, {new:true, sort:{
-      createdAt:-1
-    }});
+    const subMatch: T = {
+      agencyId,
+      subscriptionStatus: SubscriptionStatus.EXPIRED,
+      billingTariffId: subId,
+    };
+    const now = new Date();
+    const timeEnd = this.addMonths(now, 1);
 
-  if(!subscription) {
-    throw new Errors(HttpCode.BAD_REQUEST, Message.UPDATING_FAILED)
-  }
-  return subscription
+    const subscription = await this.agencySubscribeModel.findOneAndUpdate(
+      subMatch,
+      {
+        $set: {
+          cancelledAt: null,
+          currentPeriodEnd: timeEnd,
+          currentPeriodStart: now,
+          lastPaymentAt: now,
+          nextPaymentAt: timeEnd,
+          subscriptionStatus: SubscriptionStatus.ACTIVE,
+          "billingSnapshot.usage": {
+            agents: 0,
+            properties: 0,
+          },
+        },
+      },
+      {
+        new: true,
+        sort: {
+          createdAt: -1,
+        },
+      },
+    );
+
+    if (!subscription) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.UPDATING_FAILED);
+    }
+    return subscription;
   }
 
   ///////////////////////////////////// CANCEL SUBSCRIPTION ///////////////////////////////////
@@ -350,10 +358,10 @@ const agencyMatch:T = {
         features: tariffPlan.features,
         limit: tariffPlan.limits,
         name: tariffPlan.name,
-        usage:{
-          agents:0,
-          properties:0
-        }
+        usage: {
+          agents: 0,
+          properties: 0,
+        },
       },
 
       cancelledAt: null,

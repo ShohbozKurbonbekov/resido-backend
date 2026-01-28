@@ -419,27 +419,30 @@ agencyController.reviewNotification = async (
     }
   }
 };
-////////////////////------  AGENCY APPLICATIONS APPROVE ----///////////////////////
-// agencyController.applicationApprove = async (
-//   req: ExtendedRequest,
-//   res: Response,
-// ) => {
-//   try {
-//     console.log("applicationApprove proccess");
-//     const agencyId = shapeIntoMongooseObjectId(req.member._id);
-//     const { id } = req.params;
-//     const agentId = shapeIntoMongooseObjectId(id);
+////////////////////------  AGENCY APPLICATION APPROVE ----///////////////////////
+agencyController.agencyApproveApplication = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("agencyApproveApplication proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const agentId = shapeIntoMongooseObjectId(id);
 
-//     const result = await agencyService.applicationApprove(agencyId, agentId);
-//     res.status(HttpCode.OK).json(result);
-//   } catch (error) {
-//     console.log("Error in agentsApplications: ", error);
-//     if (error instanceof Errors) {
-//       res.status(error.code).json(error);
-//     } else {
-//       res.status(Errors.standart.code).json(Errors.standart);
-//     }
-//   }
-// };
+    const result = await agencyService.agencyApproveApplication(
+      agencyId,
+      agentId,
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agencyApproveApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 
 export default agencyController;

@@ -53,6 +53,9 @@ export const NotificationSchema = new Schema<AgentNotificationCreation>(
       enum: AgentNotificationType,
       required: true,
     },
+    resolvedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

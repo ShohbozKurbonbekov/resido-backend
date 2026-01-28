@@ -69,6 +69,7 @@ export enum Message {
   APPLICATION_NOT_FOUND = "Application not found!",
   NOTIFICATION_ALREADY_SENT = "Notification already sent, Please wait!",
   NOTIFICATION_NOT_FOUND = "Notification not found!",
+  APPLICATION_APPROVE_FAILED = "Application approving failed",
 }
 
 class Errors extends Error {

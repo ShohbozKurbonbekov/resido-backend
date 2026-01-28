@@ -47,6 +47,7 @@ import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import TarrifModel from "../schema/Tarrif.model";
 import {
+  AgentNotificationCreation,
   MyNotifications,
   ReviewNotificationType,
 } from "../libs/types/notification";
@@ -54,9 +55,13 @@ import {
   AgentNotificationEntityType,
   AgentNotificationType,
 } from "../libs/enums/notification.enum";
-import NotificationModel from "../schema/Notification.model";
+import NotificationModel, {
+  NotificationOutput,
+} from "../schema/Notification.model";
 import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
-import AgentApplicationModel from "../schema/AgentApplication.model";
+import AgentApplicationModel, {
+  AgentApplicationOutput,
+} from "../schema/AgentApplication.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -898,7 +903,6 @@ class AgencyService {
           {
             $set: {
               actionRequired: false,
-              type: AgentNotificationType.AGENT_APPLICATION_CONFIRMED,
             },
           },
           {
@@ -925,8 +929,6 @@ class AgencyService {
           applicationMatch,
           {
             $set: {
-              reviewedAt: new Date(),
-              reviewedBy: agency._id,
               status: AgentApplicationStatus.UNDER_REVIEW,
             },
           },
@@ -975,62 +977,124 @@ class AgencyService {
   }
 
   //////////////////////// ------- AGENTS' APPLICATIONS  APPROVE-----//////////////////
-  // public async applicationApprove(
-  //   agencyId: ObjectId,
-  //   agentId: ObjectId,
-  // ): Promise<AgentResults> {
-  //   const { page, limit, currentStatus } = queries;
-  //   const agenyMatch: T = {
-  //     _id: agencyId,
-  //     memberStatus: MemberStatus.ACTIVE,
-  //     currentStatus: AgencyStatus.AVAILABLE,
-  //     isVerified: true,
-  //   };
-  //   const agentMatch: T = {
-  //     memberStatus: MemberStatus.ACTIVE,
-  //     agencyId,
-  //   };
-  //   if (currentStatus) {
-  //     agentMatch.currentStatus = currentStatus;
-  //   }
+  public async agencyApproveApplication(
+    agencyId: ObjectId,
+    agentId: ObjectId,
+  ): Promise<NotificationOutput> {
+    const session = await mongoose.startSession();
 
-  //   const sort: T = {
-  //     createdAt: -1,
-  //   };
+    try {
+      session.startTransaction();
+      const currentSession = { session };
 
-  //   const agency = await this.agencyModel.findOne(agenyMatch).lean().exec();
-  //   if (!agency) {
-  //     throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
-  //   }
+      // Agency validation
+      const agencyMatch: T = {
+        _id: agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.AVAILABLE,
+      };
 
-  //   const [result] = await this.agentModel.aggregate([
-  //     {
-  //       $match: agentMatch,
-  //     },
-  //     {
-  //       $sort: sort,
-  //     },
-  //     {
-  //       $facet: {
-  //         agents: [
-  //           { $skip: (page - 1) * limit },
-  //           {
-  //             $limit: limit,
-  //           },
-  //         ],
-  //         totalNumbers: [{ $count: "total" }],
-  //       },
-  //     },
-  //   ]);
+      const agency = await this.agencyModel
+        .findOne(agencyMatch, null, currentSession)
+        .lean()
+        .exec();
 
-  //   if (!result.agents.length) {
-  //     return {
-  //       agents: [],
-  //       totalNumbers: [{ total: 0 }],
-  //     };
-  //   }
-  //   return result;
-  // }
+      if (!agency) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      // Check application exists
+      const applicationMatch: T = {
+        agencyId,
+        agentId,
+        status: AgentApplicationStatus.UNDER_REVIEW,
+      };
+
+      const application = await this.agentApplicationModel
+        .findOneAndUpdate(
+          applicationMatch,
+          {
+            $set: {
+              reviewedAt: new Date(),
+              reviewedBy: agency._id,
+              status: AgentApplicationStatus.APPROVED,
+            },
+          },
+          {
+            new: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const approvedNotificationMatch = {
+        recipientId: agencyId,
+        recipientRole: MemberType.AGENCY,
+        entityId: application._id,
+        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+      };
+
+      const approvedNotification = await this.notificationModel
+        .findOneAndUpdate(
+          approvedNotificationMatch,
+          {
+            $set: {
+              type: AgentNotificationType.AGENT_APPLICATION_CONFIRMED,
+              actionRequired: false,
+              resolvedAt: new Date(),
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!approvedNotification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      const newNotificationInput: Partial<AgentNotificationCreation> = {
+        actionRequired: true,
+        entityId: application._id,
+        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        recipientId: agentId,
+        recipientRole: MemberType.AGENT,
+        type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
+        payload: {
+          agencyName: agency.memberName,
+          reason:
+            "You got approved. Press OK to confirm and re-login to activate your agent account.",
+        },
+      };
+
+      await this.notificationModel.create(
+        [newNotificationInput],
+        currentSession,
+      );
+
+      await session.commitTransaction();
+
+      return approvedNotification;
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in agencyApproveApplication: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(
+          HttpCode.BAD_REQUEST,
+          Message.APPLICATION_APPROVE_FAILED,
+        );
+      }
+    } finally {
+      session.endSession();
+    }
+  }
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,

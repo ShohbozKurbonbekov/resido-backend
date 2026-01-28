@@ -137,13 +137,13 @@ agency.post(
   agencyController.reviewNotification,
 );
 
-/////////////////////// AGENCY APPLICATIONS APPROVE//////////////
-// agency.post(
-//   "/agent-applications/:id/approve",
-//   memberController.verifyMember,
-//   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
-//   agencyController.applicationApprove,
-// );
+///////////////////// AGENCY APPLICATIONS APPROVE//////////////
+agency.post(
+  "/approve/application/:id",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.agencyApproveApplication,
+);
 
 /////////////////////// AGENCY APPLICATIONS REJECT //////////////
 // agency.get(

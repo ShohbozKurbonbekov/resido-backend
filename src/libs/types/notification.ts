@@ -28,9 +28,13 @@ export interface AgentNotificationCreation {
   entityId: ObjectId;
   actionRequired: boolean;
   payload: AgentNotificationPayload;
+  resolvedAt?: ObjectId;
 }
 
-export type AgentNotificationInput = Omit<AgentNotificationCreation, "payload">;
+export type AgentNotificationInput = Omit<
+  AgentNotificationCreation,
+  "payload" | "resolvedAt"
+>;
 
 export interface MyNotifications {
   notifications: NotificationOutput[];
