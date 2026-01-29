@@ -114,3 +114,11 @@ member.post(
   allowRoles(Message.USER_PAGE, MemberType.USER),
   memberController.authorizeAgentAccount,
 );
+
+///////////////////// APPROVE AGENT REJECTION  ///////////////
+member.post(
+  "/approve/agent/rejection/:id",
+  memberController.verifyMember,
+  allowRoles(Message.USER_PAGE, MemberType.USER),
+  memberController.approveAgentRejection,
+);

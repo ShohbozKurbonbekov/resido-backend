@@ -700,6 +700,102 @@ class MemberService {
       session.endSession();
     }
   }
+
+  //////////////////////// ------- APPROVE AGENT REJECTION-----//////////////////
+  public async approveAgentRejection(
+    userId: ObjectId,
+    notificationId: ObjectId,
+  ): Promise<NotificationOutput> {
+    const session = await mongoose.startSession();
+
+    try {
+      // Start transaction
+      session.startTransaction();
+      const currentSession = { session };
+
+      // Check notification exists
+      const notificationMatch: T = {
+        _id: notificationId,
+        recipientId: userId,
+        recipientRole: MemberType.USER,
+        type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+      };
+
+      const notification = await this.notificationModel
+        .findOneAndUpdate(
+          notificationMatch,
+          {
+            $set: {
+              actionRequired: false,
+              resolvedAt: new Date(),
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!notification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      // Check agent exists
+      const agentMatch: T = {
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.PENDING,
+        userId,
+      };
+
+      const agent = await this.agentModel
+        .findOneAndUpdate(
+          agentMatch,
+          {
+            $set: {
+              currentStatus: AgentStatus.REJECTED,
+              isVerified: false,
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!agent) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.AGENT_NOT_ACTIVE);
+      }
+
+      // Check application exists
+      const applicationMatch: T = {
+        agencyId: agent.agencyId,
+        agentId: agent._id,
+        entityId: notification.entityId,
+        status: AgentApplicationStatus.REJECTED,
+      };
+
+      const application = await this.agentApplicationModel
+        .findOne(applicationMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      await session.commitTransaction();
+
+      return notification;
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in approveAgentRejection: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.SOMETHING_WENT_WRONG);
+      }
+    } finally {
+      session.endSession();
+    }
+  }
 }
 
 export default MemberService;
