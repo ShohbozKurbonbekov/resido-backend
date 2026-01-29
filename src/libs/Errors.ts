@@ -72,6 +72,7 @@ export enum Message {
   NOTIFICATION_NOT_FOUND = "Notification not found!",
   APPLICATION_APPROVE_FAILED = "Application approving failed",
   APPLICATION_REJECTION_FAILED = "Application rejection failed",
+  AGENT_CREATION_FAILED = "Agent account creation failed!",
 }
 
 class Errors extends Error {

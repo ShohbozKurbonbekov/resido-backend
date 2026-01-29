@@ -415,4 +415,28 @@ memberController.userNotifications = async (
   }
 };
 
+/////////////////// ---- USER => AGENT  STATUS ////////////////
+memberController.authorizeAgentAccount = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("authorizeAgentAccount proccess");
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const notificationId = shapeIntoMongooseObjectId(id);
+    const result = await memberService.authorizeAgentAccount(
+      userId,
+      notificationId,
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in authorizeAgentAccount: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default memberController;

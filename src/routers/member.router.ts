@@ -98,10 +98,19 @@ member.get(
   memberController.userDashboardOverview,
 );
 
-/////////////////////// USER NOTIFICATIONS ///////////////
+///////////////////// USER NOTIFICATIONS ///////////////
 member.get(
   "/get/notifications",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
   memberController.userNotifications,
+);
+
+///////////////////// USER =>  AGENT STATUS ///////////////
+
+member.post(
+  "/authorize/agent/account/:id",
+  memberController.verifyMember,
+  allowRoles(Message.USER_PAGE, MemberType.USER),
+  memberController.authorizeAgentAccount,
 );

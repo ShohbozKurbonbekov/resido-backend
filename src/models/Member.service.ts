@@ -50,7 +50,11 @@ import {
   AgentNotificationEntityType,
   AgentNotificationType,
 } from "../libs/enums/notification.enum";
-import NotificationModel from "../schema/Notification.model";
+import NotificationModel, {
+  NotificationOutput,
+} from "../schema/Notification.model";
+import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
+import AgentApplicationModel from "../schema/AgentApplication.model";
 
 class MemberService {
   private readonly userModel;
@@ -61,6 +65,7 @@ class MemberService {
   private readonly saveModel;
   private readonly commentModel;
   private readonly notificationModel;
+  private readonly agentApplicationModel;
 
   constructor() {
     this.userModel = UserModel;
@@ -71,6 +76,7 @@ class MemberService {
     this.saveModel = UserSavingModel;
     this.commentModel = CommentModel;
     this.notificationModel = NotificationModel;
+    this.agentApplicationModel = AgentApplicationModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -581,6 +587,118 @@ class MemberService {
       };
     }
     return result;
+  }
+
+  //////////////////////// ------- USER  = > AGENT STATUS-----//////////////////
+  public async authorizeAgentAccount(
+    userId: ObjectId,
+    notificationId: ObjectId,
+  ): Promise<NotificationOutput> {
+    const session = await mongoose.startSession();
+
+    try {
+      // Start transaction
+      session.startTransaction();
+      const currentSession = { session };
+
+      // Check notification exists
+      const notificationMatch: T = {
+        _id: notificationId,
+        recipientId: userId,
+        recipientRole: MemberType.USER,
+        type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
+      };
+
+      const notification = await this.notificationModel
+        .findOneAndUpdate(
+          notificationMatch,
+          {
+            $set: {
+              actionRequired: false,
+              resolvedAt: new Date(),
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!notification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      // Check agent exists
+      const agentMatch: T = {
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.PENDING,
+        userId,
+      };
+
+      const agent = await this.agentModel
+        .findOneAndUpdate(
+          agentMatch,
+          {
+            $set: {
+              currentStatus: AgentStatus.AVAILABLE,
+              isVerified: true,
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!agent) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.AGENT_NOT_ACTIVE);
+      }
+
+      // Check application exists
+      const applicationMatch: T = {
+        agencyId: agent.agencyId,
+        agentId: agent._id,
+        status: AgentApplicationStatus.APPROVED,
+      };
+
+      const application = await this.agentApplicationModel
+        .findOne(applicationMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const user = await this.userModel.findOneAndUpdate(
+        {
+          _id: userId,
+          memberStatus: MemberStatus.ACTIVE,
+        },
+        {
+          $set: {
+            agentMode: true,
+          },
+        },
+        { new: true, ...currentSession },
+      );
+
+      if (!user) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.NO_MEMBER_FOUND);
+      }
+
+      await session.commitTransaction();
+
+      return notification;
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in authorizeAgentAccount: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.AGENT_CREATION_FAILED);
+      }
+    } finally {
+      session.endSession();
+    }
   }
 }
 
