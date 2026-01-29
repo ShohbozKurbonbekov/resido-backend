@@ -45,6 +45,12 @@ import { TargetGroup } from "../libs/enums/userSaving.enum";
 import CommentModel from "../schema/Comment.model";
 import { CommentStatus } from "../libs/enums/comment.enum";
 import { AgencyStatus } from "../libs/enums/agency.enum";
+import { MyNotifications } from "../libs/types/notification";
+import {
+  AgentNotificationEntityType,
+  AgentNotificationType,
+} from "../libs/enums/notification.enum";
+import NotificationModel from "../schema/Notification.model";
 
 class MemberService {
   private readonly userModel;
@@ -54,6 +60,8 @@ class MemberService {
   private readonly blogModel;
   private readonly saveModel;
   private readonly commentModel;
+  private readonly notificationModel;
+
   constructor() {
     this.userModel = UserModel;
     this.agencyModel = AgencyModel;
@@ -62,6 +70,7 @@ class MemberService {
     this.blogModel = BlogModel;
     this.saveModel = UserSavingModel;
     this.commentModel = CommentModel;
+    this.notificationModel = NotificationModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -110,7 +119,7 @@ class MemberService {
           memberPassword: 1,
           agentMode: 1,
           agencyMode: 1,
-        }
+        },
       )
       .lean();
 
@@ -193,7 +202,7 @@ class MemberService {
   /////////////////////////// --  WRITE A MESSAGE -- //////////////////////////////
   public async WriteMessageToMember(
     member: CommonUsers,
-    input: MessageInput
+    input: MessageInput,
   ): Promise<MessageDoc> {
     const { receiverId, receiverType, senderType } = input;
     const userId = shapeIntoMongooseObjectId(member._id);
@@ -223,7 +232,7 @@ class MemberService {
   /////////////////////////// --  GET MEMBER MESSAGES -- //////////////////////////////
   public async getMemberMessages(
     member: CommonUsers,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<MessagesOutput> {
     const userId = shapeIntoMongooseObjectId(member._id);
     const { page, limit } = query;
@@ -284,7 +293,7 @@ class MemberService {
       {
         $set: { content: content, isEdited: true },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -295,7 +304,7 @@ class MemberService {
   ////////////////////////// --- DELETE MESSAGE ---/////////////////////
   public async messageDelete(
     memberId: ObjectId,
-    targetId: ObjectId
+    targetId: ObjectId,
   ): Promise<MessageDoc> {
     const match: T = {
       _id: targetId,
@@ -308,7 +317,7 @@ class MemberService {
       {
         $set: { deletedBySender: true },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -319,7 +328,7 @@ class MemberService {
   //////////////////////////// -- MESSAGE READ -- //////////////////////////////
   public async messageRead(
     member: CommonUsers,
-    id: ObjectId
+    id: ObjectId,
   ): Promise<MessageDoc> {
     const memberId = shapeIntoMongooseObjectId(member._id);
     const match: T = {
@@ -332,7 +341,7 @@ class MemberService {
     const result = await this.messageModel.findOneAndUpdate(
       match,
       { $set: { isRead: true }, $currentDate: { whenIsRead: true } },
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -344,7 +353,7 @@ class MemberService {
   /////////////////////////// -- UPDATE MEMBER -- //////////////////////////////
   public async updateMember(
     member: CommonUsers,
-    input: CommonUsersUpdateInput
+    input: CommonUsersUpdateInput,
   ): Promise<CommonUsers> {
     const memberId = shapeIntoMongooseObjectId(member._id);
 
@@ -379,7 +388,7 @@ class MemberService {
 
   /////////////////////////// -- USER DASHBOARD OVERVIEW -- //////////////////////////////
   public async userDashboardOverview(
-    member: CommonUsers
+    member: CommonUsers,
   ): Promise<UserDashboardOverviewType> {
     const memberId: ObjectId = shapeIntoMongooseObjectId(member._id);
 
@@ -487,7 +496,7 @@ class MemberService {
   ////////////////////////// - GET MEMBER FULL DATA --- //////////////////
   public async getMemberData(
     role: MemberType,
-    id: ObjectId
+    id: ObjectId,
   ): Promise<CommonUsers> {
     const MemberModels: T = {
       USER: this.userModel,
@@ -519,6 +528,59 @@ class MemberService {
     }
 
     return member;
+  }
+
+  /////////////////////////// ---- USER NOTIFICATIONS  --- ///////////////
+  public async userNotifications(
+    userId: ObjectId,
+    queries: CommonPageInput,
+  ): Promise<MyNotifications> {
+    const { page, limit } = queries;
+
+    const notificationMatch: T = {
+      recipientId: userId,
+      recipientRole: MemberType.USER,
+      entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+      type: {
+        $in: [
+          AgentNotificationType.AGENT_APPLICATION_APPROVED,
+          AgentNotificationType.AGENT_APPLICATION_REJECTED,
+        ],
+      },
+    };
+
+    const sort: T = {
+      createdAt: 1,
+    };
+
+    const [result] = await this.notificationModel.aggregate([
+      {
+        $match: notificationMatch,
+      },
+
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          notifications: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.notifications.length) {
+      return {
+        notifications: [],
+        metaCounter: [{ total: 0 }],
+      };
+    }
+    return result;
   }
 }
 

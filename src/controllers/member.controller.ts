@@ -389,4 +389,30 @@ memberController.userDashboardOverview = async (
   }
 };
 
+/////////////////// ---- USER NOTIFICATIONS ////////////////
+memberController.userNotifications = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("userNotifications proccess");
+    const userId = shapeIntoMongooseObjectId(req.member._id);
+    const { page, limit } = req.query;
+    const queries: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 5,
+    };
+
+    const result = await memberService.userNotifications(userId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in userNotifications: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default memberController;

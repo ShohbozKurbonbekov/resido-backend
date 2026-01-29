@@ -1061,12 +1061,27 @@ class AgencyService {
         throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
       }
 
+      const agentMatch: T = {
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.PENDING,
+        _id: agentId,
+      };
+
+      const agent = await this.agentModel
+        .findOne(agentMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agent) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      }
+
       const newNotificationInput: Partial<AgentNotificationCreation> = {
         actionRequired: true,
         entityId: application._id,
         entityType: AgentNotificationEntityType.AGENT_APPLICATION,
-        recipientId: agentId,
-        recipientRole: MemberType.AGENT,
+        recipientId: agent.userId,
+        recipientRole: MemberType.USER,
         type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
         payload: {
           agencyName: agency.memberName,
@@ -1185,12 +1200,26 @@ class AgencyService {
         throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
       }
 
+      const agentMatch: T = {
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.PENDING,
+        _id: agentId,
+      };
+
+      const agent = await this.agentModel
+        .findOne(agentMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agent) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_AGENT_FOUND);
+      }
       const newNotificationInput: Partial<AgentNotificationCreation> = {
         actionRequired: false,
         entityId: application._id,
         entityType: AgentNotificationEntityType.AGENT_APPLICATION,
-        recipientId: agentId,
-        recipientRole: MemberType.AGENT,
+        recipientId: agent.userId,
+        recipientRole: MemberType.USER,
         type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
         payload: {
           agencyName: agency.memberName,

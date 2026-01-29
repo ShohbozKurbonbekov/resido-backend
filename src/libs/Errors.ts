@@ -13,6 +13,7 @@ export enum HttpCode {
 export enum Message {
   SOMETHING_WENT_WRONG = "Something went wrong",
   NO_DATA_FOUND = "No data is found",
+  NO_AGENT_FOUND = "No Agent is found",
   CREATING_FAILED = "Creating is failed!",
   UPDATING_FAILED = "Updating is failed!",
   TOKEN_CREATION_FAILED = "Token creation error!",
