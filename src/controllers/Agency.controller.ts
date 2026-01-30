@@ -10,6 +10,7 @@ import { SearchByLocationInput } from "../libs/types/agent";
 import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
+  AgencyAllPropertiesInput,
   AgencyInputs,
 } from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
@@ -18,6 +19,7 @@ import AuthService from "../models/Auth.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
 import { SubscriptionMode } from "../libs/enums/payment.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
+import { PropertyStatus } from "../libs/enums/property.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -463,6 +465,46 @@ agencyController.agencyRejectApplication = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in agencyRejectApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////// --------- GET AGENCY PROPERTIES ---------///////////////////
+agencyController.getAllProperties = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("getAllProperties proccess");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { limit, page, status } = req.query;
+
+    const allowedPropertyStatus = [
+      PropertyStatus.AVAILABLE,
+      PropertyStatus.PENDING_APPROVAL,
+      PropertyStatus.REJECTED,
+      PropertyStatus.RENTED,
+      PropertyStatus.SOLD,
+    ];
+
+    if (!status || !allowedPropertyStatus.includes(status as PropertyStatus)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_PROPERTY_STATUS);
+    }
+
+    const queries: AgencyAllPropertiesInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 5,
+      status: status as PropertyStatus,
+    };
+
+    const result = await agencyService.getAllProperties(agencyId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getAllProperties: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

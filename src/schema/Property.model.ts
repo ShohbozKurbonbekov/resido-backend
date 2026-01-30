@@ -23,7 +23,7 @@ const PropertyAddressSchema = new Schema(
       long: { type: Number },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 const PropertySellingOptionSchema = new Schema(
   {
@@ -45,7 +45,7 @@ const PropertySellingOptionSchema = new Schema(
       discount: { type: Number },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 PropertySellingOptionSchema.pre("save", function (next) {
@@ -73,7 +73,7 @@ const PropertyAmenitiesSchema = new Schema(
     carParking: { type: Boolean, default: false },
     spaMassage: { type: Boolean, default: false },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const PropertySchema = new Schema<PropertyInput>(
@@ -220,12 +220,15 @@ const PropertySchema = new Schema<PropertyInput>(
     },
   },
 
-  { timestamps: true }
+  { timestamps: true },
 );
 
 PropertySchema.index({
   featuredScore: -1,
   status: 1,
+  createdAt: -1,
+  agencyId: 1,
+  agentId: 1,
 });
 
 export type Property = InferSchemaType<typeof PropertySchema>;

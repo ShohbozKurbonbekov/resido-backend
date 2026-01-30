@@ -152,4 +152,12 @@ agency.post(
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.agencyRejectApplication,
 );
+
+////////////////////// GET AGENCY ALL PROPERTIES ///////////////////
+agency.get(
+  "/get/all-properties",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.getAllProperties,
+);
 export default agency;

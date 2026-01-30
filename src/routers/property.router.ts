@@ -12,7 +12,7 @@ property.post(
   memberController.verifyMember,
   allowRoles(Message.PROPERTY_CREATE_AGENTS, MemberType.AGENT),
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
-  propertyController.createProperty
+  propertyController.createProperty,
 );
 
 //////////////////// -- PROPERTY UPDATE -- ////////////////////
@@ -21,13 +21,13 @@ property.post(
   memberController.verifyMember,
   allowRoles(Message.PROPERTY_UPDATE_AGENTS, MemberType.AGENT),
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
-  propertyController.updateProperty
+  propertyController.updateProperty,
 );
 
 ///////////// --  GET RECENTLY ADDED PROPERTIES -- //////////
 property.post(
   "/property-recent-rent",
-  propertyController.getRecentPropertiesForRent
+  propertyController.getRecentPropertiesForRent,
 );
 
 ////////////////// --  GET FEATURED PROPERTY -- /////////////
@@ -38,21 +38,21 @@ property.post("/featured-property", propertyController.getFeaturedProperty);
 property.post(
   "/getAll",
   memberController.checkMemberAuth,
-  propertyController.getAllProducts
+  propertyController.getAllProducts,
 );
 
-////////////////// --  GET A CERTAIN PRODUCT -- /////////////
+////////////////// --  GET A CERTAIN PROPRERTY -- /////////////
 property.get(
   "/:id",
   memberController.checkMemberAuth,
-  propertyController.getProperty
+  propertyController.getProperty,
 );
 
 ////////////////// --  GET PUBLISHER PROPERTY -- /////////////
 property.get(
   "/publisher/:propertyId",
   memberController.verifyMember,
-  propertyController.getPublisherProperty
+  propertyController.getPublisherProperty,
 );
 
 //////////////////// -- SAVE TARGET PROPERTY --- ///////////////
@@ -60,7 +60,7 @@ property.get(
   "/:id/toggle-save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE, MemberType.USER),
-  propertyController.toggleSaveProperty
+  propertyController.toggleSaveProperty,
 );
 
 //////////////////// -- GET SAVED PROPERTIES --- ///////////////
@@ -68,7 +68,7 @@ property.post(
   "/see/saved-properties",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_SAVE_SEE, MemberType.USER),
-  propertyController.getSavedProperties
+  propertyController.getSavedProperties,
 );
 
 /////////////////// ------ PROPERTY LIKED ---------- ///////////
@@ -77,7 +77,7 @@ property.post(
   "/liked",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS, MemberType.USER),
-  propertyController.likeTargetProperty
+  propertyController.likeTargetProperty,
 );
 
 export default property;

@@ -19,7 +19,9 @@ import { ViewGroup } from "../libs/enums/view.enum";
 import ViewService from "./View.service";
 import {
   agentsLookupByAgencyId,
+  priceValueField,
   propertiesLookupByAgencyId,
+  propertyListingType,
   shapeIntoMongooseObjectId,
 } from "../libs/config";
 import {
@@ -31,6 +33,7 @@ import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
+  AgencyAllPropertiesInput,
   AgencyInputs,
   AgencyInputUpdate,
   SearchByLocationAgency,
@@ -65,6 +68,7 @@ import {
 import AgentApplicationModel, {
   AgentApplicationOutput,
 } from "../schema/AgentApplication.model";
+import { Properties } from "../libs/types/property";
 
 class AgencyService {
   private readonly agencyModel;
@@ -1249,6 +1253,79 @@ class AgencyService {
     } finally {
       session.endSession();
     }
+  }
+
+  /////////////////// ------- GET AGENCY  ALL PROPERTIES ------//////////////////
+  public async getAllProperties(
+    agencyId: ObjectId,
+    queries: AgencyAllPropertiesInput,
+  ): Promise<Properties> {
+    const { status, page, limit } = queries;
+    // Check agency existance
+    const agencyMatch: T = {
+      currentStatus: AgencyStatus.AVAILABLE,
+      memberStatus: MemberStatus.ACTIVE,
+      _id: agencyId,
+    };
+
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    // Check for properties
+    const propertyMatch: T = {
+      agencyId,
+      status: status as PropertyStatus,
+    };
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.propertyModel.aggregate([
+      {
+        $match: propertyMatch,
+      },
+      {
+        $sort: sort,
+      },
+      priceValueField,
+      propertyListingType,
+      {
+        $project: {
+          _id: 1,
+          status: 1,
+          images: 1,
+          title: 1,
+          address: 1,
+          createdAt: 1,
+          propertyType: 1,
+          area: 1,
+          priceValue: 1,
+          views: 1,
+          propertyListingType: 1,
+        },
+      },
+      {
+        $facet: {
+          properties: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          totalPropertiesNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.properties.length) {
+      return {
+        properties: [],
+        totalPropertiesNumber: [{ total: 0 }],
+      };
+    }
+    return result;
   }
 
   //  HELPER  FUNCTIONS

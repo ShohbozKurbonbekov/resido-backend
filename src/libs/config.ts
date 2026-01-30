@@ -7,7 +7,7 @@ import chalk from "chalk";
 
 // MORGAN SETUP
 export const MORGAN_FORMAT = chalk.bgGreen(
-  `:method :url :response-time [:status] \n`
+  `:method :url :response-time [:status] \n`,
 );
 
 // AGENDA CONFIG
@@ -33,6 +33,17 @@ export const priceValueField = {
       $ifNull: [
         "$sellingOption.optionRent.overalAmount",
         "$sellingOption.optionSell.overalAmunt",
+      ],
+    },
+  },
+};
+
+export const propertyListingType = {
+  $addFields: {
+    propertyListingType: {
+      $ifNull: [
+        "$sellingOption.optionRent.type",
+        "$sellingOption.optionSell.type",
       ],
     },
   },

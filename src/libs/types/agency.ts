@@ -18,6 +18,7 @@ import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
 import { Tarrif } from "../../schema/Tarrif.model";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
 import { AgentStatus } from "../enums/agent.enum";
+import { PropertyStatus } from "../enums/property.enum";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -160,4 +161,8 @@ export interface RenewSubscriptionInput {
 }
 export interface AgencyAgentsApplicationInput extends CommonPageInput {
   currentStatus: AgentStatus;
+}
+
+export interface AgencyAllPropertiesInput extends CommonPageInput {
+  status: PropertyStatus;
 }
