@@ -41,6 +41,11 @@ import UserSavingModel, { SavingOutput } from "../schema/UserSaving.model";
 import MemberService from "./Member.service";
 import { Agent } from "../libs/types/agent";
 import { geocodeAddress } from "../libs/utils/figureGeoPosition";
+import mongoose from "mongoose";
+import { MemberStatus } from "../libs/enums/member.enum";
+import { AgencyStatus, SubscriptionStatus } from "../libs/enums/agency.enum";
+import AgencyModel from "../schema/members/Agency.model";
+import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 
 class PropertyService {
   private readonly propertyModel;
@@ -49,6 +54,8 @@ class PropertyService {
   public saveService;
   private readonly saveModel;
   public memberService;
+  private readonly agencyModel;
+  private readonly subscriptionModel;
 
   constructor() {
     this.propertyModel = PropertyModel;
@@ -57,12 +64,14 @@ class PropertyService {
     this.saveService = new UserSaving();
     this.saveModel = UserSavingModel;
     this.memberService = new MemberService();
+    this.agencyModel = AgencyModel;
+    this.subscriptionModel = AgencySubscriptionModel;
   }
 
   // UPDATE PROPERTY
   static async updatePropertyFields() {
     console.log(
-      chalk.green("✅ Working with updatePropertyFields statis method")
+      chalk.green("✅ Working with updatePropertyFields statis method"),
     );
     const match: T = {
       status: PropertyStatus.AVAILABLE,
@@ -146,7 +155,7 @@ class PropertyService {
   // LIKE PROPERTY
   public async likeTargetProperty(
     userId: ObjectId,
-    propertyId: ObjectId
+    propertyId: ObjectId,
   ): Promise<Property> {
     const target = await this.propertyModel
       .findOne({
@@ -187,7 +196,7 @@ class PropertyService {
   }
 
   private async propertyStatsEditor(
-    input: StatisticsModifier
+    input: StatisticsModifier,
   ): Promise<Property> {
     const { targetKey, _id, modifier } = input;
 
@@ -201,7 +210,7 @@ class PropertyService {
         },
         {
           new: true,
-        }
+        },
       )
       .exec();
 
@@ -211,38 +220,119 @@ class PropertyService {
   // CREATE PROPERTY
   public async createProperty(
     input: PropertyInput,
-    member: CommonUsers
+    member: CommonUsers,
   ): Promise<Property> {
+    const session = await mongoose.startSession();
+
+    // Get agent  full agent data, partial one is not enough and agent is be gonna checked in getMemberData, whether agent is found or not
     const agent = (await this.memberService.getMemberData(
       member.role,
-      member._id!
+      member._id!,
     )) as Agent;
 
+    // Get GeoCode data, all possiblities are gonna be checked in the method itself
     const { street, city, country } = input.address;
     const address = [street, city, country].filter(Boolean).join(", ");
-
     const geoCode = await geocodeAddress(address);
+
     try {
-      const result = await this.propertyModel.create({
-        ...input,
-        address: {
-          ...input.address,
-          geoCode,
+      session.startTransaction();
+      const currentSession = { session };
+
+      // Check agent's agency existance
+      const agencyMatch: T = {
+        _id: agent.agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.AVAILABLE,
+        isVerified: true,
+      };
+
+      const agency = await this.agencyModel.findOne(
+        agencyMatch,
+        null,
+        currentSession,
+      );
+
+      if (!agency) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      // Subscrition activeness check
+      const subscriptionMatch: T = {
+        agencyId: agency._id,
+        subscriptionStatus: SubscriptionStatus.ACTIVE,
+      };
+
+      const subscription = await this.subscriptionModel
+        .findOne(subscriptionMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!subscription) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.NO_ACTIVE_SUBSCRIPTION);
+      }
+
+      // Check limit
+      const { limit } = subscription.billingSnapshot;
+
+      const updatedSub = await this.subscriptionModel.updateOne(
+        {
+          ...subscriptionMatch,
+          "billingSnapshot.usage.properties": { $lt: limit.properties },
         },
-        agentId: agent._id,
-        agencyId: agent.agencyId,
-      });
-      return result;
+        { $inc: { "billingSnapshot.usage.properties": 1 } },
+        currentSession,
+      );
+
+      if (updatedSub.modifiedCount === 0) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.EXCEED_LIMIT);
+      }
+
+      // Property creation
+      const result = await this.propertyModel.create(
+        [
+          {
+            ...input,
+            address: {
+              ...input.address,
+              geoCode,
+            },
+            agentId: agent._id,
+            agencyId: agency._id,
+          },
+        ],
+        currentSession,
+      );
+
+      // Update fields
+      await this.agencyModel.updateOne(
+        { _id: agency._id },
+        {
+          $inc: { propertiesTotalNumber: 1 },
+        },
+        currentSession,
+      );
+
+      await session.commitTransaction();
+      return result[0];
     } catch (error) {
       console.log("Error: in createProduct Model ", error);
-      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      await session.abortTransaction();
+
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      }
+    } finally {
+      session.endSession();
     }
   }
 
   // UPDATE PROPERTY
   public async updateProperty(
     propertyId: ObjectId,
-    input: PropertyUpdateInput
+    input: PropertyUpdateInput,
   ): Promise<Property> {
     const target = await this.propertyModel.findById(propertyId);
 
@@ -251,7 +341,7 @@ class PropertyService {
     const result = await this.propertyModel.findByIdAndUpdate(
       propertyId,
       input,
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -262,7 +352,7 @@ class PropertyService {
 
   // GET RECENT PROPERTY FOR RENT
   public async getRecentPropertiesForRent(
-    input: RecentPropertyForRent
+    input: RecentPropertyForRent,
   ): Promise<RecentPropertyResult> {
     const { page, limit } = input;
 
@@ -330,7 +420,7 @@ class PropertyService {
 
   // GET FEATURED PROPERTY
   public async getFeaturedProperty(
-    input: FeaturedPropertyInput
+    input: FeaturedPropertyInput,
   ): Promise<FeaturedPropertyResult> {
     const match: T = {
       status: PropertyStatus.AVAILABLE,
@@ -376,7 +466,7 @@ class PropertyService {
   // GET ALL PROPERTIES
   public async getAllProperties(
     queries: T,
-    member: CommonUsers | null
+    member: CommonUsers | null,
   ): Promise<Properties> {
     const match: T = {
       status: {
@@ -443,7 +533,7 @@ class PropertyService {
           ],
           totalPropertiesNumber: [{ $count: "total" }],
         },
-      }
+      },
     );
 
     const [result] = await this.propertyModel.aggregate(pipeline);
@@ -496,7 +586,7 @@ class PropertyService {
   // GET A PROPERTY
   public async getProperty(
     memberId: ObjectId,
-    productId: ObjectId
+    productId: ObjectId,
   ): Promise<ChosenProperty> {
     const match: T = {
       status: {
@@ -515,9 +605,8 @@ class PropertyService {
         viewGroup: ViewGroup.PROPERTY,
       };
 
-      const existView: View | null = await this.viewService.checkViewExistance(
-        input
-      );
+      const existView: View | null =
+        await this.viewService.checkViewExistance(input);
 
       if (!existView) {
         await this.viewService.insertUserView(input);
@@ -608,7 +697,7 @@ class PropertyService {
   // GET A PUBLISHER PROPERTY
   public async getPublisherProperty(
     memberId: ObjectId,
-    propertyId: ObjectId
+    propertyId: ObjectId,
   ): Promise<Property> {
     const match: T = {
       status: {
@@ -630,7 +719,7 @@ class PropertyService {
   // SAVE TARGET PROPERTY
   public async toggleSaveProperty(
     propertyId: ObjectId,
-    query: SavingInput
+    query: SavingInput,
   ): Promise<Property> {
     const match: T = {
       status: {
@@ -663,7 +752,7 @@ class PropertyService {
   // GET SAVED PROPERTIES
   public async getSavedProperties(
     user: CommonUsers,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<Properties> {
     const { limit, page } = query;
     const match: T = {

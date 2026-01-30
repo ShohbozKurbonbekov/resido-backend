@@ -768,7 +768,7 @@ class MemberService {
       const applicationMatch: T = {
         agencyId: agent.agencyId,
         agentId: agent._id,
-        entityId: notification.entityId,
+        _id: notification.entityId,
         status: AgentApplicationStatus.REJECTED,
       };
 
