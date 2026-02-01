@@ -24,7 +24,7 @@ const propertyService = new PropertyService();
 //////////////////// --- CREATE PROPERTY -- //////////////
 propertyController.createProperty = async (
   req: UploadRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("createProperty process");
@@ -56,7 +56,7 @@ propertyController.createProperty = async (
 //////////////////// -- UPDATE PROPERTY --- ////////////
 propertyController.updateProperty = async (
   req: UploadRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("updateProperty process");
@@ -91,7 +91,7 @@ propertyController.updateProperty = async (
 /////////////////// ------- GET RECENT PROPERTIES FOR RENT -------------- ///////////////////////
 propertyController.getRecentPropertiesForRent = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const input: RecentPropertyForRent = req.body;
@@ -111,7 +111,7 @@ propertyController.getRecentPropertiesForRent = async (
 /////////////////////// --------- FEATURED PROPERTY ------------- ////////////////////////////
 propertyController.getFeaturedProperty = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getFeaturedProperty process");
@@ -133,7 +133,7 @@ propertyController.getFeaturedProperty = async (
 /////////// --------------- GET ALL PRODUCTS ---------- ///////////////
 propertyController.getAllProducts = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("GetAllProducts process");
@@ -156,7 +156,7 @@ propertyController.getAllProducts = async (
 //////////////////// --- GET A CERTAIN PROPERTY ////////////
 propertyController.getProperty = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getProperty Process");
@@ -178,15 +178,15 @@ propertyController.getProperty = async (
 //////////////////// --- GET A PUBLISHER PROPERTY ////////////
 propertyController.getPublisherProperty = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("getPublisherProperty Process");
     const propertyId = shapeIntoMongooseObjectId(req.params.propertyId);
-    const memberId = shapeIntoMongooseObjectId(req.member?._id);
+    const member = req.member;
     const result = await propertyService.getPublisherProperty(
-      memberId,
-      propertyId
+      member,
+      propertyId,
     );
 
     res.status(HttpCode.OK).json(result);
@@ -204,7 +204,7 @@ propertyController.getPublisherProperty = async (
 
 propertyController.likeTargetProperty = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("LikeTargetProperty process");
@@ -228,7 +228,7 @@ propertyController.likeTargetProperty = async (
 //////////////// --- SAVE TARGET PROPERTY -----------------
 propertyController.toggleSaveProperty = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("toggleSave process");
@@ -257,7 +257,7 @@ propertyController.toggleSaveProperty = async (
 //////////////// --- GET SAVED PROPERTIES -----------------
 propertyController.getSavedProperties = async (
   req: ExtendedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log(" getSavedProperties proccess");

@@ -42,7 +42,7 @@ import MemberService from "./Member.service";
 import { Agent } from "../libs/types/agent";
 import { geocodeAddress } from "../libs/utils/figureGeoPosition";
 import mongoose from "mongoose";
-import { MemberStatus } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { AgencyStatus, SubscriptionStatus } from "../libs/enums/agency.enum";
 import AgencyModel from "../schema/members/Agency.model";
 import AgencySubscriptionModel from "../schema/AgencySubscription.model";
@@ -696,18 +696,27 @@ class PropertyService {
 
   // GET A PUBLISHER PROPERTY
   public async getPublisherProperty(
-    memberId: ObjectId,
+    member: CommonUsers,
     propertyId: ObjectId,
   ): Promise<Property> {
+    const memberId = shapeIntoMongooseObjectId(member._id);
+
     const match: T = {
       status: {
-        $in: [PropertyStatus.DRAFT, PropertyStatus.REJECTED],
+        $ne: PropertyStatus.DELETED,
       },
-      agentId: memberId,
       _id: propertyId,
     };
 
-    let result = await this.propertyModel.findOne(match).lean().exec();
+    if (member.role === MemberType.AGENT) {
+      match.agentId = memberId;
+    }
+
+    if (member.role === MemberType.AGENCY) {
+      match.agencyId = memberId;
+    }
+
+    const result = await this.propertyModel.findOne(match).lean().exec();
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
