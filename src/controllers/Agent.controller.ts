@@ -409,29 +409,6 @@ agentController.getMyReviews = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
-///////////////////////// -------- DELETE MY PROPERTY ------ /////////////////////////
-agentController.archiveMyProperty = async (
-  req: ExtendedRequest,
-  res: Response,
-) => {
-  try {
-    console.log("archiveMyProperty process");
-    const member = req.member;
-    const { id } = req.params;
-    const propertyId = shapeIntoMongooseObjectId(id);
-
-    const result = await agentService.archiveMyProperty(member, propertyId);
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in deleteMyProperty: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
-
 //////////////////////// --------- UPDATE PUBLISHER PROPERTY -----------//////////////////
 agentController.updatePublisherProperty = async (
   req: UploadRequest,

@@ -483,10 +483,10 @@ agencyController.getAllProperties = async (
     const agencyId = shapeIntoMongooseObjectId(req.member._id);
     const { limit, page, status } = req.query;
 
-    const allowedPropertyStatus = [
+    const allowedPropertyStatus: PropertyStatus[] = [
       PropertyStatus.AVAILABLE,
       PropertyStatus.PENDING_APPROVAL,
-      PropertyStatus.REJECTED,
+      PropertyStatus.ARCHIVED,
       PropertyStatus.RENTED,
       PropertyStatus.SOLD,
     ];
@@ -505,6 +505,29 @@ agencyController.getAllProperties = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getAllProperties: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////////// -------- SOFT DELETE MY PROPERTY ------ /////////////////////////
+agencyController.archiveMyProperty = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("archiveMyProperty process");
+    const member = req.member;
+    const { id } = req.params;
+    const propertyId = shapeIntoMongooseObjectId(id);
+
+    const result = await agencyService.archiveMyProperty(member, propertyId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in archiveMyProperty: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

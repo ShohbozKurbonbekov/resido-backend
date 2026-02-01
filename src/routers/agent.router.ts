@@ -13,7 +13,7 @@ const agent = express.Router();
 agent.get(
   "/:id",
   memberController.checkMemberAuth,
-  agentController.getAgentDetail
+  agentController.getAgentDetail,
 );
 
 //////////////////// ---------- AGENT PROPERTIES ---- ////////////////
@@ -24,7 +24,7 @@ agent.get(
   "/get/all-properties",
   memberController.verifyMember,
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
-  agentController.getMyProperties
+  agentController.getMyProperties,
 );
 
 ////////////////// -- GET FEATURED AGENTS -- ////////////////
@@ -39,7 +39,7 @@ agent.post(
   "/liked",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS, MemberType.USER),
-  agentController.likeTargetAgent
+  agentController.likeTargetAgent,
 );
 
 ///////////////////// --- SAVE A SPECIFIC BLOG --////////////
@@ -47,7 +47,7 @@ agent.get(
   "/:id/toggle-save",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_FOLLOW, MemberType.USER),
-  agentController.saveToggleAgent
+  agentController.saveToggleAgent,
 );
 
 //////////////////// -- GET FOLLOWED AGENTS --- ///////////////
@@ -55,7 +55,7 @@ agent.post(
   "/see/followed-agents",
   memberController.verifyMember,
   allowRoles(Message.ONLY_USERS_FOLLOW, MemberType.USER),
-  agentController.getFollowedAgents
+  agentController.getFollowedAgents,
 );
 
 ////////////////// -- AGENT APPLY --- ///////////////
@@ -70,7 +70,7 @@ agent.post(
     },
   ]),
   multerErrorHandler,
-  agentController.agentApply
+  agentController.agentApply,
 );
 
 ////////////////// -- AGENT UPDATE --- ///////////////
@@ -85,14 +85,14 @@ agent.post(
     },
   ]),
   multerErrorHandler,
-  agentController.updateAgentProfile
+  agentController.updateAgentProfile,
 );
 
 //////////////////// -- MY BLOGS --- ///////////////
 agent.post(
   "/get/myBlogs",
   memberController.verifyMember,
-  agentController.myBlogs
+  agentController.myBlogs,
 );
 
 /////////////////////// UPDATE BLOGS ////////////////////
@@ -100,14 +100,14 @@ agent.post(
   "/update/myBlog/:id",
   memberController.verifyMember,
   uploadFiles("blogs", "blogImage", 1, true),
-  agentController.agentUpdateMyBlog
+  agentController.agentUpdateMyBlog,
 );
 
 /////////////////////// DELETE BLOGS ////////////////////
 agent.post(
   "/delete/myBlog/:id",
   memberController.verifyMember,
-  agentController.deleteMyBlog
+  agentController.deleteMyBlog,
 );
 
 /////////////////////////  AGENT REVIEWS /////////////////////////
@@ -115,16 +115,7 @@ agent.post(
   "/get/my-reviews",
   memberController.verifyMember,
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
-  agentController.getMyReviews
-);
-
-//////////////////////////// DELETE AGENT PROPERTY FROM DASHBOARD ///////////////////////////
-
-agent.post(
-  "/my-properties/archive/:id",
-  memberController.verifyMember,
-  allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
-  agentController.archiveMyProperty
+  agentController.getMyReviews,
 );
 
 //////////////////////////// UPDATE PUBLISHER PROPERTY FROM DASHBOARD ///////////////////////////
@@ -134,7 +125,7 @@ agent.post(
   memberController.verifyMember,
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
-  agentController.updatePublisherProperty
+  agentController.updatePublisherProperty,
 );
 
 /////////////////////////////////// AGENT DASHBOARD OVERVIEW ////////////////////////////
@@ -142,6 +133,6 @@ agent.get(
   "/dashboard/overview",
   memberController.verifyMember,
   allowRoles(Message.ONLY_AGENTS, MemberType.AGENT),
-  agentController.agentDashboardOverview
+  agentController.agentDashboardOverview,
 );
 export default agent;

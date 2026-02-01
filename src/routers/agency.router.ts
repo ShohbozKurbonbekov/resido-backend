@@ -160,4 +160,13 @@ agency.get(
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.getAllProperties,
 );
+
+//////////////////////////// SOFT DELETE AGENCY PROPERTY FROM DASHBOARD ///////////////////////////
+
+agency.post(
+  "/my-properties/archive/:id",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.archiveMyProperty,
+);
 export default agency;

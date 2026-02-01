@@ -1110,9 +1110,9 @@ class AgentService {
       {
         $sort: sort,
       },
-      priceValueField,
       {
         $project: {
+          _id: 1,
           status: 1,
           images: 1,
           title: 1,
@@ -1120,8 +1120,8 @@ class AgentService {
           createdAt: 1,
           propertyType: 1,
           area: 1,
-          priceValue: 1,
           views: 1,
+          sellingOption: 1,
         },
       },
 
@@ -1146,31 +1146,6 @@ class AgentService {
     return result;
   }
 
-  ////////////////////////--- DELETE MY PROPERTY ----- ///////////////////////
-  public async archiveMyProperty(
-    member: CommonUsers,
-    propertyId: ObjectId,
-  ): Promise<Property> {
-    const match: T = {
-      _id: propertyId,
-      agentId: shapeIntoMongooseObjectId(member._id),
-      status: { $in: [PropertyStatus.DRAFT, PropertyStatus.REJECTED] },
-    };
-
-    const result = await this.propertyModel.findOneAndUpdate(
-      match,
-      { status: PropertyStatus.ARCHIVED },
-      {
-        new: true,
-      },
-    );
-
-    if (!result) {
-      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
-    }
-    return result;
-  }
-
   ///////////////////////////// --------- UPDATE PUBLISHER PROPERTY ----- //////////////
   public async updatePublisherProperty(
     input: PropertyInput,
@@ -1187,12 +1162,7 @@ class AgentService {
         {
           $set: {
             ...input,
-            priceValue: {
-              $ifNull: [
-                "$sellingOption.optionRent.overalAmount",
-                "$sellingOption.optionSell.overalAmunt",
-              ],
-            },
+            status: PropertyStatus.PENDING_APPROVAL,
           },
         },
       ],
@@ -1206,13 +1176,11 @@ class AgentService {
           createdAt: 1,
           propertyType: 1,
           area: 1,
-          priceValue: 1,
           views: 1,
         },
       },
     );
 
-    console.log(result);
     if (!result) {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
     }

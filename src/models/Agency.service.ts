@@ -39,7 +39,7 @@ import {
   SearchByLocationAgency,
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
-import PropertyModel from "../schema/Property.model";
+import PropertyModel, { Property } from "../schema/Property.model";
 import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
@@ -1278,6 +1278,7 @@ class AgencyService {
       agencyId,
       status: status as PropertyStatus,
     };
+
     const sort: T = {
       createdAt: -1,
     };
@@ -1289,8 +1290,6 @@ class AgencyService {
       {
         $sort: sort,
       },
-      priceValueField,
-      propertyListingType,
       {
         $project: {
           _id: 1,
@@ -1301,9 +1300,8 @@ class AgencyService {
           createdAt: 1,
           propertyType: 1,
           area: 1,
-          priceValue: 1,
           views: 1,
-          propertyListingType: 1,
+          sellingOption: 1,
         },
       },
       {
@@ -1328,6 +1326,30 @@ class AgencyService {
     return result;
   }
 
+  ////////////////////////--- SOFT DELETE MY PROPERTY ----- ///////////////////////
+  public async archiveMyProperty(
+    member: CommonUsers,
+    propertyId: ObjectId,
+  ): Promise<Property> {
+    const match: T = {
+      _id: propertyId,
+      agencyId: shapeIntoMongooseObjectId(member._id),
+      status: PropertyStatus.AVAILABLE,
+    };
+
+    const result = await this.propertyModel.findOneAndUpdate(
+      match,
+      { status: PropertyStatus.ARCHIVED },
+      {
+        new: true,
+      },
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+    return result;
+  }
   //  HELPER  FUNCTIONS
   private filterAgencyItems(
     filter: T,
