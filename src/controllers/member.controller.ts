@@ -4,7 +4,7 @@ import {
   ExtendedRequest,
   UploadRequest,
 } from "../libs/types/user";
-import { CommonPageInput, T } from "../libs/types/common";
+import { AllPropertiesInput, CommonPageInput, T } from "../libs/types/common";
 import { Response, Request, NextFunction } from "express";
 import MemberService from "../models/Member.service";
 import { HttpCode, Message } from "../libs/Errors";
@@ -15,6 +15,7 @@ import { MessageInput } from "../libs/types/message";
 import { MemberType } from "../libs/enums/member.enum";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import TarrifService from "../models/Tarrif.service";
+import { PropertyStatus } from "../libs/enums/property.enum";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -457,6 +458,51 @@ memberController.approveAgentRejection = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in approveAgentRejection: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////// --------- GET AGENCY & AGENT PROPERTIES ---------///////////////////
+memberController.getAllProperties = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("getAllProperties proccess");
+    const member = req.member;
+    const { limit, page, status } = req.query;
+
+    const allowedPropertyStatus: PropertyStatus[] = [
+      PropertyStatus.AVAILABLE,
+      PropertyStatus.PENDING_APPROVAL,
+      PropertyStatus.ARCHIVED,
+      PropertyStatus.RENTED,
+      PropertyStatus.SOLD,
+      PropertyStatus.REJECTED,
+    ];
+
+    if (member.role === MemberType.AGENT) {
+      allowedPropertyStatus.push(PropertyStatus.DRAFT);
+    }
+
+    if (!status || !allowedPropertyStatus.includes(status as PropertyStatus)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_PROPERTY_STATUS);
+    }
+
+    const queries: AllPropertiesInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 5,
+      status: status as PropertyStatus,
+    };
+
+    const result = await memberService.getAllProperties(member, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getAllProperties: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

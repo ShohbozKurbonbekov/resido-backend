@@ -10,7 +10,6 @@ import { SearchByLocationInput } from "../libs/types/agent";
 import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
-  AgencyAllPropertiesInput,
   AgencyInputs,
 } from "../libs/types/agency";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
@@ -473,61 +472,40 @@ agencyController.agencyRejectApplication = async (
   }
 };
 
-///////////////// --------- GET AGENCY PROPERTIES ---------///////////////////
-agencyController.getAllProperties = async (
+////////////////////////////// CHANGE PROPERTY STATUS OF AGENCY ///////////////////////////
+agencyController.changeAgenyPropertyStatus = async (
   req: ExtendedRequest,
   res: Response,
 ) => {
   try {
-    console.log("getAllProperties proccess");
+    console.log("changeAgencyPropertyStatus proccess");
+    const { id } = req.params;
     const agencyId = shapeIntoMongooseObjectId(req.member._id);
-    const { limit, page, status } = req.query;
+    const propertyId = shapeIntoMongooseObjectId(id);
+    const input: Record<"status", PropertyStatus> = req.body;
 
     const allowedPropertyStatus: PropertyStatus[] = [
+      PropertyStatus.REJECTED,
       PropertyStatus.AVAILABLE,
-      PropertyStatus.PENDING_APPROVAL,
       PropertyStatus.ARCHIVED,
-      PropertyStatus.RENTED,
-      PropertyStatus.SOLD,
     ];
-
-    if (!status || !allowedPropertyStatus.includes(status as PropertyStatus)) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_PROPERTY_STATUS);
+    if (!allowedPropertyStatus.includes(input.status)) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_PROPERTY_STATUS);
     }
 
-    const queries: AgencyAllPropertiesInput = {
-      page: Number(page) || 1,
-      limit: Number(limit) || 5,
-      status: status as PropertyStatus,
+    const queries = {
+      status: input.status,
+      propertyId,
     };
 
-    const result = await agencyService.getAllProperties(agencyId, queries);
+    const result = await agencyService.changeAgencyPropertyStatus(
+      agencyId,
+      queries,
+    );
+
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in getAllProperties: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
-
-///////////////////////// -------- SOFT DELETE MY PROPERTY ------ /////////////////////////
-agencyController.archiveMyProperty = async (
-  req: ExtendedRequest,
-  res: Response,
-) => {
-  try {
-    console.log("archiveMyProperty process");
-    const member = req.member;
-    const { id } = req.params;
-    const propertyId = shapeIntoMongooseObjectId(id);
-
-    const result = await agencyService.archiveMyProperty(member, propertyId);
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in archiveMyProperty: ", error);
+    console.log("Error in changeAgencyStatus: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

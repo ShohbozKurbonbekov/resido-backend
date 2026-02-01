@@ -108,17 +108,18 @@ member.get(
 
 ///////////////////// USER =>  AGENT STATUS ///////////////
 
-member.post(
-  "/authorize/agent/account/:id",
-  memberController.verifyMember,
-  allowRoles(Message.USER_PAGE, MemberType.USER),
-  memberController.authorizeAgentAccount,
-);
-
 ///////////////////// APPROVE AGENT REJECTION  ///////////////
 member.post(
   "/approve/agent/rejection/:id",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
   memberController.approveAgentRejection,
+);
+
+////////////////////// GET AGENCY & AGENT  PROPERTIES ///////////////////
+member.get(
+  "/dashboard/get/all-properties",
+  memberController.verifyMember,
+  allowRoles(Message.INVALID_ROLE, MemberType.AGENCY, MemberType.AGENT),
+  memberController.getAllProperties,
 );

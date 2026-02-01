@@ -3,6 +3,7 @@ import { Agent, AgentInputUpdate } from "./agent";
 import { User, UserInputUpdate } from "./user";
 import { Agency } from "../../schema/members/Agency.model";
 import { AgencyInputUpdate } from "./agency";
+import { PropertyStatus } from "../enums/property.enum";
 export interface T {
   [key: string]: any;
 }
@@ -29,4 +30,8 @@ export type CommonUsersUpdateInput =
 export interface CommonPageInput {
   limit: number;
   page: number;
+}
+
+export interface AllPropertiesInput extends CommonPageInput {
+  status: PropertyStatus;
 }

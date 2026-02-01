@@ -162,7 +162,3 @@ export interface RenewSubscriptionInput {
 export interface AgencyAgentsApplicationInput extends CommonPageInput {
   currentStatus: AgentStatus;
 }
-
-export interface AgencyAllPropertiesInput extends CommonPageInput {
-  status: PropertyStatus;
-}

@@ -31,8 +31,9 @@ import {
   MessagesOutput,
   SenderReceiverType,
 } from "../libs/types/message";
-import { PropertyType } from "../libs/enums/property.enum";
+import { PropertyStatus, PropertyType } from "../libs/enums/property.enum";
 import {
+  AllPropertiesInput,
   CommonPageInput,
   CommonUsers,
   CommonUsersUpdateInput,
@@ -55,6 +56,8 @@ import NotificationModel, {
 } from "../schema/Notification.model";
 import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
 import AgentApplicationModel from "../schema/AgentApplication.model";
+import { Properties } from "../libs/types/property";
+import PropertyModel from "../schema/Property.model";
 
 class MemberService {
   private readonly userModel;
@@ -66,6 +69,7 @@ class MemberService {
   private readonly commentModel;
   private readonly notificationModel;
   private readonly agentApplicationModel;
+  private readonly propertyModel;
 
   constructor() {
     this.userModel = UserModel;
@@ -77,6 +81,7 @@ class MemberService {
     this.commentModel = CommentModel;
     this.notificationModel = NotificationModel;
     this.agentApplicationModel = AgentApplicationModel;
+    this.propertyModel = PropertyModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -795,6 +800,95 @@ class MemberService {
     } finally {
       session.endSession();
     }
+  }
+
+  /////////////////// ------- GET AGENCY  ALL PROPERTIES ------//////////////////
+  public async getAllProperties(
+    member: CommonUsers,
+    queries: AllPropertiesInput,
+  ): Promise<Properties> {
+    const { status, page, limit } = queries;
+
+    // Check member existance
+    const models: Record<string, any> = {
+      AGENCY: this.agencyModel,
+      AGENT: this.agentModel,
+    };
+
+    const currentModel = models[member.role];
+    const ownerMatch: T = {
+      _id: member._id,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus:
+        member.role === MemberType.AGENT
+          ? AgentStatus.AVAILABLE
+          : AgencyStatus.AVAILABLE,
+    };
+
+    const owner = await currentModel.findOne(ownerMatch).lean().exec();
+
+    if (!owner) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.NO_ACTIVE_MEMBER);
+    }
+
+    // Check for properties
+    const propertyMatch: T = {
+      status: status as PropertyStatus,
+    };
+
+    if (owner.role === MemberType.AGENCY) {
+      propertyMatch.agencyId = owner._id;
+    }
+
+    if (owner.role === MemberType.AGENT) {
+      propertyMatch.agentId = owner._id;
+    }
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.propertyModel.aggregate([
+      {
+        $match: propertyMatch,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $project: {
+          _id: 1,
+          status: 1,
+          images: 1,
+          title: 1,
+          address: 1,
+          createdAt: 1,
+          propertyType: 1,
+          area: 1,
+          views: 1,
+          sellingOption: 1,
+        },
+      },
+      {
+        $facet: {
+          properties: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          totalPropertiesNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.properties.length) {
+      return {
+        properties: [],
+        totalPropertiesNumber: [{ total: 0 }],
+      };
+    }
+    return result;
   }
 }
 

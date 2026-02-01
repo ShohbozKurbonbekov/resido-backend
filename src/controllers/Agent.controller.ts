@@ -143,33 +143,6 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
   }
 };
 
-/////////////////////// --------------- GET MY PROPERTIES --------//////////////////////////
-agentController.getMyProperties = async (
-  req: ExtendedRequest,
-  res: Response,
-) => {
-  try {
-    console.log("getMyProperties process");
-    const member = req.member;
-    const { limit, page } = req.query;
-    const queries: CommonPageInput = {
-      page: Number(page) || 1,
-      limit: Number(limit) || 4,
-    };
-
-    const result = await agentService.getMyProperties(member, queries);
-
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in getMyProperties");
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
-
 ////////////// -------------- SAVE TARGET BLOG --------------//////////////
 agentController.saveToggleAgent = async (
   req: ExtendedRequest,

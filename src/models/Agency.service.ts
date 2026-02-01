@@ -33,7 +33,6 @@ import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
-  AgencyAllPropertiesInput,
   AgencyInputs,
   AgencyInputUpdate,
   SearchByLocationAgency,
@@ -1255,16 +1254,15 @@ class AgencyService {
     }
   }
 
-  /////////////////// ------- GET AGENCY  ALL PROPERTIES ------//////////////////
-  public async getAllProperties(
+  ////////////////////////--- CHANGE PROPERTY STATUS OF AGENCY ----- ///////////////////////
+  public async changeAgencyPropertyStatus(
     agencyId: ObjectId,
-    queries: AgencyAllPropertiesInput,
-  ): Promise<Properties> {
-    const { status, page, limit } = queries;
-    // Check agency existance
+    queries: T,
+  ): Promise<Property> {
+    const { propertyId, status } = queries;
     const agencyMatch: T = {
-      currentStatus: AgencyStatus.AVAILABLE,
       memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
       _id: agencyId,
     };
 
@@ -1273,81 +1271,31 @@ class AgencyService {
       throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
     }
 
-    // Check for properties
     const propertyMatch: T = {
-      agencyId,
-      status: status as PropertyStatus,
-    };
-
-    const sort: T = {
-      createdAt: -1,
-    };
-
-    const [result] = await this.propertyModel.aggregate([
-      {
-        $match: propertyMatch,
-      },
-      {
-        $sort: sort,
-      },
-      {
-        $project: {
-          _id: 1,
-          status: 1,
-          images: 1,
-          title: 1,
-          address: 1,
-          createdAt: 1,
-          propertyType: 1,
-          area: 1,
-          views: 1,
-          sellingOption: 1,
-        },
-      },
-      {
-        $facet: {
-          properties: [
-            { $skip: (page - 1) * limit },
-            {
-              $limit: limit,
-            },
-          ],
-          totalPropertiesNumber: [{ $count: "total" }],
-        },
-      },
-    ]);
-
-    if (!result.properties.length) {
-      return {
-        properties: [],
-        totalPropertiesNumber: [{ total: 0 }],
-      };
-    }
-    return result;
-  }
-
-  ////////////////////////--- SOFT DELETE MY PROPERTY ----- ///////////////////////
-  public async archiveMyProperty(
-    member: CommonUsers,
-    propertyId: ObjectId,
-  ): Promise<Property> {
-    const match: T = {
       _id: propertyId,
-      agencyId: shapeIntoMongooseObjectId(member._id),
-      status: PropertyStatus.AVAILABLE,
+      agencyId,
+      status: {
+        $in: [PropertyStatus.PENDING_APPROVAL, PropertyStatus.AVAILABLE],
+      },
     };
 
     const result = await this.propertyModel.findOneAndUpdate(
-      match,
-      { status: PropertyStatus.ARCHIVED },
+      propertyMatch,
+      {
+        $set: {
+          status,
+        },
+      },
       {
         new: true,
+        runValidators: true,
       },
     );
 
     if (!result) {
-      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
+
     return result;
   }
   //  HELPER  FUNCTIONS

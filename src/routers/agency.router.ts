@@ -153,20 +153,11 @@ agency.post(
   agencyController.agencyRejectApplication,
 );
 
-////////////////////// GET AGENCY ALL PROPERTIES ///////////////////
-agency.get(
-  "/get/all-properties",
-  memberController.verifyMember,
-  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
-  agencyController.getAllProperties,
-);
-
-//////////////////////////// SOFT DELETE AGENCY PROPERTY FROM DASHBOARD ///////////////////////////
-
+////////////////////////////// CHANGE PROPERTY STATUS OF AGENCY ///////////////////////////
 agency.post(
-  "/my-properties/archive/:id",
+  "/change/property-status/:id",
   memberController.verifyMember,
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
-  agencyController.archiveMyProperty,
+  agencyController.changeAgenyPropertyStatus,
 );
 export default agency;

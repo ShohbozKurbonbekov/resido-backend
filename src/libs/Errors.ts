@@ -32,6 +32,8 @@ export enum Message {
   ONLY_USERS_FOLLOW = "Only common users are allowed to follow an agent",
   ONLY_AGENCY_ADMIN_AGENT = "Only Admin, Agency or Agent are authorized to post a blog",
   NO_MEMBER_FOUND = "No member is found",
+  NO_ACTIVE_MEMBER = "No active member is found",
+
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",
   PROPERTY_CREATE_AGENTS = "Only agents are authorized to create a property",
   PROPERTY_UPDATE_AGENTS = "Only agents are authorized to update a property",
