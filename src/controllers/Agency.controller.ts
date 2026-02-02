@@ -6,7 +6,10 @@ import { CommonPageInput, CommonUsers, T } from "../libs/types/common";
 import AgencyService from "../models/Agency.service";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
-import { SearchByLocationInput } from "../libs/types/agent";
+import {
+  MyAgentsDashboardInput,
+  SearchByLocationInput,
+} from "../libs/types/agent";
 import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
@@ -19,6 +22,7 @@ import AgencySubscribeService from "../models/AgencySubscribe.service";
 import { SubscriptionMode } from "../libs/enums/payment.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
+import { ObjectId } from "mongoose";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -506,6 +510,45 @@ agencyController.changeAgenyPropertyStatus = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in changeAgencyStatus: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////////// AGENCY DASHBOARD MY AGENTS ///////////////////////////
+agencyController.dashboardMyAgents = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("dashboardMyAgents process");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { page, limit, status } = req.query;
+
+    const allowedAgentStatus: AgentStatus[] = [
+      AgentStatus.AVAILABLE,
+      AgentStatus.PAUSED,
+      AgentStatus.REJECTED,
+    ];
+
+    if (!allowedAgentStatus.includes(status as AgentStatus)) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_AGENT_STATUS);
+    }
+
+    const queries: MyAgentsDashboardInput & { agencyId: ObjectId } = {
+      limit: Number(limit) || 5,
+      page: Number(page) || 1,
+      status: status as AgentStatus,
+      agencyId,
+    };
+
+    const result = await agencyService.dashboardMyAgents(queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in dashboardMyAgents: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

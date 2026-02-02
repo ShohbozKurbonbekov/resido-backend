@@ -110,5 +110,14 @@ const AgentSchema = new Schema<Agent>(
   { timestamps: true },
 );
 
+AgentSchema.index({
+  _id: 1,
+  currentStatus: 1,
+  memberStatus: 1,
+  createdAt: -1,
+  isVerified: 1,
+  agencyId: 1,
+});
+
 export type AgentDoc = InferSchemaType<typeof AgentSchema>;
 export default mongoose.model("Agent", AgentSchema);

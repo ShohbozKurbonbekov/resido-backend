@@ -3,6 +3,7 @@ import { MemberStatus, MemberType } from "../enums/member.enum";
 import { CommonPageInput, Social } from "./common";
 import { AgentPropertyType, AgentStatus } from "../enums/agent.enum";
 import { RecentPropertyForRent, TotalCounter } from "./property";
+import { AgentDoc } from "../../schema/members/Agent.model";
 
 export interface MemberAgentInput {
   userId: string;
@@ -118,3 +119,24 @@ export interface AgentDashboardOverviewType {
   totalViews: TotalCounter;
   generatedAt: Date | null;
 }
+
+export interface MyAgentsDashboardType {
+  _id: ObjectId;
+  userId: ObjectId;
+  nickname: string;
+  fullName: string;
+  currentStatus: AgentStatus;
+  memberStatus: MemberStatus;
+  agentMode: boolean;
+  isVerified: boolean;
+  avatar?: string;
+}
+
+export interface Agents<TAgent = AgentDoc> {
+  agents: TAgent[];
+  totalNumber: TotalCounter[];
+}
+
+export type MyAgentsDashboardInput = CommonPageInput & {
+  status: AgentStatus;
+};

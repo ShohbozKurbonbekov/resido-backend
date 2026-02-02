@@ -160,4 +160,12 @@ agency.post(
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.changeAgenyPropertyStatus,
 );
+
+////////////////////////////// AGENCY DASHBOARD MY AGENTS ///////////////////////////
+agency.get(
+  "/dashboard/my-agents",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.dashboardMyAgents,
+);
 export default agency;

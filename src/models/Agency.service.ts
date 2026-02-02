@@ -27,6 +27,9 @@ import {
 import {
   Agent,
   AgentResults,
+  Agents,
+  MyAgentsDashboardInput,
+  MyAgentsDashboardType,
   SearchByLocationInput,
 } from "../libs/types/agent";
 import {
@@ -35,6 +38,7 @@ import {
   AgencyAgePropertiesResult,
   AgencyInputs,
   AgencyInputUpdate,
+  AgencyResults,
   SearchByLocationAgency,
 } from "../libs/types/agency";
 import AgentModel from "../schema/members/Agent.model";
@@ -48,6 +52,7 @@ import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import TarrifModel from "../schema/Tarrif.model";
+
 import {
   AgentNotificationCreation,
   MyNotifications,
@@ -1296,6 +1301,83 @@ class AgencyService {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
     }
 
+    return result;
+  }
+
+  //////////////////////// --- DASHBOARD AGENCY MY AGENTS --- ///////////////////////////
+  public async dashboardMyAgents(
+    queries: MyAgentsDashboardInput & {
+      agencyId: ObjectId;
+    },
+  ): Promise<Agents<MyAgentsDashboardType>> {
+    // Destructure variables
+    const { agencyId, status, limit, page } = queries;
+
+    // Check agency existance
+    const agencyMatch: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
+      _id: agencyId,
+    };
+
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    // Filter
+    const agentMatch: T = {
+      agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: status as AgentStatus,
+    };
+
+    // Sort
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    // Search
+    const [result] = await this.agentModel.aggregate([
+      {
+        $match: agentMatch,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          nickname: 1,
+          fullName: 1,
+          avatar: 1,
+          currentStatus: 1,
+          memberStatus: 1,
+          agentMode: 1,
+          isVerified: 1,
+        },
+      },
+      {
+        $facet: {
+          agents: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          totalNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    // If No result  return =>
+    if (!result.agents.length) {
+      return { agents: [], totalNumber: [{ total: 0 }] };
+    }
+
+    // Return
     return result;
   }
   //  HELPER  FUNCTIONS
