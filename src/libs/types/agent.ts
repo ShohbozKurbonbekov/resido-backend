@@ -134,7 +134,7 @@ export interface MyAgentsDashboardType {
 
 export interface Agents<TAgent = AgentDoc> {
   agents: TAgent[];
-  totalNumber: TotalCounter[];
+  totalNumbers: TotalCounter[];
 }
 
 export type MyAgentsDashboardInput = CommonPageInput & {

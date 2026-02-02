@@ -23,6 +23,7 @@ import { SubscriptionMode } from "../libs/enums/payment.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import { ObjectId } from "mongoose";
+import { AgencyStatus } from "../libs/enums/agency.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -549,6 +550,43 @@ agencyController.dashboardMyAgents = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in dashboardMyAgents: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////////// AGENCY SUSPEND AGENT ///////////////////////////
+agencyController.changeAgentStatus = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("changeAgentStatus process");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const agentId = shapeIntoMongooseObjectId(id);
+
+    const { status } = req.body;
+
+    const allowedAgentStatus: AgentStatus[] = [
+      AgentStatus.AVAILABLE,
+      AgentStatus.PAUSED,
+    ];
+    if (!allowedAgentStatus.includes(status)) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_AGENT_STATUS);
+    }
+
+    const queries: T = {
+      agentId,
+      status,
+    };
+    const result = await agencyService.changeAgentStatus(agencyId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in changeAgentStatus: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

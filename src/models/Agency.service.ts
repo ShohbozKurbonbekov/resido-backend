@@ -41,7 +41,7 @@ import {
   AgencyResults,
   SearchByLocationAgency,
 } from "../libs/types/agency";
-import AgentModel from "../schema/members/Agent.model";
+import AgentModel, { AgentDoc } from "../schema/members/Agent.model";
 import PropertyModel, { Property } from "../schema/Property.model";
 import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
@@ -1367,18 +1367,61 @@ class AgencyService {
               $limit: limit,
             },
           ],
-          totalNumber: [{ $count: "total" }],
+          totalNumbers: [{ $count: "total" }],
         },
       },
     ]);
 
     // If No result  return =>
     if (!result.agents.length) {
-      return { agents: [], totalNumber: [{ total: 0 }] };
+      return { agents: [], totalNumbers: [{ total: 0 }] };
     }
 
     // Return
     return result;
+  }
+
+  ////////////////////////////// AGENCY SUSPEND AGENT ///////////////////////////
+  public async changeAgentStatus(
+    agencyId: ObjectId,
+    queries: T,
+  ): Promise<AgentDoc> {
+    const { agentId, status } = queries;
+
+    const agencyMatch: T = {
+      _id: agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
+    };
+
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    const agentMatch: T = {
+      _id: agentId,
+      agencyId: agency._id,
+    };
+
+    const agent = await this.agentModel.findOneAndUpdate(
+      agentMatch,
+      {
+        $set: {
+          currentStatus: status,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!agent) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.NO_AGENT_FOUND);
+    }
+    return agent;
   }
   //  HELPER  FUNCTIONS
   private filterAgencyItems(

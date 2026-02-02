@@ -168,4 +168,13 @@ agency.get(
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.dashboardMyAgents,
 );
+
+////////////////////////////// AGENCY CHANGE AGENT STATUS ///////////////////////////
+agency.post(
+  "/change/agent/status/:id",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.changeAgentStatus,
+);
+
 export default agency;

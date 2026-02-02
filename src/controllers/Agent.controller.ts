@@ -119,8 +119,8 @@ agentController.getAgentProperties = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { page, limit, agentPropertyType, searchLocation } = req.body;
     const inqueries: AgentPropertiesInput = {
-      page: Number(page),
-      limit: Number(limit),
+      page: Number(page) || 1,
+      limit: Number(limit) || 6,
     };
 
     if (agentPropertyType !== AgentPropertyType.NONE) {
