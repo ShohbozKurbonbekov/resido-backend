@@ -177,4 +177,11 @@ agency.post(
   agencyController.changeAgentStatus,
 );
 
+/////////////////////////////////// AGENCY DASHBOARD OVERVIEW ////////////////////////////
+agency.get(
+  "/dashboard/overview",
+  memberController.verifyMember,
+  allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
+  agencyController.agencyDashboardOverview,
+);
 export default agency;

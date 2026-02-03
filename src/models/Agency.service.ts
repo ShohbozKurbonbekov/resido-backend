@@ -36,6 +36,7 @@ import {
   AgencyAgentsApplicationInput,
   AgencyAgePropertiesInput,
   AgencyAgePropertiesResult,
+  AgencyDashboardOverviewType,
   AgencyInputs,
   AgencyInputUpdate,
   AgencyResults,
@@ -73,6 +74,7 @@ import AgentApplicationModel, {
   AgentApplicationOutput,
 } from "../schema/AgentApplication.model";
 import { Properties } from "../libs/types/property";
+import MessageModel from "../schema/Message.model";
 
 class AgencyService {
   private readonly agencyModel;
@@ -86,6 +88,7 @@ class AgencyService {
   private readonly tariffModel;
   private readonly notificationModel;
   private readonly agentApplicationModel;
+  private readonly messageModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -99,6 +102,7 @@ class AgencyService {
     this.tariffModel = TarrifModel;
     this.notificationModel = NotificationModel;
     this.agentApplicationModel = AgentApplicationModel;
+    this.messageModel = MessageModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -1422,6 +1426,130 @@ class AgencyService {
       throw new Errors(HttpCode.NOT_MODIFIELD, Message.NO_AGENT_FOUND);
     }
     return agent;
+  }
+
+  //////////////////////////////// ------------ AGENCY DASHBOARD OVERVIEW -------- ///////////////////
+  public async agencyDashboardOverview(
+    agencyId: ObjectId,
+  ): Promise<AgencyDashboardOverviewType> {
+    // Agency existance
+    const agencyMatch: T = {
+      _id: agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: {
+        $in: [AgencyStatus.AVAILABLE, AgencyStatus.PAUSED],
+      },
+    };
+
+    const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
+
+    if (!agency) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
+    }
+
+    // Subscription existance
+    const subscriptionMatch: T = {
+      agencyId,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const subscription = await this.agencySubscriptionModel
+      .findOne(subscriptionMatch)
+      .sort(sort);
+
+    if (!subscription) {
+      throw new Errors(HttpCode.NOT_FOUND, Message.NO_ACTIVE_SUBSCRIPTION);
+    }
+
+    // Fetch data countss
+    const [
+      myPropertiesCount,
+      myNotificationsCount,
+      myAgentsCount,
+      myBlogsCount,
+      messagesCount,
+      totalViewsCount,
+
+      // TO-DO FOR TRANSACTION
+    ] = await Promise.all([
+      this.propertyModel.countDocuments({
+        agencyId,
+        status: {
+          $nin: [PropertyStatus.DELETED, PropertyStatus.DRAFT],
+        },
+      }),
+      this.notificationModel.countDocuments({
+        recipientId: agencyId,
+
+        recipientRole: BlogAuthorType.AGENCY,
+        resolvedAt: { $exists: false },
+      }),
+      this.agentModel.countDocuments({
+        agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: {
+          $in: [
+            AgentStatus.AVAILABLE,
+            AgentStatus.PAUSED,
+            AgentStatus.REJECTED,
+          ],
+        },
+      }),
+      this.blogModel.countDocuments({
+        blogAuthorId: agencyId,
+        blogAuthorType: BlogAuthorType.AGENCY,
+        blogStatus: { $ne: BlogStatus.DELETED },
+      }),
+
+      this.messageModel.countDocuments({
+        $or: [
+          {
+            senderId: agencyId,
+            deletedBySender: false,
+          },
+          { receiverId: agencyId, deletedBySender: false },
+        ],
+      }),
+
+      // TO-DO  later => transactions;
+      this.viewModel.countDocuments({
+        viewTargetId: agencyId,
+        viewGroup: ViewGroup.AGENCY,
+      }),
+    ]);
+
+    return {
+      myProperties: {
+        total: myPropertiesCount,
+      },
+      myAgents: {
+        total: myAgentsCount,
+      },
+      myBillingInfo: {
+        subscriptionPlanType: subscription.billingSnapshot.name,
+        subscriptionStatus: subscription.subscriptionStatus,
+      },
+      myNotifications: {
+        total: myNotificationsCount,
+      },
+      myBlogs: {
+        total: myBlogsCount,
+      },
+
+      messages: {
+        total: messagesCount,
+      },
+      totalViews: {
+        total: totalViewsCount,
+      },
+      transactions: {
+        total: 0,
+      },
+      generatedAt: new Date(),
+    };
   }
   //  HELPER  FUNCTIONS
   private filterAgencyItems(

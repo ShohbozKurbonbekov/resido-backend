@@ -34,10 +34,8 @@ export interface TarrifOutputType {
 }
 
 export interface BillingSnapShotType {
-  
-  name: string;
+  name: TarrifName;
   features: string[];
   limit: TarrifLimitsType;
-  usage :TarrifLimitsType;
-  
+  usage: TarrifLimitsType;
 }

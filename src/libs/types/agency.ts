@@ -14,7 +14,11 @@ import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
 import { BillingSnapShotType, TarrifLimitsType } from "./payment";
-import { BillingCycle, TarrifCurrencyType } from "../enums/payment.enum";
+import {
+  BillingCycle,
+  TarrifCurrencyType,
+  TarrifName,
+} from "../enums/payment.enum";
 import { Tarrif } from "../../schema/Tarrif.model";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
 import { AgentStatus } from "../enums/agent.enum";
@@ -161,4 +165,20 @@ export interface RenewSubscriptionInput {
 }
 export interface AgencyAgentsApplicationInput extends CommonPageInput {
   currentStatus: AgentStatus;
+}
+
+export interface AgencyDashboardBillingOverview {
+  subscriptionStatus: SubscriptionStatus;
+  subscriptionPlanType: TarrifName;
+}
+export interface AgencyDashboardOverviewType {
+  myProperties: TotalCounter;
+  myNotifications: TotalCounter;
+  myBillingInfo: AgencyDashboardBillingOverview;
+  myAgents: TotalCounter;
+  myBlogs: TotalCounter;
+  messages: TotalCounter;
+  transactions: TotalCounter;
+  totalViews: TotalCounter;
+  generatedAt: Date | null;
 }

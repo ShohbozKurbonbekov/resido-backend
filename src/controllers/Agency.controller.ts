@@ -594,4 +594,26 @@ agencyController.changeAgentStatus = async (
     }
   }
 };
+
+///////////////// --------------- AGENCY DASHBOARD OVERVIEW ------------- ///////////////
+agencyController.agencyDashboardOverview = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("agencyDashboardOverview process");
+    const agencyId = shapeIntoMongooseObjectId(req.member._id);
+
+    const result = await agencyService.agencyDashboardOverview(agencyId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in agencyDashboardOverview: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default agencyController;
