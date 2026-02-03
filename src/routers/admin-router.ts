@@ -7,16 +7,7 @@ import { Message } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 const adminRouter = express.Router();
 
-// Home
-adminRouter.get("/", residoAdminController.goHome);
-
-adminRouter.get("/dashboard", residoAdminController.getDashboard);
-// Login
-adminRouter.get("/login", residoAdminController.getLogin);
-adminRouter.post("/login", residoAdminController.processLogin);
-// Signup
-adminRouter.get("/signup", residoAdminController.getSignup);
-
+//////////////////////////////////// ADMIN SIGNUP ////////////////////////////////
 adminRouter.post(
   "/signup",
   uploadFiles("members", "avatar", 1, true),

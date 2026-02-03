@@ -84,7 +84,7 @@ memberController.login = async (req: Request, res: Response) => {
 
     res.cookie("accessToken", token, {
       maxAge: jwtTime * 60 * 60 * 1000,
-      httpOnly: false,
+      httpOnly: true,
     });
 
     res.status(HttpCode.OK).json({

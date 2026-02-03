@@ -12,6 +12,7 @@ export enum HttpCode {
 
 export enum Message {
   SOMETHING_WENT_WRONG = "Something went wrong",
+  IMAGE_NEEDED = "Please, provide a valid image for your profile!",
   NO_DATA_FOUND = "No data is found",
   NO_AGENT_FOUND = "No Agent is found",
   CREATING_FAILED = "Creating is failed!",
@@ -49,6 +50,7 @@ export enum Message {
   INVALID_SOCIALS = "Invalid social networks data",
   AGENT_EXISTS = "Agent application already exists",
   AGENCY_EXISTS = "Agency application already exists",
+  ADMIN_EXISTS = "Admin already exists!",
 
   AGENT_NOT_ACTIVE = "Agent mode active but agent not available",
   AGENCY_NOT_ACTIVE = "Agency mode active but agency not available",

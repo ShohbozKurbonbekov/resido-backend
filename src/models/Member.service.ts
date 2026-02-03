@@ -153,7 +153,8 @@ class MemberService {
           userId: user._id,
           currentStatus: AgencyStatus.AVAILABLE,
         })
-        .lean();
+        .lean()
+        .exec();
 
       if (!agency) {
         throw new Errors(HttpCode.CONFLICT, Message.AGENCY_NOT_ACTIVE);
@@ -167,7 +168,8 @@ class MemberService {
           userId: user._id,
           currentStatus: AgentStatus.AVAILABLE,
         })
-        .lean();
+        .lean()
+        .exec();
 
       if (!agent) {
         throw new Errors(HttpCode.CONFLICT, Message.AGENT_NOT_ACTIVE);

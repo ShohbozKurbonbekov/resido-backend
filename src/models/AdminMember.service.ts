@@ -7,7 +7,7 @@ import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
 import bcrypt from "bcrypt";
 import { LoginInput, User, UserMemberInput } from "../libs/types/user";
-import { MemberType } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { TarrifInputType } from "../libs/types/payment";
 import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import TarrifService from "./Tarrif.service";
@@ -38,13 +38,14 @@ class AdminService {
   public async processSignup(input: UserMemberInput): Promise<User> {
     const exist = await this.userModel
       .findOne({
-        memberType: MemberType.REAL_ESTATE_ADMIN,
+        role: MemberType.REAL_ESTATE_ADMIN,
+        memberStatus: MemberStatus.ACTIVE,
       })
       .lean()
       .exec();
 
     if (exist) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
+      throw new Errors(HttpCode.BAD_REQUEST, Message.ADMIN_EXISTS);
     }
     try {
       const result = await this.userModel.create(input);
@@ -53,32 +54,6 @@ class AdminService {
       console.log("Error in process admin signup: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
-  }
-
-  public async processLogin(input: LoginInput): Promise<User> {
-    const member = await this.userModel.findOne(
-      {
-        memberEmail: input.memberEmail,
-      },
-      {
-        memberName: 1,
-        memberPassword: 1,
-      },
-    );
-
-    if (!member) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
-    }
-
-    const isMatch: boolean = await bcrypt.compare(
-      input.memberPassword,
-      member.memberPassword,
-    );
-
-    if (!isMatch) {
-      throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
-    }
-    return (await this.userModel.findById(member._id).exec()) as User;
   }
 
   //////////////////////// INSERT TARRIF ///////////////////
