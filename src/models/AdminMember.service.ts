@@ -5,14 +5,10 @@ import UserModel from "../schema/members/User.model";
 import PropertyModel from "../schema/Property.model";
 import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
-import bcrypt from "bcrypt";
-import { LoginInput, User, UserMemberInput } from "../libs/types/user";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
-import { TarrifInputType } from "../libs/types/payment";
-import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
-import TarrifService from "./Tarrif.service";
-import { TarrifStatus } from "../libs/enums/payment.enum";
-import { T } from "../libs/types/common";
+import TarrifModel, { Tariff } from "../schema/Tariff.model";
+import { User, UserMemberInput } from "../libs/types/user";
+import TariffService from "./Tariff.service";
 
 class AdminService {
   private readonly agentModel;
@@ -31,7 +27,7 @@ class AdminService {
     this.userModel = UserModel;
     this.propertyModel = PropertyModel;
     this.commentProperty = CommentModel;
-    this.tarrifService = new TarrifService();
+    this.tarrifService = new TariffService();
     this.tarrifModel = TarrifModel;
   }
 
@@ -54,28 +50,6 @@ class AdminService {
       console.log("Error in process admin signup: ", error);
       throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
     }
-  }
-
-  //////////////////////// INSERT TARRIF ///////////////////
-  public async addTarrif(input: TarrifInputType): Promise<Tarrif> {
-    const { agents, properties } = input.limits;
-    const agentsNum = Number(agents);
-    const propertiesNum = Number(properties);
-
-    const entityInput: TarrifInputType = {
-      billingCycle: input.billingCycle,
-      currency: input.currency,
-      features: input.features.map((feature) => feature.trim()),
-      limits: {
-        agents: Number.isFinite(agentsNum) ? agentsNum : 0,
-        properties: Number.isFinite(propertiesNum) ? propertiesNum : 0,
-      },
-      name: input.name,
-      price: Number.isFinite(Number(input.price)) ? Number(input.price) : 0,
-    };
-
-    const result = await this.tarrifService.adminInsertTarrif(entityInput);
-    return result;
   }
 }
 

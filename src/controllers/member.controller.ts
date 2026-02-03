@@ -14,13 +14,13 @@ import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { MessageInput } from "../libs/types/message";
 import { MemberType } from "../libs/enums/member.enum";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
-import TarrifService from "../models/Tarrif.service";
 import { PropertyStatus } from "../libs/enums/property.enum";
+import TariffService from "../models/Tariff.service";
 
 const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
-const tariffService = new TarrifService();
+const tariffService = new TariffService();
 /////////////////////////////// ----- PUBLIC ADMIN ---- ///////////////////////////////////////////////////
 memberController.getAdmin = async (req: Request, res: Response) => {
   try {
@@ -311,9 +311,9 @@ memberController.getPublicTariffs = async (req: Request, res: Response) => {
 memberController.getPublicTariffOne = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tarrifId = shapeIntoMongooseObjectId(id);
+    const tariffId = shapeIntoMongooseObjectId(id);
 
-    const result = await tariffService.getPublicTariffOne(tarrifId);
+    const result = await tariffService.getPublicTariffs(tariffId);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getPublicTariffOne: ", error);

@@ -1,41 +1,41 @@
-import { Tarrif } from "../../schema/Tarrif.model";
+import { Tariff } from "../../schema/Tariff.model";
 import {
   BillingCycle,
-  TarrifCurrencyType,
-  TarrifName,
-  TarrifStatus,
+  TariffCurrencyType,
+  TariffName,
+  TariffStatus,
 } from "../enums/payment.enum";
 import { TotalCounter } from "./property";
 
-export interface TarrifLimitsType {
+export interface TariffLimitsType {
   properties: number;
   agents: number;
 }
 
-export interface TarrifInputType {
-  name: TarrifName;
+export interface TariffInputType {
+  name: TariffName;
   price: number;
   billingCycle: BillingCycle;
   features: string[];
-  limits: TarrifLimitsType;
-  currency: TarrifCurrencyType;
+  limits: TariffLimitsType;
+  currency: TariffCurrencyType;
 }
-export interface TarrifServerSetInput {
+export interface TariffServerSetInput {
   durationDays: number;
-  status: TarrifStatus;
+  status: TariffStatus;
   createdAt: Date;
   updatedAt: Date;
 }
-export type TarrifSchemaType = TarrifInputType & TarrifServerSetInput;
+export type TariffSchemaType = TariffInputType & TariffServerSetInput;
 
-export interface TarrifOutputType {
-  paymentTariffs: Tarrif[];
+export interface TariffOutputType {
+  paymentTariffs: Tariff[];
   metaCounter: TotalCounter[];
 }
 
 export interface BillingSnapShotType {
-  name: TarrifName;
+  name: TariffName;
   features: string[];
-  limit: TarrifLimitsType;
-  usage: TarrifLimitsType;
+  limit: TariffLimitsType;
+  usage: TariffLimitsType;
 }

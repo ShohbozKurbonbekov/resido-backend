@@ -13,13 +13,13 @@ import { Agent } from "./agent";
 import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
-import { BillingSnapShotType, TarrifLimitsType } from "./payment";
+import { BillingSnapShotType, TariffLimitsType } from "./payment";
 import {
   BillingCycle,
   TarrifCurrencyType,
   TarrifName,
 } from "../enums/payment.enum";
-import { Tarrif } from "../../schema/Tarrif.model";
+import { Tarrif } from "../../schema/Tariff.model";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
 import { AgentStatus } from "../enums/agent.enum";
 import { PropertyStatus } from "../enums/property.enum";

@@ -52,7 +52,7 @@ import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 import { Blogs } from "../libs/types/blog";
 import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
-import TarrifModel from "../schema/Tarrif.model";
+import TarrifModel from "../schema/Tariff.model";
 
 import {
   AgentNotificationCreation,

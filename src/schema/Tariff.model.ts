@@ -1,13 +1,12 @@
-import { unique } from "agenda/dist/job/unique";
 import mongoose, { InferSchemaType, Schema } from "mongoose";
-import { TarrifLimitsType, TarrifSchemaType } from "../libs/types/payment";
+import { TariffLimitsType, TariffSchemaType } from "../libs/types/payment";
 import {
   BillingCycle,
-  TarrifCurrencyType,
-  TarrifStatus,
+  TariffCurrencyType,
+  TariffStatus,
 } from "../libs/enums/payment.enum";
 
-export const TarrifLimitsSchema = new Schema<TarrifLimitsType>(
+export const TariffLimitsSchema = new Schema<TariffLimitsType>(
   {
     agents: {
       type: Number,
@@ -25,7 +24,7 @@ export const TarrifLimitsSchema = new Schema<TarrifLimitsType>(
   },
 );
 
-const TarriffSchema = new Schema<TarrifSchemaType>(
+const TariffSchema = new Schema<TariffSchemaType>(
   {
     name: {
       type: String,
@@ -51,13 +50,13 @@ const TarriffSchema = new Schema<TarrifSchemaType>(
     },
 
     limits: {
-      type: TarrifLimitsSchema,
+      type: TariffLimitsSchema,
       required: true,
     },
     currency: {
       type: String,
-      enum: TarrifCurrencyType,
-      default: TarrifCurrencyType.USD,
+      enum: TariffCurrencyType,
+      default: TariffCurrencyType.USD,
     },
     durationDays: {
       type: Number,
@@ -65,8 +64,8 @@ const TarriffSchema = new Schema<TarrifSchemaType>(
     },
     status: {
       type: String,
-      enum: TarrifStatus,
-      default: TarrifStatus.ACTIVE,
+      enum: TariffStatus,
+      default: TariffStatus.ACTIVE,
     },
   },
   {
@@ -75,12 +74,12 @@ const TarriffSchema = new Schema<TarrifSchemaType>(
   },
 );
 
-TarriffSchema.index({
+TariffSchema.index({
   _id: 1,
   status: 1,
   name: 1,
 });
 
-export type Tarrif = InferSchemaType<typeof TarriffSchema>;
+export type Tariff = InferSchemaType<typeof TariffSchema>;
 
-export default mongoose.model("Tarrif", TarriffSchema);
+export default mongoose.model("Tarrif", TariffSchema);

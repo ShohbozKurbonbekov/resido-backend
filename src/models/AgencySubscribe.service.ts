@@ -17,15 +17,15 @@ import {
   SubscriptionStatus,
 } from "../libs/enums/agency.enum";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import TarrifModel, { Tarrif } from "../schema/Tarrif.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import {
   BillingCycle,
   SubscriptionMode,
-  TarrifStatus,
+  TariffStatus,
 } from "../libs/enums/payment.enum";
 import UserModel from "../schema/members/User.model";
 import { CommonUsers, T } from "../libs/types/common";
+import TariffModel, { Tariff } from "../schema/Tariff.model";
 
 class AgencySubscribeService {
   public readonly agencySubscribeModel;
@@ -36,7 +36,7 @@ class AgencySubscribeService {
   constructor() {
     this.agencySubscribeModel = AgencySubscriptionModel;
     this.agencyModel = AgencyModel;
-    this.tariffModel = TarrifModel;
+    this.tariffModel = TariffModel;
     this.userModel = UserModel;
   }
 
@@ -55,7 +55,7 @@ class AgencySubscribeService {
       const tariffPlan = await this.tariffModel.findOne(
         {
           _id: shapeIntoMongooseObjectId(input.billingTariffId!),
-          status: TarrifStatus.ACTIVE,
+          status: TariffStatus.ACTIVE,
         },
         null,
         currentSession,
@@ -235,7 +235,7 @@ class AgencySubscribeService {
     const tariffPlans = await this.tariffModel.aggregate([
       {
         $match: {
-          status: TarrifStatus.ACTIVE,
+          status: TariffStatus.ACTIVE,
         },
       },
       {
@@ -340,7 +340,7 @@ class AgencySubscribeService {
   /////////////////// ORGANIZE INPUTS //////////////
   private organiseSubscribeInputs(
     input: AgencyPaymentInfoInputs,
-    tariffPlan: Tarrif,
+    tariffPlan: Tariff,
   ) {
     const now = new Date();
     const tariffType: number =
