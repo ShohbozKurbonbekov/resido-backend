@@ -391,7 +391,15 @@ class MemberService {
           }
         : { _id: member._id!, memberStatus: MemberStatus.ACTIVE };
 
-    const result = await Model.findOneAndUpdate(query, input, { new: true });
+    const result = await Model.findOneAndUpdate(
+      query,
+      {
+        $set: {
+          ...input,
+        },
+      },
+      { new: true },
+    );
 
     if (!result) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);

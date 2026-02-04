@@ -7,8 +7,10 @@ import Errors, { Message } from "../libs/Errors";
 import { HttpCode } from "../libs/Errors";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import TarrifModel, { Tariff } from "../schema/Tariff.model";
-import { User, UserMemberInput } from "../libs/types/user";
+import { User, UserInputUpdate, UserMemberInput } from "../libs/types/user";
 import TariffService from "./Tariff.service";
+import { CommonUsers } from "../libs/types/common";
+import { shapeIntoMongooseObjectId } from "../libs/config";
 
 class AdminService {
   private readonly agentModel;
@@ -31,6 +33,7 @@ class AdminService {
     this.tarrifModel = TarrifModel;
   }
 
+  /////////////////////////// -- ADMIN SINGUP  -- //////////////////////////////
   public async processSignup(input: UserMemberInput): Promise<User> {
     const exist = await this.userModel
       .findOne({

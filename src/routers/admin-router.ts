@@ -14,12 +14,20 @@ adminRouter.post(
   adminController.processSignup,
 );
 
-//////////////////////////////////// ADMIN TARIFFS PLAN ///////////////////////
+////////////////////////////////// ADMIN TARIFFS PLAN ///////////////////////
 adminRouter.post(
   "/tariffs",
   memberController.verifyMember,
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   adminController.addTarrif,
+);
+
+////////////////////////////////// FETCH ADMIN  TARIFFS ///////////////////////
+adminRouter.get(
+  "/get/payment-tariffs",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.getAdminTariffs,
 );
 
 export default adminRouter;

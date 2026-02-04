@@ -11,6 +11,7 @@ export enum HttpCode {
 }
 
 export enum Message {
+  ACCESS_DENIED = "Access denied!s",
   SOMETHING_WENT_WRONG = "Something went wrong",
   IMAGE_NEEDED = "Please, provide a valid image for your profile!",
   NO_DATA_FOUND = "No data is found",
@@ -61,6 +62,7 @@ export enum Message {
   PAYMENT_NOT_ALLOWED = "Payment is not allowed for the current application state.",
   PAYMENT_FAILED = "Payment process failed!, Please try later",
   TARRIF_EXIST = "Tarrif already exists!",
+  INVALID_TARIFF_STATUS = "Invalid tarrif status!",
   ADMIN_ONLY = "Admin page!",
   AGENCY_ONLY = "Private agency page!",
   INVALID_CURRENCY = "Invalid Currency Name!",
