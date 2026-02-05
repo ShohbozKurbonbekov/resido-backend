@@ -16,7 +16,7 @@ adminRouter.post(
 
 ////////////////////////////////// ADMIN TARIFFS PLAN ///////////////////////
 adminRouter.post(
-  "/tariffs",
+  "/add/tariffs",
   memberController.verifyMember,
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   adminController.addTarrif,

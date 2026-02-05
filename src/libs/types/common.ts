@@ -35,3 +35,7 @@ export interface CommonPageInput {
 export interface AllPropertiesInput extends CommonPageInput {
   status: PropertyStatus;
 }
+
+export type ToString<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]: string;
+};

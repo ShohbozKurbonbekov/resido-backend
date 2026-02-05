@@ -5,6 +5,7 @@ import {
   TariffName,
   TariffStatus,
 } from "../enums/payment.enum";
+import { ToString } from "./common";
 import { TotalCounter } from "./property";
 
 export interface TariffLimitsType {
@@ -20,6 +21,11 @@ export interface TariffInputType {
   limits: TariffLimitsType;
   currency: TariffCurrencyType;
 }
+
+export type AdminAddTariffInput = Omit<TariffInputType, "price" | "limits"> & {
+  price: string;
+  limit: ToString<TariffLimitsType, "agents" | "properties">;
+};
 export interface TariffServerSetInput {
   durationDays: number;
   status: TariffStatus;

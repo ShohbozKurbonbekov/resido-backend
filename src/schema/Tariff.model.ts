@@ -64,7 +64,7 @@ const TariffSchema = new Schema<TariffSchemaType>(
     status: {
       type: String,
       enum: TariffStatus,
-      default: TariffStatus.ACTIVE,
+      default: TariffStatus.ARCHIVE,
     },
   },
   {

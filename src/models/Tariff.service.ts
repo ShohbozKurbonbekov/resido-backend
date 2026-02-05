@@ -1,5 +1,9 @@
 import AgencyModel from "../schema/members/Agency.model";
-import { TariffInputType, TariffOutputType } from "../libs/types/payment";
+import {
+  AdminAddTariffInput,
+  TariffInputType,
+  TariffOutputType,
+} from "../libs/types/payment";
 import TariffModel, { Tariff } from "../schema/Tariff.model";
 import MemberService from "./Member.service";
 import { TariffCurrencyType, TariffStatus } from "../libs/enums/payment.enum";
@@ -24,7 +28,22 @@ class TariffService {
     this.userModel = UserModel;
   }
   //////////////////////// INSERT TARRIF ///////////////////
-  public async addTarrif(input: TariffInputType): Promise<Tariff> {
+  public async addTarrif(
+    adminId: ObjectId,
+    input: TariffInputType,
+  ): Promise<Tariff> {
+    // Check admin existance
+    const adminMatch: T = {
+      _id: adminId,
+      role: MemberType.REAL_ESTATE_ADMIN,
+      memberStatus: MemberStatus.ACTIVE,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
     // Check valid currency
     const allowedCurrencies = Object.keys(TariffCurrencyType);
 
@@ -44,25 +63,8 @@ class TariffService {
       throw new Errors(HttpCode.CONFLICT, Message.TARRIF_EXIST);
     }
 
-    // Compact fields
-    const { agents, properties } = input.limits;
-    const agentsNum = Number(agents);
-    const propertiesNum = Number(properties);
-
-    const entityInput: TariffInputType = {
-      billingCycle: input.billingCycle,
-      currency: input.currency,
-      features: input.features.map((feature) => feature.trim()),
-      limits: {
-        agents: Number.isFinite(agentsNum) ? agentsNum : 0,
-        properties: Number.isFinite(propertiesNum) ? propertiesNum : 0,
-      },
-      name: input.name,
-      price: Number.isFinite(Number(input.price)) ? Number(input.price) : 0,
-    };
-
     try {
-      const result = await this.tariffModel.create(entityInput);
+      const result = await this.tariffModel.create(input);
       return result;
     } catch (error) {
       console.log("Error in addTariff service : ", error);
@@ -162,6 +164,24 @@ class TariffService {
       };
     }
     return result;
+  }
+
+  /////////////////////////  Helper functions  ////////////////
+  public customiseAdminTariffFormInputs(
+    body: AdminAddTariffInput,
+  ): TariffInputType {
+    return {
+      billingCycle: body.billingCycle,
+      currency: body.currency,
+
+      limits: {
+        agents: Number(body?.limit?.agents) || 0,
+        properties: Number(body?.limit?.agents) || 0,
+      },
+      name: body.name,
+      price: Number(body.price) || 0,
+      features: [],
+    };
   }
 }
 

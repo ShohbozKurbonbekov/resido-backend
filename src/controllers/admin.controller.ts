@@ -6,7 +6,7 @@ import AdminService from "../models/AdminMember.service";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import AuthService from "../models/Auth.service";
-import { TariffInputType } from "../libs/types/payment";
+import { AdminAddTariffInput, TariffInputType } from "../libs/types/payment";
 import TariffService from "../models/Tariff.service";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { AdminGetTariffsInput } from "../libs/types/admin";
@@ -57,10 +57,22 @@ adminController.processSignup = async (req: UploadRequest, res: Response) => {
 };
 
 ////////////////////////// ADD TARIFF///////////////////////
-adminController.addTarrif = async (req: Request, res: Response) => {
+adminController.addTarrif = async (req: ExtendedRequest, res: Response) => {
   try {
-    const input: TariffInputType = req.body;
-    const result = await tariffService.addTarrif(input);
+    const input = tariffService.customiseAdminTariffFormInputs(req.body);
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const parsedFeatures = JSON.parse(req.body?.features);
+    if (
+      !parsedFeatures ||
+      !Array.isArray(parsedFeatures) ||
+      !parsedFeatures.length
+    ) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_TARIFF_FEATURES);
+    } else {
+      input.features = parsedFeatures;
+    }
+
+    const result = await tariffService.addTarrif(adminId, input);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in addTarrif process: ", error);

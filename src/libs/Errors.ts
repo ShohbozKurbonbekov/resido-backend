@@ -82,6 +82,7 @@ export enum Message {
   APPLICATION_REJECTION_FAILED = "Application rejection failed",
   AGENT_CREATION_FAILED = "Agent account creation failed!",
   EXCEED_LIMIT = "Exceeded Limit!, Please contact with your agency",
+  INVALID_TARIFF_FEATURES = "Invalid tariff features!",
 }
 
 class Errors extends Error {

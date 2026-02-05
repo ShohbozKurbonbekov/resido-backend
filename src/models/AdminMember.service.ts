@@ -11,6 +11,7 @@ import { User, UserInputUpdate, UserMemberInput } from "../libs/types/user";
 import TariffService from "./Tariff.service";
 import { CommonUsers } from "../libs/types/common";
 import { shapeIntoMongooseObjectId } from "../libs/config";
+import { AdminAddTariffInput, TariffInputType } from "../libs/types/payment";
 
 class AdminService {
   private readonly agentModel;
