@@ -24,7 +24,7 @@ export interface TariffInputType {
 
 export type AdminAddTariffInput = Omit<TariffInputType, "price" | "limits"> & {
   price: string;
-  limit: ToString<TariffLimitsType, "agents" | "properties">;
+  limits: ToString<TariffLimitsType, "agents" | "properties">;
 };
 export interface TariffServerSetInput {
   durationDays: number;

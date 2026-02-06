@@ -166,6 +166,41 @@ class TariffService {
     return result;
   }
 
+  ///////////////////////////////////// EDIT ADMIN TARIFF PLAN /////////////////////
+
+  public async editTariff(
+    adminId: ObjectId,
+    tariffId: ObjectId,
+    input: TariffInputType,
+  ) {
+    // Check admin existance
+    const adminFilter: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminFilter).lean().exec();
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    const result = await this.tariffModel.findOneAndUpdate(
+      { _id: tariffId },
+      {
+        $set: {
+          ...input,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    return result;
+  }
   /////////////////////////  Helper functions  ////////////////
   public customiseAdminTariffFormInputs(
     body: AdminAddTariffInput,
@@ -175,12 +210,12 @@ class TariffService {
       currency: body.currency,
 
       limits: {
-        agents: Number(body?.limit?.agents) || 0,
-        properties: Number(body?.limit?.agents) || 0,
+        agents: Number(body?.limits?.agents) || 0,
+        properties: Number(body?.limits?.properties) || 0,
       },
       name: body.name,
       price: Number(body.price) || 0,
-      features: [],
+      features: body.features,
     };
   }
 }

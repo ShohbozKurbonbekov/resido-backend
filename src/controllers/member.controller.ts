@@ -74,7 +74,6 @@ memberController.login = async (req: Request, res: Response) => {
     const input: LoginInput = req.body;
 
     const result = await memberService.login(input);
-
     const tokenPayload = {
       _id: result._id,
       memberStatus: result.memberStatus,

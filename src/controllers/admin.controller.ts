@@ -58,21 +58,13 @@ adminController.processSignup = async (req: UploadRequest, res: Response) => {
 
 ////////////////////////// ADD TARIFF///////////////////////
 adminController.addTarrif = async (req: ExtendedRequest, res: Response) => {
+  console.log("AddTariff proccesss");
   try {
     const input = tariffService.customiseAdminTariffFormInputs(req.body);
     const adminId = shapeIntoMongooseObjectId(req.member._id);
-    const parsedFeatures = JSON.parse(req.body?.features);
-    if (
-      !parsedFeatures ||
-      !Array.isArray(parsedFeatures) ||
-      !parsedFeatures.length
-    ) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_TARIFF_FEATURES);
-    } else {
-      input.features = parsedFeatures;
-    }
 
     const result = await tariffService.addTarrif(adminId, input);
+
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in addTarrif process: ", error);
@@ -114,6 +106,27 @@ adminController.getAdminTariffs = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getAdminTariffs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////// EDIT TARIFF///////////////////////
+adminController.editTariff = async (req: ExtendedRequest, res: Response) => {
+  console.log("editTariff proccesss");
+  try {
+    const input = tariffService.customiseAdminTariffFormInputs(req.body);
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const tariffId = shapeIntoMongooseObjectId(id);
+    const result = await tariffService.editTariff(adminId, tariffId, input);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in editTarrif process: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

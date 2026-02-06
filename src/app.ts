@@ -11,7 +11,6 @@ import agent from "./routers/agent.router";
 import agency from "./routers/agency.router";
 import blog from "./routers/blog.router";
 import adminRouter from "./routers/admin-router";
-import chalk from "chalk";
 
 // PATHs
 const publicPath = path.join(__dirname, "public");

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction } from "express";
 import uploadFiles from "../middlewares/uploadFile";
 import memberController from "../controllers/member.controller";
 import { allowRoles } from "../middlewares/allowRoles";
@@ -28,6 +28,14 @@ adminRouter.get(
   memberController.verifyMember,
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   adminController.getAdminTariffs,
+);
+
+////////////////////////////////// EDIT TARIFF PLAN ///////////////////////
+adminRouter.post(
+  "/edit/tariffs/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.editTariff,
 );
 
 export default adminRouter;
