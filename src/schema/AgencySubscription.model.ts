@@ -2,7 +2,7 @@ import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { PaymentProvider, SubscriptionStatus } from "../libs/enums/agency.enum";
 import { AgencySubscriptionSchemaInputs } from "../libs/types/agency";
 import { BillingSnapShotType } from "../libs/types/payment";
-import { BillingCycle, TariffCurrencyType } from "../libs/enums/payment.enum";
+import { BillingCycle } from "../libs/enums/payment.enum";
 import { TariffLimitsSchema } from "./Tariff.model";
 
 const BillingSnapshotSchema = new Schema<BillingSnapShotType>({
@@ -47,7 +47,6 @@ const AgencySubscriptionSchema = new Schema<AgencySubscriptionSchemaInputs>(
     },
     currency: {
       type: String,
-      enum: TariffCurrencyType,
       required: true,
     },
 

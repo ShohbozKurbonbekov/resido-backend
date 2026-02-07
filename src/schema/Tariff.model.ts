@@ -1,10 +1,6 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { TariffLimitsType, TariffSchemaType } from "../libs/types/payment";
-import {
-  BillingCycle,
-  TariffCurrencyType,
-  TariffStatus,
-} from "../libs/enums/payment.enum";
+import { BillingCycle, TariffStatus } from "../libs/enums/payment.enum";
 
 export const TariffLimitsSchema = new Schema<TariffLimitsType>(
   {
@@ -54,8 +50,7 @@ const TariffSchema = new Schema<TariffSchemaType>(
     },
     currency: {
       type: String,
-      enum: TariffCurrencyType,
-      default: TariffCurrencyType.USD,
+      required: true,
     },
     durationDays: {
       type: Number,

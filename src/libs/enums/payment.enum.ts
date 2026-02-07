@@ -1,15 +1,3 @@
-export enum TariffName {
-  BASIC = "BASIC",
-  STANDART = "STANDART",
-  PLATINUM = "PLATINUM",
-}
-
-export enum TariffCurrencyType {
-  USD = "USD",
-  KRW = "KRW",
-  UZS = "UZS",
-}
-
 export enum MemberTariffStatus {
   ACTIVE = "ACTIVE",
   CANCELLED = "CANCELLED",

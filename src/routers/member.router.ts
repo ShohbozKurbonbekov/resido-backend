@@ -88,7 +88,11 @@ member.post(
 member.get("/public/tariffs", memberController.getPublicTariffs);
 
 ///////////////////////////// GET TARIFF  ONE ///////////////////////
-member.get("/public/tariffs/:id", memberController.getPublicTariffOne);
+member.get(
+  "/public/tariffs/:id",
+  memberController.verifyMember,
+  memberController.getPublicTariffOne,
+);
 
 /////////////////////// USER MEMBER DASHBOARD ////////////////////
 member.get(

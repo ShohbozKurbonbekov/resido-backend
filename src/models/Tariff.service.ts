@@ -3,13 +3,17 @@ import {
   AdminAddTariffInput,
   TariffInputType,
   TariffOutputType,
+  TariffSchemaType,
 } from "../libs/types/payment";
 import TariffModel, { Tariff } from "../schema/Tariff.model";
 import MemberService from "./Member.service";
-import { TariffCurrencyType, TariffStatus } from "../libs/enums/payment.enum";
-import { CommonPageInput, T } from "../libs/types/common";
+import { TariffStatus } from "../libs/enums/payment.enum";
+import { CommonPageInput, CommonUsers, T } from "../libs/types/common";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { AdminGetTariffsInput } from "../libs/types/admin";
+import {
+  AdminChangeTariffStatusQuery,
+  AdminGetTariffsInput,
+} from "../libs/types/admin";
 import { ObjectId } from "mongoose";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import UserModel from "../schema/members/User.model";
@@ -42,13 +46,6 @@ class TariffService {
     const admin = await this.userModel.findOne(adminMatch).lean().exec();
     if (!admin) {
       throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
-    }
-
-    // Check valid currency
-    const allowedCurrencies = Object.keys(TariffCurrencyType);
-
-    if (!allowedCurrencies.includes(input.currency)) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_CURRENCY);
     }
 
     // Check tariff existance
@@ -109,6 +106,28 @@ class TariffService {
       };
     }
     return result;
+  }
+
+  ///////////////////////////////////// GET PUBLIC TARIFF PLANS /////////////////////
+  public async getPublicTariffOne(
+    tariffId: ObjectId,
+    member: CommonUsers,
+  ): Promise<TariffSchemaType> {
+    const tariffMatch: T = {
+      _id: tariffId,
+    };
+
+    if (member.role !== MemberType.REAL_ESTATE_ADMIN) {
+      tariffMatch.status = TariffStatus.ACTIVE;
+    }
+
+    const tariff = await this.tariffModel.findOne(tariffMatch).lean().exec();
+
+    if (!tariff) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.TARIFF_NOT_ACTIVE);
+    }
+
+    return tariff;
   }
 
   ///////////////////////////////////// GET ADMIN TARIFF PLANS /////////////////////
@@ -200,6 +219,50 @@ class TariffService {
     }
 
     return result;
+  }
+
+  /////////////////////// CHANGE ADMIN TARIFF STATUS //////////////
+  public async adminChangeTariffStatus(
+    adminId: ObjectId,
+    queries: AdminChangeTariffStatusQuery,
+  ): Promise<Tariff> {
+    // Admin check
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Tariff search & Update it
+    const { status, tariffId } = queries;
+    const tariffMatch: T = {
+      _id: tariffId,
+    };
+
+    const tariff = await this.tariffModel.findOneAndUpdate(
+      tariffMatch,
+      {
+        $set: {
+          status,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+
+    // Check & Return
+    if (!tariff) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    return tariff;
   }
   /////////////////////////  Helper functions  ////////////////
   public customiseAdminTariffFormInputs(

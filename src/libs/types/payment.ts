@@ -1,10 +1,5 @@
 import { Tariff } from "../../schema/Tariff.model";
-import {
-  BillingCycle,
-  TariffCurrencyType,
-  TariffName,
-  TariffStatus,
-} from "../enums/payment.enum";
+import { BillingCycle, TariffStatus } from "../enums/payment.enum";
 import { ToString } from "./common";
 import { TotalCounter } from "./property";
 
@@ -14,12 +9,12 @@ export interface TariffLimitsType {
 }
 
 export interface TariffInputType {
-  name: TariffName;
+  name: string;
   price: number;
   billingCycle: BillingCycle;
   features: string[];
   limits: TariffLimitsType;
-  currency: TariffCurrencyType;
+  currency: string;
 }
 
 export type AdminAddTariffInput = Omit<TariffInputType, "price" | "limits"> & {
@@ -40,7 +35,7 @@ export interface TariffOutputType {
 }
 
 export interface BillingSnapShotType {
-  name: TariffName;
+  name: String;
   features: string[];
   limit: TariffLimitsType;
   usage: TariffLimitsType;

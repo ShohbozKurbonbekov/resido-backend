@@ -38,4 +38,12 @@ adminRouter.post(
   adminController.editTariff,
 );
 
+////////////////////////////////// EDIT TARIFF PLAN ///////////////////////
+adminRouter.post(
+  "/change/tariffs/status",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminChangeTariffStatus,
+);
+
 export default adminRouter;

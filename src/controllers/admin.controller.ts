@@ -9,7 +9,10 @@ import AuthService from "../models/Auth.service";
 import { AdminAddTariffInput, TariffInputType } from "../libs/types/payment";
 import TariffService from "../models/Tariff.service";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { AdminGetTariffsInput } from "../libs/types/admin";
+import {
+  AdminChangeTariffStatusQuery,
+  AdminGetTariffsInput,
+} from "../libs/types/admin";
 import { TariffStatus } from "../libs/enums/payment.enum";
 import { OrderRender } from "../libs/enums/common.enum";
 
@@ -127,6 +130,47 @@ adminController.editTariff = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in editTarrif process: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////////// CHANGE ADMIN TARIFF STATUS //////////////
+adminController.adminChangeTariffStatus = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("adminChangeTariffStatus proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { id, status } = req.query;
+
+    const allowedTariffStatus = [
+      TariffStatus.ACTIVE,
+      TariffStatus.ARCHIVE,
+      TariffStatus.DELETED,
+    ];
+
+    if (!allowedTariffStatus.includes(status as TariffStatus)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_TARIFF_STATUS);
+    }
+
+    const queries: AdminChangeTariffStatusQuery = {
+      status: status as TariffStatus,
+      tariffId: shapeIntoMongooseObjectId(id),
+    };
+
+    const result = await tariffService.adminChangeTariffStatus(
+      adminId,
+      queries,
+    );
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminChangeTariffStatus: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

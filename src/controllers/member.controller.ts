@@ -307,12 +307,16 @@ memberController.getPublicTariffs = async (req: Request, res: Response) => {
 };
 
 /////////////////////////// GET PUBLIC TARIFF ONE /////////////////////
-memberController.getPublicTariffOne = async (req: Request, res: Response) => {
+memberController.getPublicTariffOne = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
   try {
     const { id } = req.params;
     const tariffId = shapeIntoMongooseObjectId(id);
 
-    const result = await tariffService.getPublicTariffs(tariffId);
+    const member = req.member;
+    const result = await tariffService.getPublicTariffOne(tariffId, member);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getPublicTariffOne: ", error);
