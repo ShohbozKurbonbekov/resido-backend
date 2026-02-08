@@ -14,14 +14,13 @@ const ReceiverDataSchema = new Schema<ReceiverDataType>(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const CommentSchema = new Schema<CommentInput>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "users",
     },
     targetType: {
       type: String,
@@ -52,7 +51,7 @@ const CommentSchema = new Schema<CommentInput>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 CommentSchema.index({

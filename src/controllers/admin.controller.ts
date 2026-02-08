@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { T } from "../libs/types/common";
+import { CommonPageInput, T } from "../libs/types/common";
 import Errors, { Message, HttpCode } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
@@ -15,11 +15,14 @@ import {
 } from "../libs/types/admin";
 import { TariffStatus } from "../libs/enums/payment.enum";
 import { OrderRender } from "../libs/enums/common.enum";
+import { CommentStatus } from "../libs/enums/comment.enum";
+import CommentService from "../models/Comment.service";
 
 const adminController: T = {};
 const adminService = new AdminService();
 const tariffService = new TariffService();
 const authService = new AuthService();
+const commentService = new CommentService();
 
 ///////////////////////// PROCESS SINGNUP ///////////////////
 adminController.processSignup = async (req: UploadRequest, res: Response) => {
@@ -171,6 +174,39 @@ adminController.adminChangeTariffStatus = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in adminChangeTariffStatus: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////////// GET COMMENTS FOR ADMIN //////////////
+adminController.getCommentsForAdmin = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("getCommentsForAdmin proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { page, limit, status, username } = req.query;
+
+    const queries: CommonPageInput & {
+      status?: CommentStatus;
+      username?: string;
+    } = {
+      limit: Number(limit) || 10,
+      page: Number(page) || 1,
+      status: status as CommentStatus,
+      username: username as string,
+    };
+
+    const result = await commentService.getCommentsForAdmin(adminId, queries);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getCommentsForAdmin: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

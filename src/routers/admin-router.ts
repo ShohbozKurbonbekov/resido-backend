@@ -46,4 +46,11 @@ adminRouter.post(
   adminController.adminChangeTariffStatus,
 );
 
+///////////////////////////////// GET COMMENTS  FOR ADDMIN /////////////////////////
+adminRouter.get(
+  "/comments/getCommentsForAdmin",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.getCommentsForAdmin,
+);
 export default adminRouter;

@@ -15,10 +15,9 @@ import { CommonPageInput, T } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import { Model, ObjectId } from "mongoose";
 import MemberService from "./Member.service";
-import member from "../routers/member.router";
-import { User } from "../libs/types/user";
-import { TargetGroup } from "../libs/enums/userSaving.enum";
 import { Agent } from "../libs/types/agent";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
+import UserModel from "../schema/members/User.model";
 
 class CommentService {
   public readonly commentModel;
@@ -26,6 +25,7 @@ class CommentService {
   public readonly propertyModel;
   public readonly blogModel;
   public readonly memberService;
+  private readonly userModel;
 
   constructor() {
     this.commentModel = CommentModel;
@@ -33,12 +33,13 @@ class CommentService {
     this.propertyModel = PropertyModel;
     this.blogModel = BlogModel;
     this.memberService = new MemberService();
+    this.userModel = UserModel;
   }
 
   ///////////////////////// CREATE A COMMENT /////////////
   public async createComment(
     input: CommentInput,
-    member: T
+    member: T,
   ): Promise<CommentDocs> {
     try {
       const Models: Record<string, any> = {
@@ -99,7 +100,7 @@ class CommentService {
   //////////////////////// GET ITEM COMMENTS ////////////////
   public async getComments(
     itemId: ObjectId,
-    input: ItemComments
+    input: ItemComments,
   ): Promise<Comments> {
     const { page, limit, commentTarget } = input;
     const match: T = { status: CommentStatus.ACTIVE, targetId: itemId };
@@ -175,7 +176,7 @@ class CommentService {
   /////////////////////// GET USER COMMENTS /////////////////////
   public async getUserComments(
     userId: ObjectId,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<Comments> {
     const { page, limit } = query;
 
@@ -226,7 +227,7 @@ class CommentService {
   /////////////////////// UPDATE USER COMMENTS /////////////////////
   public async updateUserComments(
     query: T,
-    input: CommentUpdate
+    input: CommentUpdate,
   ): Promise<CommentDocs> {
     const match: T = {
       ...query,
@@ -244,7 +245,7 @@ class CommentService {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!result) {
@@ -265,7 +266,7 @@ class CommentService {
       {
         status: CommentStatus.DELETE,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!result) {
@@ -274,11 +275,111 @@ class CommentService {
     return result;
   }
 
+  /////////////////////// GET COMMENTS FOR ADMIN  /////////////////////
+  public async getCommentsForAdmin(
+    adminId: ObjectId,
+    queries: CommonPageInput & { status?: CommentStatus; username?: string },
+  ): Promise<Comments> {
+    // Check admin
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Destructure
+    const { limit, page, status, username } = queries;
+
+    // Check status of Comment
+    const allowedCommentStatus = [
+      CommentStatus.ACTIVE,
+      CommentStatus.ARCHIVED,
+      CommentStatus.DELETE,
+    ];
+
+    if (status && !allowedCommentStatus.includes(status)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_COMMENT_STATUS);
+    }
+
+    // Match queries;
+    const usernameValid = username && typeof username === "string";
+
+    const nameMatch: T = {};
+
+    if (usernameValid) {
+      nameMatch["userData.memberName"] = {
+        $regex: username,
+        $options: "i",
+      };
+    }
+
+    const pipeline: any[] = [
+      {
+        $match: { status },
+      },
+      {
+        $lookup: {
+          from: "users",
+          let: {
+            userId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$userId"],
+                },
+              },
+            },
+            {
+              $project: {
+                memberName: 1,
+                _id: 1,
+              },
+            },
+          ],
+          as: "userData",
+        },
+      },
+      {
+        $unwind: { path: "$userData", preserveNullAndEmptyArrays: true },
+      },
+      ...(usernameValid ? [{ $match: nameMatch }] : []),
+      {
+        $project: {
+          receiverData: 0,
+        },
+      },
+
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $facet: {
+          comments: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ];
+    const [result] = await this.commentModel.aggregate(pipeline);
+
+    if (!result.comments.length) {
+      return { comments: [], metaCounter: [{ total: 0 }] };
+    }
+    return result;
+  }
+
   /////////////////////////// -- HELPER FUNCTIONS -- ////////////////////
 
   private findReceiver(
     role: CommentTargetType,
-    targatData: Agent | BlogDoc | Property
+    targatData: Agent | BlogDoc | Property,
   ) {
     if (role === CommentTargetType.BLOG) {
       const data = targatData as BlogDoc;
