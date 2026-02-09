@@ -17,12 +17,15 @@ import { TariffStatus } from "../libs/enums/payment.enum";
 import { OrderRender } from "../libs/enums/common.enum";
 import { CommentStatus } from "../libs/enums/comment.enum";
 import CommentService from "../models/Comment.service";
+import { BlogSearchInput, BlogSearchType } from "../libs/types/blog";
+import BlogService from "../models/Blog.service";
 
 const adminController: T = {};
 const adminService = new AdminService();
 const tariffService = new TariffService();
 const authService = new AuthService();
 const commentService = new CommentService();
+const blogService = new BlogService();
 
 ///////////////////////// PROCESS SINGNUP ///////////////////
 adminController.processSignup = async (req: UploadRequest, res: Response) => {
@@ -239,6 +242,39 @@ adminController.adminChangeCommentStatus = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in adminChangeCommentStatus: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////// GET ALL BLOGS BY ADMIN //////////////////
+adminController.getBlogsByAdmin = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    const { limit, page, search, sort } = req.body;
+    const queries: BlogSearchInput = {
+      limit: Number(limit) || 8,
+      page: Number(page) || 1,
+    };
+
+    if (search && typeof search === "object") {
+      queries.search = search as BlogSearchType;
+    }
+
+    if (sort === "DESC" || sort === "ASC") {
+      queries.sort = sort as OrderRender;
+    }
+
+    const result = await blogService.getBlogsByAdmin(queries);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in getBlogsByAdmin: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

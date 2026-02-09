@@ -10,6 +10,7 @@ import {
   BlogDetailOutput,
   BlogInput,
   Blogs,
+  BlogSearchInput,
   SavedBlogsOutput,
   SearchBlogTags,
 } from "../libs/types/blog";
@@ -45,6 +46,7 @@ import generateMeSavedKey from "../libs/utils/generatedMeSavedKey";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import UserSavingModel from "../schema/UserSaving.model";
 import path from "path";
+import { OrderRender } from "../libs/enums/common.enum";
 
 class BlogService {
   private readonly blogModel;
@@ -149,7 +151,7 @@ class BlogService {
   // POST BLOG
   public async postBlog(
     member: CommonUsers,
-    input: BlogInput
+    input: BlogInput,
   ): Promise<BlogDoc> {
     const Models: Record<string, any> = {
       REAL_ESTATE_ADMIN: this.userModel,
@@ -203,7 +205,7 @@ class BlogService {
   // GET ALL BLOGS
   public async getAllBlogs(
     member: CommonUsers | null,
-    query: T
+    query: T,
   ): Promise<Blogs> {
     const { page, limit, title, category, sort } = query;
     const match: T = {
@@ -256,7 +258,7 @@ class BlogService {
   // LIKE A BLOG
   public async likeTargetBlog(
     member: CommonUsers,
-    id: ObjectId
+    id: ObjectId,
   ): Promise<BlogDoc> {
     // checking liking user's existance
     const target = await this.blogModel.findOne({
@@ -300,7 +302,7 @@ class BlogService {
         },
         {
           new: true,
-        }
+        },
       )
 
       .exec();
@@ -313,7 +315,7 @@ class BlogService {
   // GET A BLOG DETAIL
   public async getBlogDetail(
     member: CommonUsers,
-    blogId: ObjectId
+    blogId: ObjectId,
   ): Promise<BlogDetailOutput> {
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -332,9 +334,8 @@ class BlogService {
         viewGroup: ViewGroup.BLOG,
       };
 
-      const existView: View | null = await this.viewService.checkViewExistance(
-        input
-      );
+      const existView: View | null =
+        await this.viewService.checkViewExistance(input);
 
       if (!existView) {
         await this.viewService.insertUserView(input);
@@ -481,7 +482,7 @@ class BlogService {
   // SAVE TARGET BLOG
   public async saveToggleBlog(
     blogId: ObjectId,
-    query: SavingInput
+    query: SavingInput,
   ): Promise<BlogDoc> {
     const match: T = {
       blogStatus: BlogStatus.ACTIVE,
@@ -505,7 +506,7 @@ class BlogService {
   // GET SAVED PROPERTIES
   public async getSavedBlogs(
     user: CommonUsers,
-    query: CommonPageInput
+    query: CommonPageInput,
   ): Promise<SavedBlogsOutput> {
     const { limit, page } = query;
 
@@ -584,6 +585,79 @@ class BlogService {
       return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
     }
     return result;
+  }
+
+  // GET BLOGS BY ADMIN
+  public async getBlogsByAdmin(queries: BlogSearchInput): Promise<Blogs> {
+    const { limit, page, search, sort: blogSort } = queries;
+    // Match
+    const match: T = {};
+
+    if (search) {
+      if (search?.category) {
+        match.blogCategory = search.category;
+      }
+      if (search?.title) {
+        match.blogTitle = {
+          $regex: search.title,
+          $options: "i",
+        };
+      }
+    }
+
+    // Sort
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    if (blogSort) {
+      sort.createdAt = blogSort === "DESC" ? -1 : 1;
+    }
+
+    // Look for
+    const [results] = await this.blogModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $project: {
+          id: "$_id",
+          status: "$blogStatus",
+          authorType: "$blogAuthorType",
+          title: "$blogTitle",
+          category: "$blogCategory",
+          author: "$blogAuthor.authorName",
+          date: "$createdAt",
+          _id: 0,
+        },
+      },
+
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (page - 1) * queries.limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!results.blogs.length) {
+      return {
+        blogs: [],
+        totalBlogsNumber: [{ total: 0 }],
+      };
+    }
+
+    return results;
   }
 }
 

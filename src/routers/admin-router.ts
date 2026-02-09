@@ -62,3 +62,11 @@ adminRouter.post(
   allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminChangeCommentStatus,
 );
+
+////////////////////////////// ADMIN GET ALL BLOGS ///////////////////////////
+adminRouter.post(
+  "/blogs/get-all",
+  memberController.verifyMember,
+  allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
+  adminController.getBlogsByAdmin,
+);

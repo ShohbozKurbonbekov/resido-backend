@@ -3,6 +3,7 @@ import { BlogAuthorType, BlogCategory, BlogStatus } from "../enums/blog.enum";
 import { TotalCounter } from "./property";
 import { BlogDoc } from "../../schema/Blog.model";
 import { CommonPageInput, Social } from "./common";
+import { OrderRender } from "../enums/common.enum";
 
 export interface BlogAuthor {
   authorAvatar?: string;
@@ -37,8 +38,8 @@ export interface BlogSearchType {
   category?: BlogCategory;
 }
 export interface BlogSearchInput extends CommonPageInput {
-  sort: ["DESC", "ASC"];
-  search: BlogSearchType;
+  sort?: OrderRender;
+  search?: BlogSearchType;
 }
 
 export interface Blogs {
