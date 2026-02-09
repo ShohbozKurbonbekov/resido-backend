@@ -54,3 +54,11 @@ adminRouter.get(
   adminController.getCommentsForAdmin,
 );
 export default adminRouter;
+
+////////////////////////////// ADMIN CHANGE COMMENT STATUS ///////////////////////////
+adminRouter.post(
+  "/comments/status/change/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminChangeCommentStatus,
+);

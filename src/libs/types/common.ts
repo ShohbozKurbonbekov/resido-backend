@@ -39,3 +39,8 @@ export interface AllPropertiesInput extends CommonPageInput {
 export type ToString<T, K extends keyof T> = Omit<T, K> & {
   [P in K]: string;
 };
+
+export interface StatusChangeType<TStatus> {
+  id: ObjectId;
+  status: TStatus;
+}

@@ -11,7 +11,7 @@ import { CommentStatus, CommentTargetType } from "../libs/enums/comment.enum";
 import AgentModel from "../schema/members/Agent.model";
 import PropertyModel, { Property } from "../schema/Property.model";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { CommonPageInput, T } from "../libs/types/common";
+import { CommonPageInput, StatusChangeType, T } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import { Model, ObjectId } from "mongoose";
 import MemberService from "./Member.service";
@@ -313,7 +313,7 @@ class CommentService {
     const nameMatch: T = {};
 
     if (usernameValid) {
-      nameMatch["userData.memberName"] = {
+      nameMatch["senderData.memberName"] = {
         $regex: username,
         $options: "i",
       };
@@ -344,11 +344,11 @@ class CommentService {
               },
             },
           ],
-          as: "userData",
+          as: "senderData",
         },
       },
       {
-        $unwind: { path: "$userData", preserveNullAndEmptyArrays: true },
+        $unwind: { path: "$senderData", preserveNullAndEmptyArrays: true },
       },
       ...(usernameValid ? [{ $match: nameMatch }] : []),
       {
@@ -359,6 +359,16 @@ class CommentService {
 
       {
         $sort: { createdAt: -1 },
+      },
+      {
+        $project: {
+          id: "$_id",
+          content: 1,
+          status: 1,
+          date: "$createdAt",
+          author: "$senderData.memberName",
+          _id: 0,
+        },
       },
       {
         $facet: {
@@ -375,6 +385,57 @@ class CommentService {
     return result;
   }
 
+  /////////////////////// ADMIN CHANGE COMMENT STATUS ///////////////////
+
+  public async adminChangeCommentStatus(
+    adminId: ObjectId,
+    queries: StatusChangeType<CommentStatus>,
+  ): Promise<CommentDocs> {
+    const { id, status } = queries;
+    // Check status Valid
+    const allowedCommentStatus = [
+      CommentStatus.ACTIVE,
+      CommentStatus.ARCHIVED,
+      CommentStatus.DELETE,
+    ];
+
+    if (!allowedCommentStatus.includes(status)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_COMMENT_STATUS);
+    }
+    // Check admin
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Find comment and Change status
+    const result = await this.commentModel.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          status,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    // Return updated one
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    return result;
+  }
   /////////////////////////// -- HELPER FUNCTIONS -- ////////////////////
 
   private findReceiver(

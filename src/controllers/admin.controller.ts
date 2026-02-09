@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { CommonPageInput, T } from "../libs/types/common";
+import { CommonPageInput, StatusChangeType, T } from "../libs/types/common";
 import Errors, { Message, HttpCode } from "../libs/Errors";
 import { MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
@@ -207,6 +207,38 @@ adminController.getCommentsForAdmin = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getCommentsForAdmin: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////////// ADMIN CHANGE COMMENT STATUS ///////////////////
+adminController.adminChangeCommentStatus = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("adminChangeCommentStatus proccess");
+    const { id } = req.params;
+    const commentId = shapeIntoMongooseObjectId(id);
+    const { status } = req.body;
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+
+    const queries: StatusChangeType<CommentStatus> = {
+      id: commentId,
+      status,
+    };
+
+    const result = await commentService.adminChangeCommentStatus(
+      adminId,
+      queries,
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminChangeCommentStatus: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
