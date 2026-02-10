@@ -2,6 +2,7 @@ import {
   CommonPageInput,
   CommonUsers,
   StatisticsModifier,
+  StatusChangeType,
   T,
 } from "../libs/types/common";
 import BlogModel, { BlogDoc } from "../schema/Blog.model";
@@ -190,7 +191,8 @@ class BlogService {
           authorAvatar: blogger?.avatar,
           authorName:
             blogger?.memberName || blogger?.fullName || blogger?.nickname,
-          socials: blogger?.socialLinks || blogger?.socials,
+          socials:
+            blogger?.socialLinks || blogger?.socials || blogger.memberSocials,
           bioInfo: blogger?.bioInfo || blogger?.memberDescription,
         },
       });
@@ -663,6 +665,56 @@ class BlogService {
     }
 
     return results;
+  }
+
+  // ADMIN CHANGE BLOG STATUS
+  public async adminChangeBlogsStatus(
+    adminId: ObjectId,
+    queries: StatusChangeType<BlogStatus>,
+  ): Promise<BlogDoc> {
+    const { id, status } = queries;
+
+    const allowedBlogStatus = [
+      BlogStatus.ACTIVE,
+      BlogStatus.BLOCKED,
+      BlogStatus.DELETED,
+    ];
+
+    if (!allowedBlogStatus.includes(status)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_BLOG_STATUS);
+    }
+    // Admin Check
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Search & Update
+    const blogMatch: T = {
+      _id: id,
+    };
+
+    const blog = await this.blogModel.findOneAndUpdate(
+      blogMatch,
+      {
+        $set: {
+          blogStatus: status,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!blog) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+    return blog;
   }
 }
 

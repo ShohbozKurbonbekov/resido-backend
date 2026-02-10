@@ -70,3 +70,11 @@ adminRouter.post(
   allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
   adminController.getBlogsByAdmin,
 );
+
+////////////////////////////// ADMIN CHANGE BLOG STATUS ///////////////////////////
+adminRouter.post(
+  "/change/blogs/status/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminChangeBlogsStatus,
+);

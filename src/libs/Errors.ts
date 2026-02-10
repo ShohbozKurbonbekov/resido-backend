@@ -29,6 +29,7 @@ export enum Message {
   INVALID_PROPERTY_STATUS = "Invalid property status!",
   INVALID_COMMENT_STATUS = "Invalid comment status!",
   INVALID_AGENT_STATUS = "Invalid Agent Status!",
+  INVALID_BLOG_STATUS = "Invalid Blog status!",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
   ONLY_USERS = "Sorry, only common users are allowed to like it",
   ONLY_USERS_SAVE = "Sorry, only common users are allowed to save it",

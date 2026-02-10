@@ -287,4 +287,31 @@ adminController.getBlogsByAdmin = async (
   }
 };
 
+////////////////////////////// ADMIN CHANGE BLOG STATUS ///////////////////////////
+adminController.adminChangeBlogsStatus = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    const { status } = req.body;
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+
+    const queries: StatusChangeType<BlogStatus> = {
+      id: shapeIntoMongooseObjectId(req.params.id),
+      status: status as BlogStatus,
+    };
+
+    console.log(queries);
+    const result = await blogService.adminChangeBlogsStatus(adminId, queries);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminChangeBlogStatus: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default adminController;
