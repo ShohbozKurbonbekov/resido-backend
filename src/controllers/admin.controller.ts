@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CommonPageInput, StatusChangeType, T } from "../libs/types/common";
 import Errors, { Message, HttpCode } from "../libs/Errors";
-import { MemberType } from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
@@ -11,6 +11,8 @@ import TariffService from "../models/Tariff.service";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import {
   AdminChangeTariffStatusQuery,
+  AdminGetAllMembersCategory,
+  AdminGetAllMembersType,
   AdminGetTariffsInput,
 } from "../libs/types/admin";
 import { TariffStatus } from "../libs/enums/payment.enum";
@@ -20,6 +22,7 @@ import CommentService from "../models/Comment.service";
 import { BlogSearchInput, BlogSearchType } from "../libs/types/blog";
 import BlogService from "../models/Blog.service";
 import { BlogStatus } from "../libs/enums/blog.enum";
+import memberController from "./member.controller";
 
 const adminController: T = {};
 const adminService = new AdminService();
@@ -307,6 +310,42 @@ adminController.adminChangeBlogsStatus = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in adminChangeBlogStatus: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////////// ADMIN GET ALL MEMBERS ///////////////////////////
+adminController.adminGetAllMembers = async (req: Request, res: Response) => {
+  try {
+    const { status, memberCategory, sort, limit, page } = req.body;
+    const queries: AdminGetAllMembersType = {
+      limit: Number(limit) || 8,
+      page: Number(page) || 1,
+    };
+
+    if (sort && Object.keys(OrderRender).includes(sort as OrderRender)) {
+      queries.sort = sort as OrderRender;
+    }
+
+    if (status && Object.keys(MemberStatus).includes(status as MemberStatus)) {
+      queries.status = status as MemberStatus;
+    }
+
+    if (memberCategory && typeof memberCategory === "object") {
+      queries.memberCategory = memberCategory as AdminGetAllMembersCategory;
+    }
+
+    console.log(queries);
+
+    const result = await adminService.adminGetAllMembers(queries);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminGetAllMembers: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

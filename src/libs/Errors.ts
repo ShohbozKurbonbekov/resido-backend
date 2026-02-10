@@ -26,6 +26,7 @@ export enum Message {
   NOT_AUTHENTICATED = "You are not authenticated, Please Login First",
   NO_MEMBER = "No member found",
   INVALID_ROLE = "you are not allowed to request this role",
+  INVALID_MEMBER_ROLE = "Invalid member role!",
   INVALID_PROPERTY_STATUS = "Invalid property status!",
   INVALID_COMMENT_STATUS = "Invalid comment status!",
   INVALID_AGENT_STATUS = "Invalid Agent Status!",
