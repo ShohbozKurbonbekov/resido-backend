@@ -19,6 +19,7 @@ import { CommentStatus } from "../libs/enums/comment.enum";
 import CommentService from "../models/Comment.service";
 import { BlogSearchInput, BlogSearchType } from "../libs/types/blog";
 import BlogService from "../models/Blog.service";
+import { BlogStatus } from "../libs/enums/blog.enum";
 
 const adminController: T = {};
 const adminService = new AdminService();
@@ -256,8 +257,8 @@ adminController.getBlogsByAdmin = async (
   res: Response,
 ) => {
   try {
-    const { limit, page, search, sort } = req.body;
-    const queries: BlogSearchInput = {
+    const { limit, page, search, sort, status } = req.body;
+    const queries: BlogSearchInput & { status?: BlogStatus } = {
       limit: Number(limit) || 8,
       page: Number(page) || 1,
     };
@@ -270,6 +271,9 @@ adminController.getBlogsByAdmin = async (
       queries.sort = sort as OrderRender;
     }
 
+    if (status && Object.keys(BlogStatus).includes(status)) {
+      queries.status = status;
+    }
     const result = await blogService.getBlogsByAdmin(queries);
 
     res.status(HttpCode.OK).json(result);

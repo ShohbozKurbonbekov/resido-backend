@@ -588,11 +588,16 @@ class BlogService {
   }
 
   // GET BLOGS BY ADMIN
-  public async getBlogsByAdmin(queries: BlogSearchInput): Promise<Blogs> {
-    const { limit, page, search, sort: blogSort } = queries;
+  public async getBlogsByAdmin(
+    queries: BlogSearchInput & { status?: BlogStatus },
+  ): Promise<Blogs> {
+    const { limit, page, search, sort: blogSort, status } = queries;
     // Match
     const match: T = {};
 
+    if (status) {
+      match.blogStatus = status;
+    }
     if (search) {
       if (search?.category) {
         match.blogCategory = search.category;
