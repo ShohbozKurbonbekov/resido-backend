@@ -39,7 +39,7 @@ export interface MyNotifications {
   metaCounter: TotalCounter[];
 }
 
-export interface ReviewNotificationType {
-  agent: AgentDoc;
+export interface ReviewNotificationType<TMember> {
+  member: TMember;
   notification: NotificationOutput;
 }

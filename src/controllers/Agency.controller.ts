@@ -417,7 +417,7 @@ agencyController.reviewNotification = async (
     const result = await agencyService.reviewNotification(agencyId, entityId);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in reviewNotification: ", error);
+    console.log("Error in reviewNotification of agency system: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

@@ -1,5 +1,5 @@
 import CommentModel from "../schema/Comment.model";
-import AgencyModel from "../schema/members/Agency.model";
+import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import AgentModel from "../schema/members/Agent.model";
 import UserModel from "../schema/members/User.model";
 import PropertyModel from "../schema/Property.model";
@@ -25,14 +25,24 @@ import {
   AdminGetAllMembersCategory,
   AdminGetAllMembersType,
 } from "../libs/types/admin";
-import { Model, ObjectId } from "mongoose";
+import mongoose, { Model, ObjectId } from "mongoose";
 import { OrderRender } from "../libs/enums/common.enum";
-import { MyNotifications } from "../libs/types/notification";
+import {
+  MyNotifications,
+  NotificationCreation,
+  ReviewNotificationType,
+} from "../libs/types/notification";
 import {
   NotificationEntityType,
   NotificationType,
 } from "../libs/enums/notification.enum";
-import NotificationModel from "../schema/Notification.model";
+import NotificationModel, {
+  NotificationOutput,
+} from "../schema/Notification.model";
+import AgencyApplicationModel from "../schema/AgencyApplication.model";
+import { AgencyStatus } from "../libs/enums/agency.enum";
+import { AgencyApplicationStatus } from "../libs/enums/agencyApplication.enum";
+import { ApplicationStatusMessage } from "../libs/enums/agentApplication.enum";
 
 class AdminService {
   private readonly agentModel;
@@ -43,6 +53,7 @@ class AdminService {
   public readonly tarrifService;
   private readonly tarrifModel;
   private readonly notificationsModel;
+  private readonly agencyApplicationModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -53,6 +64,7 @@ class AdminService {
     this.tarrifService = new TariffService();
     this.tarrifModel = TarrifModel;
     this.notificationsModel = NotificationModel;
+    this.agencyApplicationModel = AgencyApplicationModel;
   }
 
   /////////////////////////// -- ADMIN SINGUP  -- //////////////////////////////
@@ -357,6 +369,252 @@ class AdminService {
       };
     }
     return result;
+  }
+
+  /////////////////////////// ---- REVIEW NOTIFICATION --- ///////////////
+  public async reviewNotification(
+    adminId: ObjectId,
+    entityId: string,
+  ): Promise<ReviewNotificationType<Agency>> {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      const currentSession = { session };
+      // Get agency
+      const adminMatch: T = {
+        _id: adminId,
+        memberStatus: MemberStatus.ACTIVE,
+        role: MemberType.REAL_ESTATE_ADMIN,
+      };
+      const admin = await this.userModel
+        .findOne(adminMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!admin) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+      }
+
+      const notificationMatch: T = {
+        recipientId: adminId,
+        recipientRole: MemberType.REAL_ESTATE_ADMIN,
+        entityId: shapeIntoMongooseObjectId(entityId),
+      };
+
+      const notification = await this.notificationsModel
+        .findOneAndUpdate(
+          notificationMatch,
+          {
+            $set: {
+              actionRequired: false,
+            },
+          },
+          {
+            new: true,
+            runValidators: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!notification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      const applicationMatch: T = {
+        _id: shapeIntoMongooseObjectId(entityId),
+        status: AgencyApplicationStatus.APPLIED,
+      };
+
+      const application = await this.agencyApplicationModel
+        .findOneAndUpdate(
+          applicationMatch,
+          {
+            $set: {
+              status: AgencyApplicationStatus.UNDER_REVIEW,
+            },
+          },
+
+          {
+            new: true,
+            runValidators: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const agencyMatch: T = {
+        _id: application.agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.PENDING,
+      };
+
+      const agency = await this.agencyModel
+        .findOne(agencyMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agency) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER_FOUND);
+      }
+
+      await session.commitTransaction();
+      return {
+        notification,
+        member: agency,
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in reviewNotification: ", error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
+  //////////////////////// ------- ADMIN APPLICATION REJECT-----//////////////////
+  public async adminRejectApplication(
+    adminId: ObjectId,
+    agencyId: ObjectId,
+  ): Promise<NotificationOutput> {
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+      const currentSession = { session };
+
+      // Admin validation
+      const adminMatch: T = {
+        _id: adminId,
+        memberStatus: MemberStatus.ACTIVE,
+        role: MemberType.REAL_ESTATE_ADMIN,
+      };
+
+      const admin = await this.userModel
+        .findOne(adminMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!admin) {
+        throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+      }
+
+      // Check application exists
+      const applicationMatch: T = {
+        agencyId,
+        status: AgencyApplicationStatus.UNDER_REVIEW,
+      };
+
+      const application = await this.agencyApplicationModel
+        .findOneAndUpdate(
+          applicationMatch,
+          {
+            $set: {
+              reviewedAt: new Date(),
+              reviewedBy: adminId,
+              status: AgencyApplicationStatus.REJECTED,
+              rejectionReason: ApplicationStatusMessage.REJECTED_MESSAGE,
+            },
+          },
+          {
+            new: true,
+            ...currentSession,
+          },
+        )
+        .lean()
+        .exec();
+
+      if (!application) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+      }
+
+      const rejectedNotificationMatch = {
+        recipientId: adminId,
+        recipientRole: MemberType.REAL_ESTATE_ADMIN,
+        entityId: application._id,
+        entityType: NotificationEntityType.AGENCY_APPLICATION,
+      };
+
+      const rejectedNotification = await this.notificationsModel
+        .findOneAndUpdate(
+          rejectedNotificationMatch,
+          {
+            $set: {
+              type: NotificationType.APPLICATION_REJECTED,
+              payload: {
+                rejectorName: "Admin",
+                reason: ApplicationStatusMessage.REJECTED_MESSAGE,
+              },
+              actionRequired: false,
+              resolvedAt: new Date(),
+            },
+          },
+          { new: true, ...currentSession },
+        )
+        .lean()
+        .exec();
+
+      if (!rejectedNotification) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
+      }
+
+      const agencyMatch: T = {
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.PENDING,
+        _id: agencyId,
+      };
+
+      const agency = await this.agencyModel
+        .findOne(agencyMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!agency) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_AGENCY_FOUND);
+      }
+
+      const newNotificationInput: Partial<NotificationCreation> = {
+        actionRequired: false,
+        entityId: application._id,
+        entityType: NotificationEntityType.AGENCY_APPLICATION,
+        recipientId: agency.userId,
+        recipientRole: MemberType.USER,
+        type: NotificationType.APPLICATION_REJECTED,
+        payload: {
+          rejectorName: "Admin",
+          reason: ApplicationStatusMessage.REJECTED_MESSAGE,
+        },
+      };
+
+      await this.notificationsModel.create(
+        [newNotificationInput],
+        currentSession,
+      );
+
+      await session.commitTransaction();
+
+      return rejectedNotification;
+    } catch (error) {
+      await session.abortTransaction();
+      console.log("Error in adminRejectApplication: ", error);
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(
+          HttpCode.BAD_REQUEST,
+          Message.APPLICATION_REJECTION_FAILED,
+        );
+      }
+    } finally {
+      session.endSession();
+    }
   }
 
   //////////////////////////////////// Helper functions /////////////////////////

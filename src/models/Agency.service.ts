@@ -980,7 +980,7 @@ class AgencyService {
   public async reviewNotification(
     agencyId: ObjectId,
     entityId: string,
-  ): Promise<ReviewNotificationType> {
+  ): Promise<ReviewNotificationType<AgentDoc>> {
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
@@ -1004,7 +1004,7 @@ class AgencyService {
       const notificationMatch: T = {
         recipientId: agency._id,
         recipientRole: MemberType.AGENCY,
-        entityId,
+        entityId: shapeIntoMongooseObjectId(entityId),
       };
 
       const notification = await this.notificationModel
@@ -1075,7 +1075,7 @@ class AgencyService {
       await session.commitTransaction();
       return {
         notification,
-        agent,
+        member: agent,
       };
     } catch (error) {
       await session.abortTransaction();

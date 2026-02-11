@@ -408,4 +408,50 @@ adminController.adminGetNotifications = async (
     }
   }
 };
+
+/////////////////// ---- REVIEW NOTIFICATIONS////////////////
+adminController.reviewNotification = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("reviewNotification proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { entityId } = req.params;
+
+    const result = await adminService.reviewNotification(adminId, entityId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in reviewNotification of Admin system: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////////////// ADMIN APPLICATION REJECT //////////////
+
+adminController.adminRejectApplication = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("adminRejectApplication proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const agencyId = shapeIntoMongooseObjectId(id);
+
+    const result = await adminService.adminRejectApplication(adminId, agencyId);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminRejectApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default adminController;

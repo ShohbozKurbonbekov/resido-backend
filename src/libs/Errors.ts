@@ -17,6 +17,7 @@ export enum Message {
   IMAGE_NEEDED = "Please, provide a valid image for your profile!",
   NO_DATA_FOUND = "No data is found",
   NO_AGENT_FOUND = "No Agent is found",
+  NO_AGENCY_FOUND = "No Agency is found",
   CREATING_FAILED = "Creating is failed!",
   UPDATING_FAILED = "Updating is failed!",
   TOKEN_CREATION_FAILED = "Token creation error!",

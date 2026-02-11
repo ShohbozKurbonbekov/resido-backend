@@ -102,3 +102,19 @@ adminRouter.get(
   allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminGetNotifications,
 );
+
+/////////////////////// ////// REVIEW NOTIFICATION ///////////////
+adminRouter.post(
+  "/review/notification/:entityId",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.reviewNotification,
+);
+
+///////////////////// ADMIN APPLICATION REJECT //////////////
+adminRouter.post(
+  "/reject/application/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminRejectApplication,
+);
