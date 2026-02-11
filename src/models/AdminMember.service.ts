@@ -721,7 +721,7 @@ class AdminService {
         recipientRole: MemberType.USER,
         type: NotificationType.APPLICATION_APPROVED,
         payload: {
-          actorName: agency.memberName,
+          actorName: "Admin",
           reason: ApplicationStatusMessage.APPROVED_MESSAGE,
         },
       };

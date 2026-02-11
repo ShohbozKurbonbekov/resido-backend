@@ -58,6 +58,8 @@ import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
 import AgentApplicationModel from "../schema/AgentApplication.model";
 import { Properties } from "../libs/types/property";
 import PropertyModel from "../schema/Property.model";
+import { AgencyApplicationStatus } from "../libs/enums/agencyApplication.enum";
+import AgencyApplicationModel from "../schema/AgencyApplication.model";
 
 class MemberService {
   private readonly userModel;
@@ -70,6 +72,7 @@ class MemberService {
   private readonly notificationModel;
   private readonly agentApplicationModel;
   private readonly propertyModel;
+  private readonly agencyApplicationModel;
 
   constructor() {
     this.userModel = UserModel;
@@ -82,6 +85,7 @@ class MemberService {
     this.notificationModel = NotificationModel;
     this.agentApplicationModel = AgentApplicationModel;
     this.propertyModel = PropertyModel;
+    this.agencyApplicationModel = AgencyApplicationModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -561,7 +565,6 @@ class MemberService {
     const notificationMatch: T = {
       recipientId: userId,
       recipientRole: MemberType.USER,
-      entityType: NotificationEntityType.AGENT_APPLICATION,
       type: {
         $in: [
           NotificationType.APPLICATION_APPROVED,
@@ -605,7 +608,7 @@ class MemberService {
   }
 
   //////////////////////// ------- USER  = > AGENT STATUS-----//////////////////
-  public async authorizeAgentAccount(
+  public async authorizeAccount(
     userId: ObjectId,
     notificationId: ObjectId,
   ): Promise<NotificationOutput> {
@@ -642,62 +645,104 @@ class MemberService {
         throw new Errors(HttpCode.NOT_FOUND, Message.NOTIFICATION_NOT_FOUND);
       }
 
-      // Check agent exists
-      const agentMatch: T = {
-        memberStatus: MemberStatus.ACTIVE,
-        currentStatus: AgentStatus.PENDING,
-        userId,
-      };
+      if (
+        notification.entityType === NotificationEntityType.AGENT_APPLICATION
+      ) {
+        // Check agent exists
+        const agentMatch: T = {
+          memberStatus: MemberStatus.ACTIVE,
+          currentStatus: AgentStatus.PENDING,
+          userId,
+        };
+        const agent = await this.agentModel
+          .findOneAndUpdate(
+            agentMatch,
+            {
+              $set: {
+                currentStatus: AgentStatus.AVAILABLE,
+                isVerified: true,
+              },
+            },
+            { new: true, ...currentSession },
+          )
+          .lean()
+          .exec();
+        if (!agent) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.AGENT_NOT_ACTIVE);
+        }
 
-      const agent = await this.agentModel
-        .findOneAndUpdate(
-          agentMatch,
+        // Check application exists
+        const applicationMatch: T = {
+          agencyId: agent.agencyId,
+          agentId: agent._id,
+          status: AgentApplicationStatus.APPROVED,
+        };
+
+        const application = await this.agentApplicationModel
+          .findOne(applicationMatch, null, currentSession)
+          .lean()
+          .exec();
+
+        if (!application) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+        }
+
+        // Update account
+        const user = await this.userModel.findOneAndUpdate(
+          {
+            _id: userId,
+            memberStatus: MemberStatus.ACTIVE,
+          },
           {
             $set: {
-              currentStatus: AgentStatus.AVAILABLE,
-              isVerified: true,
+              agentMode: true,
             },
           },
           { new: true, ...currentSession },
-        )
-        .lean()
-        .exec();
+        );
 
-      if (!agent) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.AGENT_NOT_ACTIVE);
-      }
-
-      // Check application exists
-      const applicationMatch: T = {
-        agencyId: agent.agencyId,
-        agentId: agent._id,
-        status: AgentApplicationStatus.APPROVED,
-      };
-
-      const application = await this.agentApplicationModel
-        .findOne(applicationMatch, null, currentSession)
-        .lean()
-        .exec();
-
-      if (!application) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
-      }
-
-      const user = await this.userModel.findOneAndUpdate(
-        {
-          _id: userId,
+        if (!user) {
+          throw new Errors(HttpCode.FORBIDDEN, Message.NO_MEMBER_FOUND);
+        }
+      } else {
+        // Check agency exists
+        const agencyMatch: T = {
           memberStatus: MemberStatus.ACTIVE,
-        },
-        {
-          $set: {
-            agentMode: true,
-          },
-        },
-        { new: true, ...currentSession },
-      );
+          currentStatus: AgencyStatus.PENDING,
+          userId,
+        };
 
-      if (!user) {
-        throw new Errors(HttpCode.FORBIDDEN, Message.NO_MEMBER_FOUND);
+        const agency = await this.agencyModel
+          .findOneAndUpdate(
+            agencyMatch,
+            {
+              $set: {
+                currentStatus: AgencyStatus.PAYMENT,
+                isVerified: false,
+              },
+            },
+            { new: true, ...currentSession },
+          )
+          .lean()
+          .exec();
+        if (!agency) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
+        }
+
+        // Check application exists
+        const applicationMatch: T = {
+          agencyId: agency._id,
+          status: AgencyApplicationStatus.APPROVED,
+        };
+
+        const application = await this.agencyApplicationModel
+          .findOne(applicationMatch, null, currentSession)
+          .lean()
+          .exec();
+
+        if (!application) {
+          throw new Errors(HttpCode.NOT_FOUND, Message.APPLICATION_NOT_FOUND);
+        }
       }
 
       await session.commitTransaction();
@@ -705,11 +750,11 @@ class MemberService {
       return notification;
     } catch (error) {
       await session.abortTransaction();
-      console.log("Error in authorizeAgentAccount: ", error);
+      console.log("Error in authorizeAccount: ", error);
       if (error instanceof Errors) {
         throw error;
       } else {
-        throw new Errors(HttpCode.BAD_REQUEST, Message.AGENT_CREATION_FAILED);
+        throw new Errors(HttpCode.BAD_REQUEST, Message.ACCOUNT_CREATION_FAILED);
       }
     } finally {
       session.endSession();

@@ -84,7 +84,7 @@ agency.post(
   agencyController.subscriptionCancel,
 );
 
-////////////////// -- AGENCY PTOFILE UPDATE --- ///////////////
+////////////////// -- AGENCY PROFILE UPDATE --- ///////////////
 agency.post(
   "/update/agency-profile",
   memberController.verifyMember,

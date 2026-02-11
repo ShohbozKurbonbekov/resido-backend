@@ -300,6 +300,7 @@ class AgencyService {
     const { page, limit, location } = input;
     const match: T = {
       memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
     };
 
     if (location) {
@@ -311,7 +312,6 @@ class AgencyService {
 
     const sort: T = {
       createdAt: -1,
-      isVerified: -1,
     };
 
     const [result] = await this.agencyModel.aggregate([

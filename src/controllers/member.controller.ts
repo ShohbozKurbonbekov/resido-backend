@@ -420,22 +420,19 @@ memberController.userNotifications = async (
 };
 
 /////////////////// ---- USER => AGENT  STATUS ////////////////
-memberController.authorizeAgentAccount = async (
+memberController.authorizeAccount = async (
   req: ExtendedRequest,
   res: Response,
 ) => {
   try {
-    console.log("authorizeAgentAccount proccess");
+    console.log("authorizeAccount proccess");
     const userId = shapeIntoMongooseObjectId(req.member._id);
     const { id } = req.params;
     const notificationId = shapeIntoMongooseObjectId(id);
-    const result = await memberService.authorizeAgentAccount(
-      userId,
-      notificationId,
-    );
+    const result = await memberService.authorizeAccount(userId, notificationId);
     res.status(HttpCode.OK).json(result);
   } catch (error) {
-    console.log("Error in authorizeAgentAccount: ", error);
+    console.log("Error in authorizeAccount: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
