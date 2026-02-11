@@ -382,4 +382,30 @@ adminController.adminChangeMemberStatus = async (
     }
   }
 };
+
+/////////////////// ---- ADMIN NOTIFICATIONS ////////////////
+adminController.adminGetNotifications = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("adminGetNotifications proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { page, limit } = req.query;
+    const queries: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 5,
+    };
+
+    const result = await adminService.adminGetNotifications(adminId, queries);
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminGetNotifications: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
 export default adminController;

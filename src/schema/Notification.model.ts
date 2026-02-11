@@ -11,7 +11,7 @@ import {
 
 const NotificationPayloadSchema = new Schema<NotificationPayload>(
   {
-    agencyName: {
+    rejectorName: {
       type: String,
     },
     reason: {

@@ -14,6 +14,7 @@ import {
   AdminGetAgentType,
   AdminGetUserType,
   AdminMembers,
+  CommonPageInput,
   CommonUsers,
   StatusChangeType,
   T,
@@ -26,6 +27,12 @@ import {
 } from "../libs/types/admin";
 import { Model, ObjectId } from "mongoose";
 import { OrderRender } from "../libs/enums/common.enum";
+import { MyNotifications } from "../libs/types/notification";
+import {
+  NotificationEntityType,
+  NotificationType,
+} from "../libs/enums/notification.enum";
+import NotificationModel from "../schema/Notification.model";
 
 class AdminService {
   private readonly agentModel;
@@ -35,6 +42,7 @@ class AdminService {
   private readonly commentProperty;
   public readonly tarrifService;
   private readonly tarrifModel;
+  private readonly notificationsModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -44,6 +52,7 @@ class AdminService {
     this.commentProperty = CommentModel;
     this.tarrifService = new TariffService();
     this.tarrifModel = TarrifModel;
+    this.notificationsModel = NotificationModel;
   }
 
   /////////////////////////// -- ADMIN SINGUP  -- //////////////////////////////
@@ -223,6 +232,131 @@ class AdminService {
 
     // Return
     return member;
+  }
+
+  /////////////////// ---- ADMIN NOTIFICATIONS ////////////////
+  public async adminGetNotifications(
+    adminId: ObjectId,
+    queries: CommonPageInput,
+  ): Promise<MyNotifications> {
+    const { page, limit } = queries;
+    const notificationMatch: T = {
+      recipientId: adminId,
+      recipientRole: MemberType.REAL_ESTATE_ADMIN,
+      entityType: NotificationEntityType.AGENCY_APPLICATION,
+      type: NotificationType.APPLICATION_SUBMITED,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const adminMatch: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      _id: adminId,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    const [result] = await this.notificationsModel.aggregate([
+      {
+        $match: notificationMatch,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $lookup: {
+          from: "agencyApplications",
+          let: {
+            applicationId: "$entityId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$applicationId"],
+                },
+              },
+            },
+            {
+              $project: {
+                agencyId: 1,
+              },
+            },
+          ],
+          as: "application",
+        },
+      },
+      {
+        $unwind: { path: "$application", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "agencies",
+          let: {
+            agencyId: "$application.agencyId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$agencyId"],
+                },
+              },
+            },
+            {
+              $project: {
+                ownerId: "$_id",
+                _id: 0,
+                ownerType: "$role",
+                name: "$memberName",
+                status: "$currentStatus",
+                address: 1,
+                avatar: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: "notificationOwner",
+        },
+      },
+      {
+        $unwind: {
+          path: "$notificationOwner",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          application: 0,
+        },
+      },
+      {
+        $facet: {
+          notifications: [
+            { $skip: (page - 1) * limit },
+            {
+              $limit: limit,
+            },
+          ],
+          metaCounter: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.notifications.length) {
+      return {
+        notifications: result.notifications ?? [],
+        metaCounter: result.metaCounter ?? [{ total: 0 }],
+      };
+    }
+    return result;
   }
 
   //////////////////////////////////// Helper functions /////////////////////////

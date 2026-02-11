@@ -7,8 +7,9 @@ import {
 import { NotificationOutput } from "../../schema/Notification.model";
 import { TotalCounter } from "./property";
 import { AgentDoc } from "../../schema/members/Agent.model";
+
 export interface ApprovePayload {
-  agencyName: string;
+  rejectorName: string;
 }
 
 export interface RejectedPayload {

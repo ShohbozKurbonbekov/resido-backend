@@ -866,7 +866,7 @@ class AgencyService {
     };
 
     const sort: T = {
-      createdAt: 1,
+      createdAt: -1,
     };
 
     const agencyMatch: T = {
@@ -928,7 +928,7 @@ class AgencyService {
             {
               $project: {
                 ownerId: "$_id",
-                ownerType: 1,
+                ownerType: "$role",
                 name: "$fullName",
                 status: "$currentStatus",
                 address: 1,
@@ -1191,7 +1191,7 @@ class AgencyService {
         recipientRole: MemberType.USER,
         type: NotificationType.APPLICATION_APPROVED,
         payload: {
-          agencyName: agency.memberName,
+          rejectorName: agency.memberName,
           reason: ApplicationStatusMessage.APPROVED_MESSAGE,
         },
       };
@@ -1291,7 +1291,7 @@ class AgencyService {
             $set: {
               type: NotificationType.APPLICATION_REJECTED,
               payload: {
-                agencyName: agency.memberName,
+                rejectorName: agency.memberName,
                 reason: ApplicationStatusMessage.REJECTED_MESSAGE,
               },
               actionRequired: false,
@@ -1329,7 +1329,7 @@ class AgencyService {
         recipientRole: MemberType.USER,
         type: NotificationType.APPLICATION_REJECTED,
         payload: {
-          agencyName: agency.memberName,
+          rejectorName: agency.memberName,
           reason: ApplicationStatusMessage.REJECTED_MESSAGE,
         },
       };

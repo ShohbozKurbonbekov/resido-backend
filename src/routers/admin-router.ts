@@ -94,3 +94,11 @@ adminRouter.post(
   allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminChangeMemberStatus,
 );
+
+////////////////////////////// ADMIN NOTIFICATIONS ///////////////////////////
+adminRouter.get(
+  "/get/notifications",
+  memberController.verifyMember,
+  allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminGetNotifications,
+);
