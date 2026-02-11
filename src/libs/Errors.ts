@@ -11,6 +11,7 @@ export enum HttpCode {
 }
 
 export enum Message {
+  SYSTEM_PROBLEM = "System problem, please try later!",
   ACCESS_DENIED = "Access denied!s",
   SOMETHING_WENT_WRONG = "Something went wrong",
   IMAGE_NEEDED = "Please, provide a valid image for your profile!",
@@ -30,6 +31,7 @@ export enum Message {
   INVALID_PROPERTY_STATUS = "Invalid property status!",
   INVALID_COMMENT_STATUS = "Invalid comment status!",
   INVALID_AGENT_STATUS = "Invalid Agent Status!",
+  INVALID_MEMBER_STATUS = "Invalid Member Status!",
   INVALID_BLOG_STATUS = "Invalid Blog status!",
   NO_MESSAGE_TO_MEMBER = "Sorry, you can not write a message to invalid member",
   ONLY_USERS = "Sorry, only common users are allowed to like it",

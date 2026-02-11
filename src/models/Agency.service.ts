@@ -4,11 +4,7 @@ import {
   StatisticsModifier,
   T,
 } from "../libs/types/common";
-import {
-  MemberStatus,
-  MemberType,
-  UserCurrentStatus,
-} from "../libs/enums/member.enum";
+import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import ViewModel, { ViewDocs } from "../schema/View.model";
 import AgencyModel, { Agency } from "../schema/members/Agency.model";
 import Errors, { Message } from "../libs/Errors";
@@ -55,13 +51,14 @@ import BlogModel, { BlogDoc } from "../schema/Blog.model";
 import TarrifModel from "../schema/Tariff.model";
 
 import {
-  AgentNotificationCreation,
+  NotificationInput,
   MyNotifications,
+  NotificationCreation,
   ReviewNotificationType,
 } from "../libs/types/notification";
 import {
-  AgentNotificationEntityType,
-  AgentNotificationType,
+  NotificationEntityType,
+  NotificationType,
 } from "../libs/enums/notification.enum";
 import NotificationModel, {
   NotificationOutput,
@@ -70,11 +67,13 @@ import {
   AgentApplicationStatus,
   ApplicationStatusMessage,
 } from "../libs/enums/agentApplication.enum";
-import AgentApplicationModel, {
-  AgentApplicationOutput,
-} from "../schema/AgentApplication.model";
-import { Properties } from "../libs/types/property";
+import AgentApplicationModel from "../schema/AgentApplication.model";
 import MessageModel from "../schema/Message.model";
+import AgencyApplicationModel, {
+  AgencyApplicationOutput,
+} from "../schema/AgencyApplication.model";
+import { AgencyApplicationStatus } from "../libs/enums/agencyApplication.enum";
+import { AgencyApplicationInput } from "../libs/types/agencyApplication";
 
 class AgencyService {
   private readonly agencyModel;
@@ -89,6 +88,7 @@ class AgencyService {
   private readonly notificationModel;
   private readonly agentApplicationModel;
   private readonly messageModel;
+  private readonly agencyApplicationModel;
 
   constructor() {
     this.agencyModel = AgencyModel;
@@ -103,6 +103,7 @@ class AgencyService {
     this.notificationModel = NotificationModel;
     this.agentApplicationModel = AgentApplicationModel;
     this.messageModel = MessageModel;
+    this.agencyApplicationModel = AgencyApplicationModel;
   }
 
   // UPDATE AGENCY FIELDS
@@ -580,26 +581,120 @@ class AgencyService {
   public async applyAgency(
     userId: ObjectId,
     input: AgencyInputs,
-  ): Promise<Agency> {
-    const target = await this.agencyModel
-      .findOne({ userId })
-      .select("memberName _id memberEmail");
-
-    if (target) {
-      throw new Errors(HttpCode.CONFLICT, Message.AGENT_EXISTS);
-    }
-
+  ): Promise<AgencyApplicationOutput> {
+    const session = await mongoose.startSession();
     try {
-      const result = await this.agencyModel.create({ ...input, userId });
+      session.startTransaction();
+      const currentSession = { session };
 
-      return result;
+      // Get admin  - Transaction - 1
+      const admin = await this.userModel
+        .findOne(
+          {
+            role: MemberType.REAL_ESTATE_ADMIN,
+            memberStatus: MemberStatus.ACTIVE,
+          },
+          {
+            _id: 1,
+          },
+          currentSession,
+        )
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+
+      if (!admin) {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.SYSTEM_PROBLEM);
+      }
+
+      // Check agency available - Transition 2
+      const target = await this.agencyModel.findOne(
+        { userId },
+        null,
+        currentSession,
+      );
+
+      if (target) {
+        throw new Errors(HttpCode.CONFLICT, Message.AGENCY_EXISTS);
+      }
+
+      // Check Application available -  Transaction 3
+      const existingApplication = await this.agencyApplicationModel.findOne(
+        {
+          userId,
+          status: AgencyApplicationStatus.APPLIED,
+        },
+        null,
+        currentSession,
+      );
+
+      if (existingApplication) {
+        throw new Errors(HttpCode.CONFLICT, Message.APPLICATION_ALREADY_EXISTS);
+      }
+
+      // Create agency  - Transction 4
+      const [agency] = await this.agencyModel.create(
+        [
+          {
+            ...input,
+            userId,
+            isVerified: false,
+            currentStatus: AgencyStatus.PENDING,
+          },
+        ],
+        currentSession,
+      );
+
+      // Create an application -  Transaction 5
+      const agencyApplicationInput: AgencyApplicationInput = {
+        agencyId: agency._id,
+        userId,
+      };
+
+      const [agencyApplication] = await this.agencyApplicationModel.create(
+        [agencyApplicationInput],
+        currentSession,
+      );
+
+      // Create a notification Transaction 6
+      const notificationInput: NotificationInput = {
+        actionRequired: true,
+        entityId: agencyApplication._id,
+        entityType: NotificationEntityType.AGENCY_APPLICATION,
+        recipientId: admin._id,
+        recipientRole: MemberType.REAL_ESTATE_ADMIN,
+        type: NotificationType.APPLICATION_SUBMITED,
+      };
+
+      const notificationAvailable = await this.notificationModel.findOne(
+        {
+          recipientId: admin._id,
+          recipientRole: MemberType.REAL_ESTATE_ADMIN,
+          entityId: agencyApplication._id,
+          type: NotificationType.APPLICATION_SUBMITED,
+        },
+        null,
+        currentSession,
+      );
+
+      if (notificationAvailable) {
+        throw new Errors(HttpCode.CONFLICT, Message.NOTIFICATION_ALREADY_SENT);
+      }
+
+      await this.notificationModel.create([notificationInput], currentSession);
+      await session.commitTransaction();
+
+      return agencyApplication;
     } catch (error) {
+      await session.abortTransaction();
       console.log("Error in applyAgency service: ", error);
       if (error instanceof Errors) {
         throw error;
       } else {
         throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
       }
+    } finally {
+      session.endSession();
     }
   }
 
@@ -766,8 +861,8 @@ class AgencyService {
     const notificationMatch: T = {
       recipientId: agencyId,
       recipientRole: MemberType.AGENCY,
-      entityType: AgentNotificationEntityType.AGENT_APPLICATION,
-      type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
+      entityType: NotificationEntityType.AGENT_APPLICATION,
+      type: NotificationType.APPLICATION_SUBMITED,
     };
 
     const sort: T = {
@@ -1051,7 +1146,7 @@ class AgencyService {
         recipientId: agencyId,
         recipientRole: MemberType.AGENCY,
         entityId: application._id,
-        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        entityType: NotificationEntityType.AGENT_APPLICATION,
       };
 
       const approvedNotification = await this.notificationModel
@@ -1059,7 +1154,7 @@ class AgencyService {
           approvedNotificationMatch,
           {
             $set: {
-              type: AgentNotificationType.AGENT_APPLICATION_CONFIRMED,
+              type: NotificationType.APPLICATION_CONFIRMED,
               actionRequired: false,
               resolvedAt: new Date(),
             },
@@ -1088,13 +1183,13 @@ class AgencyService {
         throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
       }
 
-      const newNotificationInput: Partial<AgentNotificationCreation> = {
+      const newNotificationInput: Partial<NotificationCreation> = {
         actionRequired: true,
         entityId: application._id,
-        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        entityType: NotificationEntityType.AGENT_APPLICATION,
         recipientId: agent.userId,
         recipientRole: MemberType.USER,
-        type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
+        type: NotificationType.APPLICATION_APPROVED,
         payload: {
           agencyName: agency.memberName,
           reason: ApplicationStatusMessage.APPROVED_MESSAGE,
@@ -1186,7 +1281,7 @@ class AgencyService {
         recipientId: agencyId,
         recipientRole: MemberType.AGENCY,
         entityId: application._id,
-        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        entityType: NotificationEntityType.AGENT_APPLICATION,
       };
 
       const rejectedNotification = await this.notificationModel
@@ -1194,7 +1289,7 @@ class AgencyService {
           rejectedNotificationMatch,
           {
             $set: {
-              type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+              type: NotificationType.APPLICATION_REJECTED,
               payload: {
                 agencyName: agency.memberName,
                 reason: ApplicationStatusMessage.REJECTED_MESSAGE,
@@ -1226,13 +1321,13 @@ class AgencyService {
       if (!agent) {
         throw new Errors(HttpCode.NOT_FOUND, Message.NO_AGENT_FOUND);
       }
-      const newNotificationInput: Partial<AgentNotificationCreation> = {
+      const newNotificationInput: Partial<NotificationCreation> = {
         actionRequired: false,
         entityId: application._id,
-        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        entityType: NotificationEntityType.AGENT_APPLICATION,
         recipientId: agent.userId,
         recipientRole: MemberType.USER,
-        type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+        type: NotificationType.APPLICATION_REJECTED,
         payload: {
           agencyName: agency.memberName,
           reason: ApplicationStatusMessage.REJECTED_MESSAGE,

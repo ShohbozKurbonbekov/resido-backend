@@ -48,8 +48,8 @@ import { CommentStatus } from "../libs/enums/comment.enum";
 import { AgencyStatus } from "../libs/enums/agency.enum";
 import { MyNotifications } from "../libs/types/notification";
 import {
-  AgentNotificationEntityType,
-  AgentNotificationType,
+  NotificationEntityType,
+  NotificationType,
 } from "../libs/enums/notification.enum";
 import NotificationModel, {
   NotificationOutput,
@@ -561,11 +561,11 @@ class MemberService {
     const notificationMatch: T = {
       recipientId: userId,
       recipientRole: MemberType.USER,
-      entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+      entityType: NotificationEntityType.AGENT_APPLICATION,
       type: {
         $in: [
-          AgentNotificationType.AGENT_APPLICATION_APPROVED,
-          AgentNotificationType.AGENT_APPLICATION_REJECTED,
+          NotificationType.APPLICATION_APPROVED,
+          NotificationType.APPLICATION_REJECTED,
         ],
       },
     };
@@ -621,7 +621,7 @@ class MemberService {
         _id: notificationId,
         recipientId: userId,
         recipientRole: MemberType.USER,
-        type: AgentNotificationType.AGENT_APPLICATION_APPROVED,
+        type: NotificationType.APPLICATION_APPROVED,
       };
 
       const notification = await this.notificationModel
@@ -733,7 +733,7 @@ class MemberService {
         _id: notificationId,
         recipientId: userId,
         recipientRole: MemberType.USER,
-        type: AgentNotificationType.AGENT_APPLICATION_REJECTED,
+        type: NotificationType.APPLICATION_REJECTED,
       };
 
       const notification = await this.notificationModel

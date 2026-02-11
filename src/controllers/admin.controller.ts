@@ -331,7 +331,10 @@ adminController.adminGetAllMembers = async (req: Request, res: Response) => {
       queries.sort = sort as OrderRender;
     }
 
-    if (status && Object.keys(MemberStatus).includes(status as MemberStatus)) {
+    if (
+      status &&
+      Object.values(MemberStatus).includes(status as MemberStatus)
+    ) {
       queries.status = status as MemberStatus;
     }
 
@@ -339,13 +342,39 @@ adminController.adminGetAllMembers = async (req: Request, res: Response) => {
       queries.memberCategory = memberCategory as AdminGetAllMembersCategory;
     }
 
-    console.log(queries);
-
     const result = await adminService.adminGetAllMembers(queries);
 
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in adminGetAllMembers: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////////// ADMIN CHANGE MEMBER STATUS ///////////////////////////
+adminController.adminChangeMemberStatus = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const memberId = shapeIntoMongooseObjectId(req.params.id);
+    const { status, role } = req.body;
+    const queries: StatusChangeType<MemberStatus> & { role: MemberType } = {
+      id: memberId,
+      status: status as MemberStatus,
+      role: role as MemberType,
+    };
+
+    const result = await adminService.adminChangeMemberStatus(adminId, queries);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminChangeMemberStatus: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

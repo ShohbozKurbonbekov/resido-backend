@@ -62,10 +62,10 @@ import AgentApplicationModel, {
 import { AgentApplicationInput } from "../libs/types/agentApplication";
 import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
 import NotificationModel from "../schema/Notification.model";
-import { AgentNotificationInput } from "../libs/types/notification";
+import { NotificationInput } from "../libs/types/notification";
 import {
-  AgentNotificationEntityType,
-  AgentNotificationType,
+  NotificationEntityType,
+  NotificationType,
 } from "../libs/enums/notification.enum";
 
 class AgentService {
@@ -814,7 +814,7 @@ class AgentService {
       const agentApplicationInput: AgentApplicationInput = {
         agencyId: shapeIntoMongooseObjectId(input.agencyId),
         agentId: agent._id,
-        userId: shapeIntoMongooseObjectId(_id),
+        userId: _id,
       };
 
       const [agentApplication] = await this.agentApplicationModel.create(
@@ -823,13 +823,13 @@ class AgentService {
       );
 
       //Transaction 5
-      const notificationInput: AgentNotificationInput = {
+      const notificationInput: NotificationInput = {
         actionRequired: true,
         entityId: agentApplication._id,
-        entityType: AgentNotificationEntityType.AGENT_APPLICATION,
+        entityType: NotificationEntityType.AGENT_APPLICATION,
         recipientId: shapeIntoMongooseObjectId(input.agencyId),
         recipientRole: MemberType.AGENCY,
-        type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
+        type: NotificationType.APPLICATION_SUBMITED,
       };
 
       const notificationAvailable = await this.notificationModel.findOne(
@@ -837,7 +837,7 @@ class AgentService {
           recipientId: shapeIntoMongooseObjectId(input.agencyId),
           recipientRole: MemberType.AGENCY,
           entityId: agentApplication._id,
-          type: AgentNotificationType.AGENT_APPLICATION_SUBMITED,
+          type: NotificationType.APPLICATION_SUBMITED,
         },
         null,
         currentSession,

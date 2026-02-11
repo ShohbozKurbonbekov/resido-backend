@@ -1,15 +1,15 @@
 import mongoose, { InferSchemaType, Schema } from "mongoose";
 import {
-  AgentNotificationCreation,
-  AgentNotificationPayload,
+  NotificationPayload,
+  NotificationCreation,
 } from "../libs/types/notification";
 import { MemberType } from "../libs/enums/member.enum";
 import {
-  AgentNotificationEntityType,
-  AgentNotificationType,
+  NotificationEntityType,
+  NotificationType,
 } from "../libs/enums/notification.enum";
 
-const NotificationPayloadSchema = new Schema<AgentNotificationPayload>(
+const NotificationPayloadSchema = new Schema<NotificationPayload>(
   {
     agencyName: {
       type: String,
@@ -21,7 +21,7 @@ const NotificationPayloadSchema = new Schema<AgentNotificationPayload>(
   { _id: false },
 );
 
-export const NotificationSchema = new Schema<AgentNotificationCreation>(
+export const NotificationSchema = new Schema<NotificationCreation>(
   {
     actionRequired: {
       type: Boolean,
@@ -33,7 +33,7 @@ export const NotificationSchema = new Schema<AgentNotificationCreation>(
     },
     entityType: {
       type: String,
-      enum: AgentNotificationEntityType,
+      enum: NotificationEntityType,
       required: true,
     },
     payload: {
@@ -50,7 +50,7 @@ export const NotificationSchema = new Schema<AgentNotificationCreation>(
     },
     type: {
       type: String,
-      enum: AgentNotificationType,
+      enum: NotificationType,
       required: true,
     },
     resolvedAt: {

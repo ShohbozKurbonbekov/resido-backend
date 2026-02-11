@@ -52,7 +52,7 @@ export interface AdminGetCommonMember {
   id: ObjectId;
   name: string;
   type: MemberType;
-  systemStatus: MemberStatus;
+  status: MemberStatus;
   phone: string;
   date: Date;
 }
@@ -73,5 +73,5 @@ export type AdminGetUserType = AdminGetCommonMember;
 
 export interface AdminMembers {
   metaCounter: TotalCounter[];
-  members: AdminGetAgencyType | AdminGetAgentType | AdminGetUserType[][];
+  members: AdminGetAgencyType | AdminGetAgentType | AdminGetUserType[];
 }

@@ -15,6 +15,7 @@ import {
   AdminGetUserType,
   AdminMembers,
   CommonUsers,
+  StatusChangeType,
   T,
 } from "../libs/types/common";
 import { shapeIntoMongooseObjectId } from "../libs/config";
@@ -23,7 +24,7 @@ import {
   AdminGetAllMembersCategory,
   AdminGetAllMembersType,
 } from "../libs/types/admin";
-import { Model } from "mongoose";
+import { Model, ObjectId } from "mongoose";
 import { OrderRender } from "../libs/enums/common.enum";
 
 class AdminService {
@@ -157,6 +158,73 @@ class AdminService {
     return result;
   }
 
+  ////////////////////////////// ADMIN CHANGE MEMBER STATUS ///////////////////////////
+  public async adminChangeMemberStatus(
+    adminId: ObjectId,
+    queries: StatusChangeType<MemberStatus> & { role: MemberType },
+  ): Promise<CommonUsers> {
+    const { id, status, role } = queries;
+
+    // Check  member status;
+    const allowedMemberStatus = Object.values(MemberStatus) as MemberStatus[];
+    if (!allowedMemberStatus.includes(status)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_MEMBER_STATUS);
+    }
+
+    // Admin Check
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Find model
+    const Models: Record<string, any> = {
+      USER: this.userModel,
+      AGENT: this.agentModel,
+      AGENCY: this.agencyModel,
+    };
+
+    const currentModel = Models[role];
+    if (!currentModel) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_ROLE);
+    }
+
+    // Search & Update
+    const memberMatch: T = {
+      _id: id,
+      role,
+    };
+
+    const member = await currentModel
+      .findOneAndUpdate(
+        memberMatch,
+        {
+          $set: {
+            memberStatus: status,
+          },
+        },
+        {
+          new: true,
+        },
+      )
+      .lean()
+      .exec();
+
+    if (!member) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+
+    // Return
+    return member;
+  }
+
   //////////////////////////////////// Helper functions /////////////////////////
 
   public updateProject(memberCategory: AdminGetAllMembersCategory): T {
@@ -165,7 +233,7 @@ class AdminService {
         id: "$_id",
         name: "$memberName",
         type: "$role",
-        systemStatus: "$memberStatus",
+        status: "$memberStatus",
         phone: "$memberPhone",
         date: "$createdAt",
         _id: 0,
@@ -177,7 +245,7 @@ class AdminService {
         id: "$_id",
         name: "$nickname",
         type: "$role",
-        systemStatus: "$memberStatus",
+        status: "$memberStatus",
         phone: 1,
         date: "$createdAt",
         verified: "$isVerified",
@@ -192,7 +260,7 @@ class AdminService {
         id: "$_id",
         name: "$memberName",
         type: "$role",
-        systemStatus: "$memberStatus",
+        status: "$memberStatus",
         phone: "$memberPhone",
         date: "$memberSince",
         verified: "$isVerified",

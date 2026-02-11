@@ -86,3 +86,11 @@ adminRouter.post(
   allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminGetAllMembers,
 );
+
+////////////////////////////// ADMIN CHANGE MEMBER STATUS ///////////////////////////
+adminRouter.post(
+  "/change/member/status/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ACCESS_DENIED, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminChangeMemberStatus,
+);
