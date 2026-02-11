@@ -118,3 +118,11 @@ adminRouter.post(
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminRejectApplication,
 );
+
+///////////////////// ADMIN APPLICATION APPROVE//////////////
+adminRouter.post(
+  "/approve/application/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.adminApproveApplication,
+);

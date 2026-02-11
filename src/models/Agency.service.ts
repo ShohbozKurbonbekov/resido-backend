@@ -1191,7 +1191,7 @@ class AgencyService {
         recipientRole: MemberType.USER,
         type: NotificationType.APPLICATION_APPROVED,
         payload: {
-          rejectorName: agency.memberName,
+          actorName: agency.memberName,
           reason: ApplicationStatusMessage.APPROVED_MESSAGE,
         },
       };
@@ -1291,7 +1291,7 @@ class AgencyService {
             $set: {
               type: NotificationType.APPLICATION_REJECTED,
               payload: {
-                rejectorName: agency.memberName,
+                actorName: agency.memberName,
                 reason: ApplicationStatusMessage.REJECTED_MESSAGE,
               },
               actionRequired: false,
@@ -1329,7 +1329,7 @@ class AgencyService {
         recipientRole: MemberType.USER,
         type: NotificationType.APPLICATION_REJECTED,
         payload: {
-          rejectorName: agency.memberName,
+          actorName: agency.memberName,
           reason: ApplicationStatusMessage.REJECTED_MESSAGE,
         },
       };

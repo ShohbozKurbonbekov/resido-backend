@@ -9,7 +9,7 @@ import { TotalCounter } from "./property";
 import { AgentDoc } from "../../schema/members/Agent.model";
 
 export interface ApprovePayload {
-  rejectorName: string;
+  actorName: string;
 }
 
 export interface RejectedPayload {

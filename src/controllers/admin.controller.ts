@@ -432,7 +432,6 @@ adminController.reviewNotification = async (
 };
 
 ///////////////////// ADMIN APPLICATION REJECT //////////////
-
 adminController.adminRejectApplication = async (
   req: ExtendedRequest,
   res: Response,
@@ -454,4 +453,31 @@ adminController.adminRejectApplication = async (
     }
   }
 };
+
+////////////////////------  ADMIN APPLICATION APPROVE ----///////////////////////
+adminController.adminApproveApplication = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
+  try {
+    console.log("adminApproveApplication proccess");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const agencyId = shapeIntoMongooseObjectId(id);
+
+    const result = await adminService.adminApproveApplication(
+      adminId,
+      agencyId,
+    );
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in adminApproveApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
 export default adminController;
