@@ -367,10 +367,11 @@ class AgencyService {
   ): Promise<Agency> {
     const match: T = {
       memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
       _id: agencyId,
     };
 
-    const target = await this.agencyModel.findOne(match);
+    const target = await this.agencyModel.findOne(match).lean().exec();
 
     if (!target) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
@@ -397,20 +398,103 @@ class AgencyService {
       }
     }
 
+    const propertyStatus = [
+      PropertyStatus.AVAILABLE,
+      PropertyStatus.RENTED,
+      PropertyStatus.SOLD,
+    ];
+
     const [result] = await this.agencyModel.aggregate([
       {
         $match: match,
       },
-      propertiesLookupByAgencyId,
-      agentsLookupByAgencyId,
+
+      // Properties lookup
+      {
+        $lookup: {
+          from: "properties",
+          let: {
+            agencyId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$agencyId", "$$agencyId"] },
+                    { $in: ["$status", propertyStatus] },
+                  ],
+                },
+              },
+            },
+            {
+              $facet: {
+                paginatedProperties: [
+                  { $sort: { createdAt: -1 } },
+                  {
+                    $skip: 0,
+                  },
+                  {
+                    $limit: 4,
+                  },
+                ],
+              },
+            },
+          ],
+          as: "propertiesData",
+        },
+      },
+      {
+        $unwind: { path: "$propertiesData", preserveNullAndEmptyArrays: true },
+      },
+
+      // Agents Lookup
+      {
+        $lookup: {
+          from: "agents",
+          let: {
+            agencyId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$agencyId", "$$agencyId"] },
+                    { $eq: ["$memberStatus", "ACTIVE"] },
+                    { $eq: ["$currentStatus", "available"] },
+                  ],
+                },
+              },
+            },
+            {
+              $facet: {
+                paginatedAgents: [
+                  { $sort: { createdAt: -1 } },
+                  {
+                    $skip: 0,
+                  },
+                  {
+                    $limit: 4,
+                  },
+                ],
+              },
+            },
+          ],
+          as: "agentsData",
+        },
+      },
+      {
+        $unwind: { path: "$agentsData", preserveNullAndEmptyArrays: true },
+      },
       {
         $addFields: {
           agencyItems: {
             agents: {
-              $ifNull: ["$agentsList", []],
+              $ifNull: ["$agentsData.paginatedAgents", []],
             },
             properties: {
-              $ifNull: ["$propertiesList", []],
+              $ifNull: ["$propertiesData.paginatedProperties", []],
             },
           },
         },
@@ -418,12 +502,11 @@ class AgencyService {
 
       {
         $project: {
-          agentsList: 0,
-          propertiesList: 0,
+          agentsData: 0,
+          propertiesData: 0,
         },
       },
     ]);
-
     return result;
   }
 
@@ -1639,9 +1722,6 @@ class AgencyService {
       },
       totalViews: {
         total: totalViewsCount,
-      },
-      transactions: {
-        total: 0,
       },
       generatedAt: new Date(),
     };

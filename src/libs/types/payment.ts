@@ -35,7 +35,7 @@ export interface TariffOutputType {
 }
 
 export interface BillingSnapShotType {
-  name: String;
+  name: string;
   features: string[];
   limit: TariffLimitsType;
   usage: TariffLimitsType;

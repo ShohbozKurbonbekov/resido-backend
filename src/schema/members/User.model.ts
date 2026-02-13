@@ -3,6 +3,77 @@ import bcrypt from "bcrypt";
 import { MemberStatus, MemberType } from "../../libs/enums/member.enum";
 import validator from "validator";
 import { User } from "../../libs/types/user";
+import {
+  AdminDashboardOverviewType,
+  AdminGlobalStatsType,
+  AdminPersonalStatsType,
+} from "../../libs/types/admin";
+
+const AdminGlobalStatsSchema = new Schema<AdminGlobalStatsType>(
+  {
+    agencies: {
+      type: Number,
+      required: true,
+    },
+    agents: {
+      type: Number,
+      required: true,
+    },
+    blogs: {
+      type: Number,
+      required: true,
+    },
+    comments: {
+      type: Number,
+      required: true,
+    },
+    properties: {
+      type: Number,
+      required: true,
+    },
+    tariffs: {
+      type: Number,
+      required: true,
+    },
+    users: {
+      type: Number,
+      required: true,
+    },
+  },
+
+  { _id: false },
+);
+
+const AdminPersonalStatsSchema = new Schema<AdminPersonalStatsType>(
+  {
+    myBlogs: {
+      type: Number,
+      required: true,
+    },
+    myMessages: {
+      type: Number,
+      required: true,
+    },
+    notifications: {
+      type: Number,
+      required: true,
+    },
+  },
+
+  { _id: false },
+);
+const AdminOverviewStatsSchema = new Schema<AdminDashboardOverviewType>({
+  adminId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+  },
+  globalStats: AdminGlobalStatsSchema,
+  personalStats: AdminPersonalStatsSchema,
+  generatedAt: {
+    type: Date,
+    required: true,
+  },
+});
 
 const Socials = new Schema(
   {
@@ -116,6 +187,10 @@ const UserSchema = new Schema<User>(
     occupation: {
       type: String,
       required: true,
+    },
+
+    adminOverviewStats: {
+      type: AdminOverviewStatsSchema,
     },
   },
   {

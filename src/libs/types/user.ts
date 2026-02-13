@@ -7,6 +7,7 @@ import {
 import { Request } from "express";
 import { CommonUsers, Social } from "./common";
 import { TotalCounter } from "./property";
+import { AdminDashboardOverviewType } from "./admin";
 
 export interface UploadFiles {
   videos?: Express.Multer.File[];
@@ -57,6 +58,7 @@ export interface User {
   userFullname?: string;
   memberAddress?: string;
   memberDescription?: string;
+  adminOverviewStats?: AdminDashboardOverviewType;
   avatar?: string;
   createdAt: Date;
   updatedAt: Date;

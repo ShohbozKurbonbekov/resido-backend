@@ -2,6 +2,7 @@ import { agendaConfig } from "../libs/config";
 import agenda, { beautifulShutdown } from "./agenda-config";
 import { connectDB } from "./agenda-config";
 import {
+  defineUpdateAdminsOverviewStats,
   defineUpdateAgencyFields,
   defineUpdateAgentFields,
   defineUpdateBlogFieldsJob,
@@ -9,12 +10,14 @@ import {
 } from "./agenda-start-jobs";
 
 (async () => {
+  // DB connection
   await connectDB();
 
   defineUpdateBlogFieldsJob(agenda);
   defineUpdateProperyFields(agenda);
   defineUpdateAgentFields(agenda);
   defineUpdateAgencyFields(agenda);
+  defineUpdateAdminsOverviewStats(agenda);
 
   await agenda.start();
 
@@ -23,7 +26,7 @@ import {
     agendaConfig.cron,
     "update blog fields",
     {},
-    { skipImmediate: true }
+    { skipImmediate: true },
   );
 
   // UPDATE PROPERTY FIELDS
@@ -31,7 +34,7 @@ import {
     agendaConfig.cron,
     "update property fields",
     {},
-    { skipImmediate: true }
+    { skipImmediate: true },
   );
 
   // UPDATE AGENT FIELDS
@@ -39,7 +42,7 @@ import {
     agendaConfig.cron,
     "update agent fields",
     {},
-    { skipImmediate: true }
+    { skipImmediate: true },
   );
 
   // UPDATE AGENCY FIELDS
@@ -47,7 +50,15 @@ import {
     agendaConfig.cron,
     "update agency fields",
     {},
-    { skipImmediate: true }
+    { skipImmediate: true },
+  );
+
+  // UPDATE ADMINS OVERVIEW FIELD
+  await agenda.every(
+    "1 minute",
+    "update admins overview",
+    {},
+    { skipImmediate: true },
   );
 
   process.on("SIGINT", beautifulShutdown);

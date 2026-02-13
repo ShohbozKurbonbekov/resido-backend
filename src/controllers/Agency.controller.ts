@@ -23,7 +23,6 @@ import { SubscriptionMode } from "../libs/enums/payment.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import { ObjectId } from "mongoose";
-import { AgencyStatus } from "../libs/enums/agency.enum";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -143,7 +142,7 @@ agencyController.validationPrePayment = async (
   res: Response,
 ) => {
   try {
-    console.log("validationPrePayment proccess: ");
+    console.log("validationPrePayment proccess");
     const userId = shapeIntoMongooseObjectId(req.member._id);
 
     const result = await agencyService.validationPrePayment(userId);

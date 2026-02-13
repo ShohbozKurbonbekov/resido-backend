@@ -17,7 +17,7 @@ export const agendaConfig = {
   agendaCollectionName: "agendaJobs",
   cron: "40 0 * * *",
 };
-export const jwtTime = 2;
+export const jwtTime = 6;
 
 // CHANGE INTO DB ID
 export const shapeIntoMongooseObjectId = (target: any) => {

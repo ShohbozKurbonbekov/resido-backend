@@ -31,7 +31,7 @@ property.post(
 );
 
 ////////////////// --  GET FEATURED PROPERTY -- /////////////
-property.post("/featured-property", propertyController.getFeaturedProperty);
+property.get("/featured-property", propertyController.getFeaturedProperty);
 
 /////////////////// --  GET ALL PROPERTIES -- //////////////
 

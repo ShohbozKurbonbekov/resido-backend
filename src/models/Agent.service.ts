@@ -925,27 +925,6 @@ class AgentService {
     return result;
   }
 
-  // UPDATE MY BLOG
-  public async agentUpdateMyBog(
-    input: BlogDoc,
-    blogId: ObjectId,
-    memberId: ObjectId,
-  ): Promise<BlogDoc> {
-    const match: T = {
-      _id: blogId,
-      blogAuthorId: memberId,
-      blogStatus: BlogStatus.ACTIVE,
-    };
-    const result = await this.blogModel.findOneAndUpdate(match, input, {
-      new: true,
-    });
-
-    if (!result) {
-      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
-    }
-    return result;
-  }
-
   ////////////////////////// --- DELETE BLOG ---/////////////////////
   public async deleteMyBlog(
     memberId: ObjectId,
@@ -1132,7 +1111,6 @@ class AgentService {
       myBlogsCount,
       reviewsCount,
       messagesCount,
-      // TO-DO FOR TRANSACTION
 
       totalLikesCount,
       totalViewsCount,
@@ -1191,9 +1169,7 @@ class AgentService {
       totalViews: {
         total: totalViewsCount,
       },
-      transactions: {
-        total: 0,
-      },
+
       generatedAt: new Date(),
     };
   }

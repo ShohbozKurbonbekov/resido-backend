@@ -667,6 +667,31 @@ class BlogService {
     return results;
   }
 
+  // UPDATE MY BLOG
+  public async updateMyBlog(
+    input: BlogDoc,
+    blogId: ObjectId,
+    memberId: ObjectId,
+  ): Promise<BlogDoc> {
+    const match: T = {
+      _id: blogId,
+      blogAuthorId: memberId,
+      blogStatus: BlogStatus.ACTIVE,
+    };
+    const result = await this.blogModel.findOneAndUpdate(
+      match,
+      { $set: { ...input } },
+      {
+        new: true,
+      },
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+    return result;
+  }
+
   // ADMIN CHANGE BLOG STATUS
   public async adminChangeBlogsStatus(
     adminId: ObjectId,

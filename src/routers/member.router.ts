@@ -113,10 +113,10 @@ member.get(
 ///////////////////// USER =>  AGENT STATUS ///////////////
 
 member.post(
-  "/authorize/account/:id",
+  "/authorize/agent/account/:id",
   memberController.verifyMember,
   allowRoles(Message.USER_PAGE, MemberType.USER),
-  memberController.authorizeAccount,
+  memberController.authorizeAgentAccount,
 );
 ///////////////////// APPROVE AGENT REJECTION  ///////////////
 member.post(

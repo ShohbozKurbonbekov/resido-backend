@@ -11,7 +11,7 @@ const agency = express.Router();
 
 //////////////// --  GET AGENCY DETAIL -- ////////////////////
 agency.get(
-  "/:id",
+  "/get/:id",
   memberController.checkMemberAuth,
   agencyController.getAgencyDetail,
 );
@@ -84,7 +84,7 @@ agency.post(
   agencyController.subscriptionCancel,
 );
 
-////////////////// -- AGENCY PROFILE UPDATE --- ///////////////
+////////////////// -- AGENCY PrOFILE UPDATE --- ///////////////
 agency.post(
   "/update/agency-profile",
   memberController.verifyMember,

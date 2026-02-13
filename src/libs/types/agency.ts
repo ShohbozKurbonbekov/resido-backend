@@ -14,15 +14,10 @@ import { TotalCounter } from "./property";
 import { Agency } from "../../schema/members/Agency.model";
 import { Property } from "../../schema/Property.model";
 import { BillingSnapShotType, TariffLimitsType } from "./payment";
-import {
-  BillingCycle,
-  TarrifCurrencyType,
-  TarrifName,
-} from "../enums/payment.enum";
-import { Tarrif } from "../../schema/Tariff.model";
+import { BillingCycle } from "../enums/payment.enum";
 import { AgencySubscriptionResult } from "../../schema/AgencySubscription.model";
 import { AgentStatus } from "../enums/agent.enum";
-import { PropertyStatus } from "../enums/property.enum";
+import { Tariff } from "../../schema/Tariff.model";
 
 export interface BillingDetails {
   planName: SubscriptionTarrif;
@@ -106,7 +101,7 @@ export interface AgencySubscriptionSchemaInputs {
 
   amount: number;
   billingSnapshot: BillingSnapShotType;
-  currency: TarrifCurrencyType;
+  currency: string;
   paymentProvider: PaymentProvider;
   subscriptionStatus: SubscriptionStatus;
 
@@ -143,7 +138,7 @@ export type AgencyPaymentInfoInputs = Pick<
 export type RequiredSubscribeInputs = Partial<AgencySubscriptionSchemaInputs>;
 
 export interface AgencySubscriptionInfoType {
-  tariffPlans: Tarrif[];
+  tariffPlans: Tariff[];
   agencySubscription: AgencySubscriptionResult;
 }
 
@@ -169,7 +164,7 @@ export interface AgencyAgentsApplicationInput extends CommonPageInput {
 
 export interface AgencyDashboardBillingOverview {
   subscriptionStatus: SubscriptionStatus;
-  subscriptionPlanType: TarrifName;
+  subscriptionPlanType: string;
 }
 export interface AgencyDashboardOverviewType {
   myProperties: TotalCounter;
@@ -178,7 +173,6 @@ export interface AgencyDashboardOverviewType {
   myAgents: TotalCounter;
   myBlogs: TotalCounter;
   messages: TotalCounter;
-  transactions: TotalCounter;
   totalViews: TotalCounter;
   generatedAt: Date | null;
 }

@@ -458,7 +458,7 @@ class PropertyService {
     ]);
 
     if (!result.properties.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return { properties: [], totalPropertiesNumber: [{ total: 0 }] };
     }
     return result;
   }

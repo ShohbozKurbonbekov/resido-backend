@@ -22,7 +22,6 @@ import CommentService from "../models/Comment.service";
 import { BlogSearchInput, BlogSearchType } from "../libs/types/blog";
 import BlogService from "../models/Blog.service";
 import { BlogStatus } from "../libs/enums/blog.enum";
-import memberController from "./member.controller";
 
 const adminController: T = {};
 const adminService = new AdminService();
@@ -472,6 +471,49 @@ adminController.adminApproveApplication = async (
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in adminApproveApplication: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+////////////////////////// ------------ ADMIN MY BLOG -------------- /////////////////
+adminController.myBlogs = async (req: ExtendedRequest, res: Response) => {
+  try {
+    const admin = req.member;
+    const { limit, page } = req.query;
+    const query: CommonPageInput = {
+      page: Number(page) || 1,
+      limit: Number(limit) || 6,
+    };
+
+    const result = await adminService.myBlogs(admin, query);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in admin myBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+/////////////////// ---- DELETE MY BLOG ------////////////////////
+adminController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
+  try {
+    console.log("deleteMyBlog proccess in adminController");
+    const adminId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const blogId = shapeIntoMongooseObjectId(id);
+    const result = await adminService.deleteMyBlog(adminId, blogId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in deleteMyBlog process of admin: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {

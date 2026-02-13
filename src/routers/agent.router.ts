@@ -87,14 +87,6 @@ agent.post(
   agentController.myBlogs,
 );
 
-/////////////////////// UPDATE BLOGS ////////////////////
-agent.post(
-  "/update/myBlog/:id",
-  memberController.verifyMember,
-  uploadFiles("blogs", "blogImage", 1, true),
-  agentController.agentUpdateMyBlog,
-);
-
 /////////////////////// DELETE BLOGS ////////////////////
 agent.post(
   "/delete/myBlog/:id",

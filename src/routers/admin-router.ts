@@ -126,3 +126,19 @@ adminRouter.post(
   allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
   adminController.adminApproveApplication,
 );
+
+//////////////////// -- MY BLOGS --- ///////////////
+adminRouter.get(
+  "/get/myBlogs",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.myBlogs,
+);
+
+/////////////////////// DELETE BLOG ////////////////////
+adminRouter.post(
+  "/delete/myBlog/:id",
+  memberController.verifyMember,
+  allowRoles(Message.ADMIN_ONLY, MemberType.REAL_ESTATE_ADMIN),
+  adminController.deleteMyBlog,
+);

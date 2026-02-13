@@ -302,39 +302,6 @@ agentController.myBlogs = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
-///////////// -------- UPDATE MY BLOG ---------- ////////////
-agentController.agentUpdateMyBlog = async (
-  req: UploadRequest,
-  res: Response,
-) => {
-  try {
-    const memberId = shapeIntoMongooseObjectId(req.member._id);
-    const { id } = req.params;
-    const blogId = shapeIntoMongooseObjectId(id);
-    const input = { ...req.body };
-    const parsedTags = JSON.parse(req.body.blogTags);
-    if (!Array.isArray(parsedTags)) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_BLOG_TAGS);
-    }
-    input.blogTags = parsedTags;
-
-    if (req.files?.blogImage?.length) {
-      input.blogImage = orrangeFiles(req.files?.blogImage)[0];
-    }
-
-    const result = await agentService.agentUpdateMyBog(input, blogId, memberId);
-
-    res.status(HttpCode.OK).json(result);
-  } catch (error) {
-    console.log("Error in agentUpdateMyBog: ", error);
-    if (error instanceof Errors) {
-      res.status(error.code).json(error);
-    } else {
-      res.status(Errors.standart.code).json(Errors.standart);
-    }
-  }
-};
-
 /////////////////// ---- DELETE BLOG ------////////////////////
 agentController.deleteMyBlog = async (req: ExtendedRequest, res: Response) => {
   try {

@@ -22,6 +22,7 @@ import {
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { AdminAddTariffInput, TariffInputType } from "../libs/types/payment";
 import {
+  AdminDashboardOverviewType,
   AdminGetAllMembersCategory,
   AdminGetAllMembersType,
 } from "../libs/types/admin";
@@ -43,17 +44,31 @@ import AgencyApplicationModel from "../schema/AgencyApplication.model";
 import { AgencyStatus } from "../libs/enums/agency.enum";
 import { AgencyApplicationStatus } from "../libs/enums/agencyApplication.enum";
 import { ApplicationStatusMessage } from "../libs/enums/agentApplication.enum";
+import { Blogs } from "../libs/types/blog";
+import { BlogAuthorType, BlogStatus } from "../libs/enums/blog.enum";
+import BlogModel, { BlogDoc } from "../schema/Blog.model";
+import MessageModel from "../schema/Message.model";
+import AgentApplicationModel from "../schema/AgentApplication.model";
+import { PropertyStatus } from "../libs/enums/property.enum";
+import { AgentStatus } from "../libs/enums/agent.enum";
+import { CommentStatus } from "../libs/enums/comment.enum";
+import { TariffStatus } from "../libs/enums/payment.enum";
+import chalk from "chalk";
 
 class AdminService {
   private readonly agentModel;
   private readonly agencyModel;
   private readonly userModel;
   private readonly propertyModel;
+  private messageModel;
   private readonly commentProperty;
   public readonly tarrifService;
-  private readonly tarrifModel;
+  private readonly tariffModel;
   private readonly notificationsModel;
   private readonly agencyApplicationModel;
+  private readonly agentApplicationModel;
+  private readonly blogModel;
+  commentModel: any;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -62,9 +77,97 @@ class AdminService {
     this.propertyModel = PropertyModel;
     this.commentProperty = CommentModel;
     this.tarrifService = new TariffService();
-    this.tarrifModel = TarrifModel;
+    this.tariffModel = TarrifModel;
     this.notificationsModel = NotificationModel;
     this.agencyApplicationModel = AgencyApplicationModel;
+    this.blogModel = BlogModel;
+    this.messageModel = MessageModel;
+    this.agentApplicationModel = AgentApplicationModel;
+  }
+
+  // Cron Handler
+  static async updateAdminOverviewField() {
+    console.log(
+      chalk.green("✅ Working with updateAdminOverviewField static method"),
+    );
+
+    const adminsMatch: T = {
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admins = await UserModel.find(adminsMatch)
+      .select("_id")
+      .lean()
+      .exec();
+
+    const globalStats = {
+      properties: await PropertyModel.countDocuments({
+        status: PropertyStatus.AVAILABLE,
+      }),
+      agents: await AgentModel.countDocuments({
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.AVAILABLE,
+      }),
+      users: await UserModel.countDocuments({
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.AVAILABLE,
+        role: MemberType.USER,
+      }),
+      agencies: await AgencyModel.countDocuments({
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgentStatus.AVAILABLE,
+      }),
+      blogs: await BlogModel.countDocuments({
+        blogStatus: BlogStatus.ACTIVE,
+      }),
+      comments: await CommentModel.countDocuments({
+        status: CommentStatus.ACTIVE,
+      }),
+      tariffs: await TarrifModel.countDocuments({
+        status: TariffStatus.ACTIVE,
+      }),
+    };
+
+    for (const admin of admins) {
+      const [notifications, myBlogs, myMessages] = await Promise.all([
+        NotificationModel.countDocuments({
+          recipientId: admin._id,
+          recipientRole: BlogAuthorType.ADMIN,
+          resolvedAt: { $exists: false },
+        }),
+        BlogModel.countDocuments({
+          blogAuthorId: admin._id,
+          blogAuthorType: BlogAuthorType.ADMIN,
+          blogStatus: BlogStatus.ACTIVE,
+        }),
+        MessageModel.countDocuments({
+          $or: [
+            {
+              senderId: admin._id,
+              deletedBySender: false,
+            },
+            { receiverId: admin._id, deletedBySender: false },
+          ],
+        }),
+      ]);
+
+      const personalStats = { notifications, myBlogs, myMessages };
+      await UserModel.updateOne(
+        { _id: admin._id },
+        {
+          $set: {
+            adminOverviewStats: {
+              adminId: admin._id,
+              globalStats,
+              personalStats,
+              generatedAt: new Date(),
+            },
+          },
+        },
+        { upsert: true },
+      );
+    }
   }
 
   /////////////////////////// -- ADMIN SINGUP  -- //////////////////////////////
@@ -572,7 +675,11 @@ class AdminService {
       };
 
       const agency = await this.agencyModel
-        .findOne(agencyMatch, null, currentSession)
+        .findOneAndUpdate(
+          agencyMatch,
+          { $set: { currentStatus: AgencyStatus.REJECTED, isVerified: false } },
+          { new: true, ...currentSession },
+        )
         .lean()
         .exec();
 
@@ -594,7 +701,12 @@ class AdminService {
       };
 
       await this.notificationsModel.create(
-        [newNotificationInput],
+        [
+          {
+            ...newNotificationInput,
+            resolvedAt: new Date(),
+          },
+        ],
         currentSession,
       );
 
@@ -705,7 +817,15 @@ class AdminService {
       };
 
       const agency = await this.agencyModel
-        .findOne(agencyMatch, null, currentSession)
+        .findOneAndUpdate(
+          agencyMatch,
+          {
+            $set: {
+              currentStatus: AgencyStatus.PAYMENT,
+            },
+          },
+          { new: true, ...currentSession },
+        )
         .lean()
         .exec();
 
@@ -722,12 +842,12 @@ class AdminService {
         type: NotificationType.APPLICATION_APPROVED,
         payload: {
           actorName: "Admin",
-          reason: ApplicationStatusMessage.APPROVED_MESSAGE,
+          reason: ApplicationStatusMessage.AGENCY_APPROVED_MESSAGE,
         },
       };
 
       await this.notificationsModel.create(
-        [newNotificationInput],
+        [{ ...newNotificationInput, resolvedAt: new Date() }],
         currentSession,
       );
 
@@ -748,6 +868,106 @@ class AdminService {
     } finally {
       session.endSession();
     }
+  }
+
+  //////////////////////// ------- ADMIN  MY BLOGS-----//////////////////
+  public async myBlogs(
+    admin: CommonUsers,
+    query: CommonPageInput,
+  ): Promise<Blogs> {
+    const adminId = shapeIntoMongooseObjectId(admin._id);
+    const { page, limit } = query;
+
+    // Admin check
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const target = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!target) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Match blog
+    const match: T = {
+      blogAuthorId: adminId,
+      blogAuthorType: BlogAuthorType.ADMIN,
+      blogStatus: BlogStatus.ACTIVE,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+
+    const [result] = await this.blogModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $sort: sort,
+      },
+      {
+        $facet: {
+          blogs: [
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          totalBlogsNumber: [{ $count: "total" }],
+        },
+      },
+    ]);
+
+    if (!result.blogs.length) {
+      return { blogs: [], totalBlogsNumber: [{ total: 0 }] };
+    }
+    return result;
+  }
+
+  ////////////////////////// --- ADMIN DELETE BLOG ---/////////////////////
+  public async deleteMyBlog(
+    adminId: ObjectId,
+    blogId: ObjectId,
+  ): Promise<BlogDoc> {
+    // Check admin
+    const adminMatch: T = {
+      _id: adminId,
+      memberStatus: MemberStatus.ACTIVE,
+      role: MemberType.REAL_ESTATE_ADMIN,
+    };
+
+    const admin = await this.userModel.findOne(adminMatch).lean().exec();
+
+    if (!admin) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.ACCESS_DENIED);
+    }
+
+    // Blog match
+    const match: T = {
+      _id: blogId,
+      blogAuthorId: adminId,
+      blogAuthorType: BlogAuthorType.ADMIN,
+    };
+
+    // Find & Update
+    const result = await this.blogModel.findOneAndUpdate(
+      match,
+      {
+        $set: { blogStatus: BlogStatus.DELETED },
+      },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+    }
+    return result;
   }
 
   //////////////////////////////////// Helper functions /////////////////////////

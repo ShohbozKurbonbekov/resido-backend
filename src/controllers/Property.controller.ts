@@ -115,7 +115,12 @@ propertyController.getFeaturedProperty = async (
 ) => {
   try {
     console.log("getFeaturedProperty process");
-    const input: FeaturedPropertyInput = req.body;
+    const { page, limit } = req.params;
+
+    const input: FeaturedPropertyInput = {
+      limit: Number(limit) || 4,
+      page: Number(page) || 1,
+    };
 
     const result: FeaturedPropertyResult =
       await propertyService.getFeaturedProperty(input);

@@ -3,7 +3,7 @@ import { CommonPageInput, T } from "../libs/types/common";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import { BlogInput, BlogSearchInput } from "../libs/types/blog";
 import { Response, Request } from "express";
-import Errors, { HttpCode } from "../libs/Errors";
+import Errors, { HttpCode, Message } from "../libs/Errors";
 import { shapeIntoMongooseObjectId } from "../libs/config";
 import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { SavingInput } from "../libs/types/userSaving";
@@ -188,6 +188,38 @@ blogController.getSavedBlogs = async (req: ExtendedRequest, res: Response) => {
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in getSavedBlogs: ", error);
+    if (error instanceof Errors) {
+      res.status(error.code).json(error);
+    } else {
+      res.status(Errors.standart.code).json(Errors.standart);
+    }
+  }
+};
+
+///////////// -------- UPDATE MY BLOG ---------- ////////////
+blogController.updateMyBlog = async (req: UploadRequest, res: Response) => {
+  try {
+    const memberId = shapeIntoMongooseObjectId(req.member._id);
+    const { id } = req.params;
+    const blogId = shapeIntoMongooseObjectId(id);
+    const input = req.body;
+    const parsedTags = JSON.parse(req.body.blogTags);
+    if (!Array.isArray(parsedTags)) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.INVALID_BLOG_TAGS);
+    } else {
+      input.blogTags = parsedTags;
+    }
+
+    if (req.files?.blogImage?.length) {
+      input.blogImage = orrangeFiles(req.files?.blogImage)[0];
+      console.log("image");
+    }
+
+    const result = await blogService.updateMyBlog(input, blogId, memberId);
+
+    res.status(HttpCode.OK).json(result);
+  } catch (error) {
+    console.log("Error in updateMyBog: ", error);
     if (error instanceof Errors) {
       res.status(error.code).json(error);
     } else {
