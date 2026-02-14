@@ -123,7 +123,7 @@ agency.get(
 
 /////////////////////// GET AGENCY NOTIFICATIONS ///////////////
 agency.get(
-  "/get/notifications",
+  "/notifications",
   memberController.verifyMember,
   allowRoles(Message.AGENCY_ONLY, MemberType.AGENCY),
   agencyController.agencyNotifications,

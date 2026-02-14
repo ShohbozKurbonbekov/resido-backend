@@ -596,30 +596,31 @@ class AgentService {
     const [result] = await this.agentModel.aggregate([
       { $match: match },
       {
+        $sort: sort,
+      },
+      {
         $lookup: {
           from: "properties",
           localField: "_id",
           foreignField: "agentId",
-          as: "comments",
+          as: "propertiesData",
         },
       },
       {
         $addFields: {
           totalProperties: {
             $size: {
-              $ifNull: ["$comments", []],
+              $ifNull: ["$propertiesData", []],
             },
           },
         },
       },
       {
         $project: {
-          comments: 0,
+          propertiesData: 0,
         },
       },
-      {
-        $sort: sort,
-      },
+
       {
         $facet: {
           agents: [
@@ -634,7 +635,10 @@ class AgentService {
     ]);
 
     if (!result.agents.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return {
+        agents: result.agents || [],
+        totalNumbers: result.totalNumbers || [{ total: 0 }],
+      };
     }
 
     return result;

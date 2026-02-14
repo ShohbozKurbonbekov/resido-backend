@@ -82,17 +82,44 @@ class CommentService {
 
   ///////////////////////// GET LATEST COMMENTS /////////////
   public async getLatestComments(): Promise<CommentDocs[]> {
-    const result = await this.commentModel
-      .find({
-        status: CommentStatus.ACTIVE,
-      })
-      .sort({
-        createdAt: -1,
-      })
-      .limit(10)
-      .exec();
+    const commentMatch: T = {
+      status: CommentStatus.ACTIVE,
+    };
+
+    const sort: T = {
+      createdAt: -1,
+    };
+    const result = await this.commentModel.aggregate([
+      { $match: commentMatch },
+      { $sort: sort },
+      {
+        $lookup: {
+          from: "users",
+          let: {
+            userId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$_id", "$$userId"] },
+                    {
+                      $eq: ["$memberStatus", "ACTIVE"],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "senderData",
+        },
+      },
+      { $unwind: { path: "$senderData", preserveNullAndEmptyArrays: true } },
+    ]);
+
     if (!result.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return [];
     }
     return result;
   }

@@ -7,10 +7,10 @@ export const buildPropertyInquery = (queries: PropertyInquery) => {
   const { page, limit, order, search } = queries;
 
   if (page) {
-    query.page = Number(queries.page);
+    query.page = Number(queries.page) || 1;
   }
   if (limit) {
-    query.limit = Number(queries.limit);
+    query.limit = Number(queries.limit) || 4;
   }
   if (order) {
     query.order = queries.order;
@@ -18,25 +18,33 @@ export const buildPropertyInquery = (queries: PropertyInquery) => {
 
   if (!search) return query;
 
-  if (search.propertyAmenities) {
+  if (
+    search.propertyAmenities &&
+    typeof search.propertyAmenities === "object" &&
+    Object.keys(search.propertyAmenities).length
+  ) {
     query.amenities = search.propertyAmenities;
   }
   if (search.propertyBedrooms) {
     query.bedrooms = search.propertyBedrooms;
   }
-  if (search.propertyLocation) {
+  if (search.propertyLocation?.trim()) {
     query.address = search.propertyLocation;
   }
-  if (search.propertyMood) {
+  if (search.propertyMood?.trim()) {
     query.mood = search.propertyMood;
   }
-  if (search.propertyPriceRange) {
+  if (
+    search.propertyPriceRange &&
+    typeof search.propertyPriceRange === "object" &&
+    Object.keys(search).length
+  ) {
     query.price = search.propertyPriceRange;
   }
-  if (search.propertySearch) {
+  if (search.propertySearch?.trim()) {
     query.title = search.propertySearch;
   }
-  if (search.propertyAgentLevel) {
+  if (search.propertyAgentLevel?.trim()) {
     query.rank = search.propertyAgentLevel;
   }
   if (search.propertyType) {

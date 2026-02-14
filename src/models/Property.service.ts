@@ -10,7 +10,11 @@ import {
 } from "../libs/types/property";
 import PropertyModel, { Property } from "../schema/Property.model";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { PropertySortOrder, PropertyStatus } from "../libs/enums/property.enum";
+import {
+  PropertySortOrder,
+  PropertyStatus,
+  SellingTypeEnum,
+} from "../libs/enums/property.enum";
 import {
   CommonPageInput,
   CommonUsers,
@@ -358,15 +362,18 @@ class PropertyService {
 
     const match: T = {
       status: PropertyStatus.AVAILABLE,
-      "sellingOption.optionRent.type": "RENT",
+      "sellingOption.optionRent.type": SellingTypeEnum.RENT,
     };
+
     const sort: T = {
       createdAt: -1,
     };
+
     const [result] = await this.propertyModel.aggregate([
       {
         $match: match,
       },
+      { $sort: sort },
       {
         $lookup: {
           from: "agents",
@@ -391,7 +398,6 @@ class PropertyService {
       {
         $unwind: "$author",
       },
-      { $sort: sort },
 
       {
         $facet: {
@@ -413,7 +419,10 @@ class PropertyService {
     ]);
 
     if (!result.properties.length) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      return {
+        properties: result.properites || [],
+        totalPropertiesNumber: result.totalPropertiesNumber || [{ total: 0 }],
+      };
     }
     return result;
   }
@@ -491,6 +500,7 @@ class PropertyService {
     }
 
     this.shapeMatchQuery(match, queries);
+    console.log(match);
     const pipeline: any[] = [
       { $match: match },
       {
@@ -499,7 +509,7 @@ class PropertyService {
           localField: "agentId",
           foreignField: "_id",
           as: "agentData",
-          pipeline: [{ $project: { name: 1, rank: 1, isVerified: 1 } }],
+          pipeline: [{ $project: { fullName: 1, rank: 1, isVerified: 1 } }],
         },
       },
       { $unwind: "$agentData" },
@@ -552,21 +562,27 @@ class PropertyService {
     if (title) {
       match.title = { $regex: new RegExp(title, "i") };
     }
+
     if (address) {
-      match["address.city"] = { $regex: new RegExp(address, "i") };
+      match.$or = [
+        { "address.city": { $regex: address, $options: "i" } },
+        { "address.street": { $regex: address, $options: "i" } },
+        { "address.country": { $regex: address, $options: "i" } },
+        { "address.district": { $regex: address, $options: "i" } },
+      ];
     }
+
     if (propertyType) {
-      match.propertyType = {
-        $regex: new RegExp(propertyType, "i"),
-      };
+      match.propertyType = { $regex: propertyType, $options: "i" };
     }
     if (bedrooms) {
       match.bedrooms = bedrooms >= 6 ? { $gte: bedrooms } : bedrooms;
     }
 
     if (mood) {
-      match.mood = { $regex: new RegExp(mood, "i") };
+      match.mood = { $regex: mood, $options: "i" };
     }
+
     if (price) {
       const { start, end } = price;
       match.$or = [

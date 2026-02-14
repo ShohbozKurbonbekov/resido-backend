@@ -707,6 +707,26 @@ class MemberService {
         throw new Errors(HttpCode.FORBIDDEN, Message.NO_MEMBER_FOUND);
       }
 
+      // Agency update
+      const agencyMatch: T = {
+        _id: application.agencyId,
+        memberStatus: MemberStatus.ACTIVE,
+        currentStatus: AgencyStatus.AVAILABLE,
+      };
+      const agency = await this.agencyModel.findOneAndUpdate(
+        agencyMatch,
+        {
+          $inc: {
+            agentsTotalNumber: 1,
+          },
+        },
+        { new: true, ...currentSession },
+      );
+
+      if (!agency) {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.AGENCY_NOT_ACTIVE);
+      }
+
       await session.commitTransaction();
 
       return notification;

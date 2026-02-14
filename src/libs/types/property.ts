@@ -224,7 +224,7 @@ export interface PropertySearchFeatures {
   propertySearch?: string;
   propertyVerified?: boolean;
   propertyAgentLevel?: string;
-  propertyLocation?: MajorCites;
+  propertyLocation?: string;
   propertyType?: PropertyType;
   propertyBedrooms?: number;
   propertyAmenities?: PropertyAmenities;
