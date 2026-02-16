@@ -225,11 +225,20 @@ const PropertySchema = new Schema<PropertyInput>(
 
 PropertySchema.index({
   featuredScore: -1,
+  famousIndicator: -1,
   status: 1,
   createdAt: -1,
-  agencyId: 1,
-  agentId: 1,
+  priceValue: 1,
+  _id: 1,
 });
 
+PropertySchema.index({
+  agentId: 1,
+  agencyId: 1,
+  "address.city": 1,
+  "address.district": 1,
+  "address.street": 1,
+  "address.country": 1,
+});
 export type Property = InferSchemaType<typeof PropertySchema>;
 export default mongoose.model<Property>("Property", PropertySchema);

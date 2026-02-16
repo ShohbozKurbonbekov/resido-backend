@@ -500,7 +500,6 @@ class PropertyService {
     }
 
     this.shapeMatchQuery(match, queries);
-    console.log(match);
     const pipeline: any[] = [
       { $match: match },
       {

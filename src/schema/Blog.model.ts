@@ -5,7 +5,7 @@ import {
   BlogCategory,
   BlogStatus,
 } from "../libs/enums/blog.enum";
-import { SocialsSchema } from "../../src/libs/utils/SocialsSchema";
+import { SocialsSchema } from "../libs/utils/SocialsSchema";
 
 const BlogAuthorSchema = new Schema<BlogAuthor>(
   {
