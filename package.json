@@ -4,9 +4,9 @@
   "main": "src/server.ts",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "start:dev": "env-cmd -f ./config/dev.env nodemon  --exec ts-node src/server.ts",
-    "start:prod": "env-cmd -f ./config/prod.env node dist/server.js",
-    "start:agenda": "env-cmd -f ./config/dev.env nodemon   --exec ts-node src/agenda/index.ts",
+    "start:dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/server.ts",
+    "start:prod": "node dist/server.js",
+    "start:agenda": "nodemon   --exec ts-node src/agenda/index.ts",
     "build": "tsc && node extra.js"
   },
   "author": "MIT24_DANIEL",
@@ -24,7 +24,6 @@
     "@types/multer": "^2.0.0",
     "@types/uuid": "^10.0.0",
     "@types/validator": "^13.15.3",
-    "env-cmd": "^11.0.0",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
@@ -40,6 +39,7 @@
     "chalk": "^4.1.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
     "dotenv": "^16.0.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
