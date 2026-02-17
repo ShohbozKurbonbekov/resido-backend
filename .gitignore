@@ -3,3 +3,5 @@ dist
 config
 process.config.js
 uploads 
+.env.development
+.env.production
