@@ -1,18 +1,18 @@
-import { User } from "../libs/types/user";
 import jwt from "jsonwebtoken";
 import { jwtTime } from "../libs/config";
 import Errors, { HttpCode, Message } from "../libs/Errors";
-import { Agent } from "../libs/types/agent";
 import { CommonUsers, T } from "../libs/types/common";
-import { Agency } from "../schema/members/Agency.model";
 
 class AuthService {
-  private readonly secretToken;
+  private readonly secretToken: string;
   constructor() {
     this.secretToken = process.env.JWT_SECRET as string;
   }
 
-  public async createToken(payload: T): Promise<string> {
+  public createToken(payload: T): Promise<string> {
+    if (!this.secretToken) {
+      throw new Errors(HttpCode.BAD_REQUEST, Message.TOKEN_CREATION_FAILED);
+    }
     return new Promise((resolve, reject) => {
       jwt.sign(
         payload,
@@ -23,12 +23,12 @@ class AuthService {
         (error, token) => {
           if (error) {
             reject(
-              new Errors(HttpCode.UNAUTHORIZED, Message.TOKEN_CREATION_FAILED)
+              new Errors(HttpCode.UNAUTHORIZED, Message.TOKEN_CREATION_FAILED),
             );
           } else {
             resolve(token as string);
           }
-        }
+        },
       );
     });
   }

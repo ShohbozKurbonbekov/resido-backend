@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
-import app from "./app";
-import chalk from "chalk";
 import dotenv from "dotenv";
 const ENV = process.env.NODE_ENV;
 
 dotenv.config({
   path: `.env.${ENV}`,
 });
+
+import app from "./app";
+import chalk from "chalk";
 
 mongoose
   .connect(process.env.MONGO_URL as string, {})
