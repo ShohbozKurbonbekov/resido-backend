@@ -101,7 +101,7 @@ agency.post(
 
 //////////////////// -- MY BLOGS --- ///////////////
 agency.get(
-  "/get/myBlogs",
+  "/fetch/myBlogs",
   memberController.verifyMember,
   agencyController.myBlogs,
 );
