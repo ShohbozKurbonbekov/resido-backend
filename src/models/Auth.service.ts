@@ -18,7 +18,7 @@ class AuthService {
         payload,
         this.secretToken,
         {
-          expiresIn: `2 minutes`,
+          expiresIn: `${jwtTime}h`,
         },
         (error, token) => {
           if (error) {
