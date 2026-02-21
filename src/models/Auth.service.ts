@@ -34,8 +34,20 @@ class AuthService {
   }
 
   public async checkAuth(token: string): Promise<CommonUsers> {
-    const decoded = await jwt.verify(token, this.secretToken);
-    return decoded as CommonUsers;
+    try {
+      const decoded = await jwt.verify(token, this.secretToken);
+      return decoded as CommonUsers;
+    } catch (error: any) {
+      console.log("Error in checkAuth: ", error);
+
+      if (error.name === "TokenExpiredError")
+        throw new Errors(HttpCode.UNAUTHORIZED, Message.SESSION_EXPIRED);
+
+      if (error.name === "JsonWebTokenError")
+        throw new Errors(HttpCode.UNAUTHORIZED, Message.INVALID_TOKEN);
+
+      throw new Errors(HttpCode.UNAUTHORIZED, Message.NOT_AUTHENTICATED);
+    }
   }
 }
 

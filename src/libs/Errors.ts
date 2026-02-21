@@ -11,6 +11,8 @@ export enum HttpCode {
 }
 
 export enum Message {
+  INVALID_TOKEN = "Invalid  token!",
+  SESSION_EXPIRED = "Session expired!",
   SYSTEM_PROBLEM = "System problem, please try later!",
   ACCESS_DENIED = "Access denied!s",
   SOMETHING_WENT_WRONG = "Something went wrong",
