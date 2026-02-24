@@ -30,10 +30,12 @@ export const shapeIntoMongooseObjectId = (target: any) => {
 export const priceValueField = {
   $addFields: {
     priceValue: {
-      $ifNull: [
-        "$sellingOption.optionRent.overalAmount",
-        "$sellingOption.optionSell.overalAmunt",
-      ],
+      $toDouble: {
+        $ifNull: [
+          "$sellingOption.optionRent.overalAmount",
+          "$sellingOption.optionSell.overalAmunt",
+        ],
+      },
     },
   },
 };
