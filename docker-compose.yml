@@ -4,7 +4,7 @@ services:
     restart: always
     image: node:20.20.2
     ports:
-      - 3019:3006
+      - 3019:3019
     volumes:
       - ./:/usr/src/resido-server
     working_dir: /usr/src/resido-server
