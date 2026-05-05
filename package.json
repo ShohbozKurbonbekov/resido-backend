@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "start:dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/server.ts",
-    "start:prod": "node dist/server.js",
+    "start:prod": "cross-env NODE_ENV=production node dist/server.js",
     "start:agenda": "nodemon   --exec ts-node src/agenda/index.ts",
     "build": "tsc && node extra.js"
   },

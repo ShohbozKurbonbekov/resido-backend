@@ -34,14 +34,14 @@ const blogService = new BlogService();
 adminController.processSignup = async (req: UploadRequest, res: Response) => {
   try {
     console.log("process signup for Admin");
-    const adminAvatar = req.files?.avatar;
+    // const adminAvatar = req.files?.avatar;
 
-    if (!adminAvatar?.length) {
-      throw new Errors(HttpCode.BAD_REQUEST, Message.IMAGE_NEEDED);
-    }
+    // if (!adminAvatar?.length) {
+    //   throw new Errors(HttpCode.BAD_REQUEST, Message.IMAGE_NEEDED);
+    // }
 
     const input = req.body;
-    input.avatar = orrangeFiles(adminAvatar)[0];
+    // input.avatar = orrangeFiles(adminAvatar)[0];
     input.role = MemberType.REAL_ESTATE_ADMIN;
 
     const result = await adminService.processSignup(input);
@@ -418,7 +418,10 @@ adminController.reviewNotification = async (
     const adminId = shapeIntoMongooseObjectId(req.member._id);
     const { entityId } = req.params;
 
-    const result = await adminService.reviewNotification(adminId, entityId);
+    const result = await adminService.reviewNotification(
+      adminId,
+      entityId as string,
+    );
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in reviewNotification of Admin system: ", error);

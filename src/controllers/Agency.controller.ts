@@ -413,7 +413,10 @@ agencyController.reviewNotification = async (
     const agencyId = shapeIntoMongooseObjectId(req.member._id);
     const { entityId } = req.params;
 
-    const result = await agencyService.reviewNotification(agencyId, entityId);
+    const result = await agencyService.reviewNotification(
+      agencyId,
+      entityId as string,
+    );
     res.status(HttpCode.OK).json(result);
   } catch (error) {
     console.log("Error in reviewNotification of agency system: ", error);

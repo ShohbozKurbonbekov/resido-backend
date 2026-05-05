@@ -12,6 +12,8 @@ import chalk from "chalk";
 mongoose
   .connect(process.env.MONGO_URL as string, {})
   .then((data) => {
+    console.log("DB NAME:", mongoose.connection.name);
+
     console.log(chalk.bgBlue("connected to the database successfully 👏"));
 
     // CREATING PORT AND TELLING EXPRESS TO LISTEN THAT PORT
