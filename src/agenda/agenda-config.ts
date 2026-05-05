@@ -6,7 +6,6 @@ import mongoose from "mongoose";
 // DB CONNECTION
 export const connectDB = async () => {
   try {
-    console.log("MONGO URL: ", agendaConfig.mongoUri);
     await mongoose.connect(agendaConfig.mongoUri, {});
 
     console.log(
