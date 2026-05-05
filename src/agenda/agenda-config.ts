@@ -1,4 +1,4 @@
-import Agenda, { Job, JobAttributesData } from "agenda";
+import Agenda from "agenda";
 import chalk from "chalk";
 import { agendaConfig } from "../libs/config";
 import mongoose from "mongoose";
@@ -6,10 +6,11 @@ import mongoose from "mongoose";
 // DB CONNECTION
 export const connectDB = async () => {
   try {
+    console.log("MONGO URL: ", agendaConfig.mongoUri);
     await mongoose.connect(agendaConfig.mongoUri, {});
 
     console.log(
-      chalk.green("✅ Connected to DB successfully for job schedules")
+      chalk.green("✅ Connected to DB successfully for job schedules"),
     );
   } catch (error) {
     console.log(chalk.bgRed("Error in connection to database"));
@@ -40,7 +41,7 @@ const agenda = new Agenda({
     collection: "agendaJobs",
   },
   maxConcurrency: 1, // job numbers should be done
-  processEvery: "1 minute", //  checks db any job there to run
+  processEvery: "10 minutes", //  checks db any job there to run
 });
 
 export default agenda;

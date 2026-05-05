@@ -1,8 +1,4 @@
 import mongoose from "mongoose";
-import { MemberType } from "./enums/member.enum";
-import { ExtendedRequest } from "./types/user";
-import { NextFunction, RequestHandler, Response } from "express";
-import Errors, { HttpCode, Message } from "./Errors";
 import chalk from "chalk";
 
 // MORGAN SETUP

@@ -1,6 +1,13 @@
+import dotenv from "dotenv";
+const ENV = process.env.NODE_ENV;
+dotenv.config({
+  path: `.env.${ENV}`,
+});
+
 import { agendaConfig } from "../libs/config";
 import agenda, { beautifulShutdown } from "./agenda-config";
 import { connectDB } from "./agenda-config";
+
 import {
   defineUpdateAdminsOverviewStats,
   defineUpdateAgencyFields,
@@ -55,7 +62,7 @@ import {
 
   // UPDATE ADMINS OVERVIEW FIELD
   await agenda.every(
-    "1 minute",
+    "10 minutes",
     "update admins overview",
     {},
     { skipImmediate: true },

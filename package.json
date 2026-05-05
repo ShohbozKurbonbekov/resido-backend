@@ -6,7 +6,7 @@
     "start": "ts-node src/server.ts",
     "start:dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/server.ts",
     "start:prod": "cross-env NODE_ENV=production node dist/server.js",
-    "start:agenda": "nodemon   --exec ts-node src/agenda/index.ts",
+    "start:agenda": "cross-env NODE_ENV=production node dist/agenda/index.js",
     "build": "tsc && node extra.js"
   },
   "author": "MIT24_DANIEL",
