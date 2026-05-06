@@ -50,6 +50,8 @@ import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import { AgencyStatus, SubscriptionStatus } from "../libs/enums/agency.enum";
 import AgencyModel from "../schema/members/Agency.model";
 import AgencySubscriptionModel from "../schema/AgencySubscription.model";
+import AgentModel from "../schema/members/Agent.model";
+import { AgentStatus } from "../libs/enums/agent.enum";
 
 class PropertyService {
   private readonly propertyModel;
@@ -59,6 +61,7 @@ class PropertyService {
   private readonly saveModel;
   public memberService;
   private readonly agencyModel;
+  private readonly agentModel;
   private readonly subscriptionModel;
 
   constructor() {
@@ -69,6 +72,7 @@ class PropertyService {
     this.saveModel = UserSavingModel;
     this.memberService = new MemberService();
     this.agencyModel = AgencyModel;
+    this.agentModel = AgentModel;
     this.subscriptionModel = AgencySubscriptionModel;
   }
 
@@ -313,6 +317,18 @@ class PropertyService {
         { _id: agency._id },
         {
           $inc: { propertiesTotalNumber: 1 },
+        },
+        currentSession,
+      );
+
+      await this.agentModel.updateOne(
+        {
+          _id: agent._id,
+          memberStatus: MemberStatus.ACTIVE,
+          currentStatus: AgentStatus.AVAILABLE,
+        },
+        {
+          $inc: { totalProperties: 1 },
         },
         currentSession,
       );

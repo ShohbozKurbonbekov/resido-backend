@@ -47,6 +47,10 @@ const AgentSchema = new Schema<Agent>(
       type: Number,
       default: 0,
     },
+    totalProperties: {
+      type: Number,
+      default: 0,
+    },
     currentStatus: {
       type: String,
       enum: AgentStatus,

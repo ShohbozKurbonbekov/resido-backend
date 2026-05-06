@@ -4,7 +4,7 @@ import Errors, { HttpCode, Message } from "../Errors";
 export async function geocodeAddress(address: string) {
   const apiKey = process.env.POSITIONSTACK_API_KEY;
   const url = `https://api.positionstack.com/v1/forward?access_key=${apiKey}&query=${encodeURIComponent(
-    address
+    address,
   )}&limit=1`;
 
   const response = await axios.get(url, {
@@ -20,7 +20,7 @@ export async function geocodeAddress(address: string) {
   if (data.error) {
     throw new Errors(
       HttpCode.BAD_REQUEST,
-      data.error.message || "Something wrong with Geo fetching"
+      data.error.message || "Something wrong with Geo fetching",
     );
   }
   if (!data || !data?.data || data?.data?.length === 0) {

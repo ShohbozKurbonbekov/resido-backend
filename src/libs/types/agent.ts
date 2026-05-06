@@ -48,6 +48,7 @@ export interface Agent {
   socialLinks: Social; // set in the schema
   isVerified: boolean; // set in the schema
   totalComments: number;
+  totalProperties: number;
   views: number;
   totalLikes: number;
   totalSavings: number;
