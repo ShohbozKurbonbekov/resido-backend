@@ -67,6 +67,8 @@ import {
   NotificationEntityType,
   NotificationType,
 } from "../libs/enums/notification.enum";
+import { SubscriptionStatus } from "../libs/enums/agency.enum";
+import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 
 class AgentService {
   private readonly agentModel;
@@ -84,6 +86,7 @@ class AgentService {
   private readonly viewModel;
   private readonly agentApplicationModel;
   private readonly notificationModel;
+  private readonly subscriptionModel;
 
   constructor() {
     this.agentModel = AgentModel;
@@ -101,6 +104,7 @@ class AgentService {
     this.viewModel = ViewModel;
     this.agentApplicationModel = AgentApplicationModel;
     this.notificationModel = NotificationModel;
+    this.subscriptionModel = AgencySubscriptionModel;
   }
 
   // UPDATE AGENT FIELDS
@@ -772,7 +776,34 @@ class AgentService {
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
+
       const currentSession = { session };
+
+      // Protection
+      const subscriptionMatch: T = {
+        agencyId: input.agencyId,
+        subscriptionStatus: SubscriptionStatus.ACTIVE,
+        cancelledAt: null,
+      };
+
+      const subscription = await this.subscriptionModel
+        .findOne(subscriptionMatch, null, currentSession)
+        .lean()
+        .exec();
+
+      if (!subscription) {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.NO_ACTIVE_SUBSCRIPTION);
+      }
+
+      if (
+        subscription.billingSnapshot.usage.agents >=
+        subscription.billingSnapshot.limit.agents
+      ) {
+        throw new Errors(
+          HttpCode.FORBIDDEN,
+          Message.SUBSCRIPTION_LIMIT_WARNING,
+        );
+      }
 
       // Transction 1
       const _id = shapeIntoMongooseObjectId(member._id);

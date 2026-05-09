@@ -45,7 +45,7 @@ import UserSavingModel from "../schema/UserSaving.model";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
 import CommentModel from "../schema/Comment.model";
 import { CommentStatus } from "../libs/enums/comment.enum";
-import { AgencyStatus } from "../libs/enums/agency.enum";
+import { AgencyStatus, SubscriptionStatus } from "../libs/enums/agency.enum";
 import { MyNotifications } from "../libs/types/notification";
 import {
   NotificationEntityType,
@@ -58,6 +58,7 @@ import { AgentApplicationStatus } from "../libs/enums/agentApplication.enum";
 import AgentApplicationModel from "../schema/AgentApplication.model";
 import { Properties } from "../libs/types/property";
 import PropertyModel from "../schema/Property.model";
+import AgencySubscriptionModel from "../schema/AgencySubscription.model";
 
 class MemberService {
   private readonly userModel;
@@ -70,6 +71,7 @@ class MemberService {
   private readonly notificationModel;
   private readonly agentApplicationModel;
   private readonly propertyModel;
+  private readonly subscriptionModel;
 
   constructor() {
     this.userModel = UserModel;
@@ -82,6 +84,7 @@ class MemberService {
     this.notificationModel = NotificationModel;
     this.agentApplicationModel = AgentApplicationModel;
     this.propertyModel = PropertyModel;
+    this.subscriptionModel = AgencySubscriptionModel;
   }
 
   /////////////////////////// --  GET PUBLIC ADMIN  -- //////////////////////////////
@@ -713,6 +716,7 @@ class MemberService {
         memberStatus: MemberStatus.ACTIVE,
         currentStatus: AgencyStatus.AVAILABLE,
       };
+
       const agency = await this.agencyModel.findOneAndUpdate(
         agencyMatch,
         {
@@ -725,6 +729,29 @@ class MemberService {
 
       if (!agency) {
         throw new Errors(HttpCode.BAD_REQUEST, Message.AGENCY_NOT_ACTIVE);
+      }
+
+      const subscriptionMatch: T = {
+        agencyId: agency._id,
+        subscriptionStatus: SubscriptionStatus.ACTIVE,
+        cancelledAt: null,
+      };
+
+      const subscription = await this.subscriptionModel.findOneAndUpdate(
+        subscriptionMatch,
+        {
+          $inc: {
+            "billingSnapshot.usage.agents": 1,
+          },
+        },
+        {
+          new: true,
+          ...currentSession,
+        },
+      );
+
+      if (!subscription) {
+        throw new Errors(HttpCode.BAD_REQUEST, Message.NO_ACTIVE_SUBSCRIPTION);
       }
 
       await session.commitTransaction();

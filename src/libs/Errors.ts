@@ -91,6 +91,7 @@ export enum Message {
   AGENT_CREATION_FAILED = "Agent account creation failed!",
   EXCEED_LIMIT = "Exceeded Limit!, Please contact with your agency",
   INVALID_TARIFF_FEATURES = "Invalid tariff features!",
+  SUBSCRIPTION_LIMIT_WARNING = "The agency has reached its agent limit for the current subscription plan.",
 }
 
 class Errors extends Error {
