@@ -735,6 +735,12 @@ class MemberService {
         agencyId: agency._id,
         subscriptionStatus: SubscriptionStatus.ACTIVE,
         cancelledAt: null,
+        $expr: {
+          $lt: [
+            "$billingSnapshot.usage.agents",
+            "$billingSnapshot.limits.agents",
+          ],
+        },
       };
 
       const subscription = await this.subscriptionModel.findOneAndUpdate(

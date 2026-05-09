@@ -208,9 +208,8 @@ class AgencySubscribeService {
 
     const isSubscribedMatch: T = {
       agencyId,
-      subscriptionStatus: {
-        $ne: SubscriptionStatus.INACTIVE,
-      },
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
+      cancelledAt: null,
     };
 
     const isAgencyValid = await this.agencyModel
@@ -223,8 +222,7 @@ class AgencySubscribeService {
     }
 
     const isAgencySubscribed = await this.agencySubscribeModel
-      .findOne(isSubscribedMatch)
-      .sort({ createdAt: -1 })
+      .findOne(isSubscribedMatch, null, { new: true })
       .lean()
       .exec();
 
