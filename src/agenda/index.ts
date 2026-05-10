@@ -14,6 +14,7 @@ import {
   defineUpdateAgentFields,
   defineUpdateBlogFieldsJob,
   defineUpdateProperyFields,
+  defineUpdateSubscriptionStatus,
 } from "./agenda-start-jobs";
 
 (async () => {
@@ -24,6 +25,7 @@ import {
   defineUpdateProperyFields(agenda);
   defineUpdateAgentFields(agenda);
   defineUpdateAgencyFields(agenda);
+  defineUpdateSubscriptionStatus(agenda);
   defineUpdateAdminsOverviewStats(agenda);
 
   await agenda.start();
@@ -56,6 +58,14 @@ import {
   await agenda.every(
     agendaConfig.cron,
     "update agency fields",
+    {},
+    { skipImmediate: true },
+  );
+
+  // UPDATE ADMINS OVERVIEW FIELD
+  await agenda.every(
+    agendaConfig.cron,
+    "update subscription status",
     {},
     { skipImmediate: true },
   );

@@ -4,6 +4,7 @@ import PropertyService from "../models/Property.service";
 import AgentService from "../models/Agent.service";
 import AgencyService from "../models/Agency.service";
 import AdminService from "../models/AdminMember.service";
+import AgencySubscribeService from "../models/AgencySubscribe.service";
 
 export const defineUpdateBlogFieldsJob = (agenda: any) => {
   agenda.define("update blog fields", async (job: Job) => {
@@ -57,6 +58,17 @@ export const defineUpdateAdminsOverviewStats = (agenda: any) => {
     try {
       await AdminService.updateAdminOverviewField();
       console.log("✅ Job completed: update admins overviews");
+    } catch (error) {
+      console.error("❌ Job failed:", error);
+    }
+  });
+};
+
+export const defineUpdateSubscriptionStatus = (agenda: any) => {
+  agenda.define("update subscription status", async (job: Job) => {
+    try {
+      await AgencySubscribeService.checkSubscriptionStatus();
+      console.log("✅ Job completed: update subscription status");
     } catch (error) {
       console.error("❌ Job failed:", error);
     }

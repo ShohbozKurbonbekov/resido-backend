@@ -40,6 +40,35 @@ class AgencySubscribeService {
     this.userModel = UserModel;
   }
 
+  // Check subscription status
+
+  static async checkSubscriptionStatus() {
+    try {
+      const now = new Date();
+
+      const expiredSubscriptions = await AgencySubscriptionModel.updateMany(
+        {
+          subscriptionStatus: SubscriptionStatus.ACTIVE,
+
+          currentPeriodEnd: {
+            $lt: now,
+          },
+        },
+        {
+          $set: {
+            subscriptionStatus: SubscriptionStatus.EXPIRED,
+          },
+        },
+      );
+
+      console.log(
+        `Expired subscription updated: , ${expiredSubscriptions.modifiedCount}`,
+      );
+    } catch (error) {
+      console.log("Error in checkSubsriptionStatus: ", error);
+    }
+  }
+
   /////////////////////////////////////// CREATE SUBSCRIPTION ////////////////////////
   public async createSubscription(
     input: AgencyPaymentInfoInputs,
