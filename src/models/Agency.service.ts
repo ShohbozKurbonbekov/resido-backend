@@ -1448,11 +1448,7 @@ class AgencyService {
   ): Promise<Property> {
     const session = await mongoose.startSession();
     const { propertyId, status } = queries;
-    const agencyMatch: T = {
-      memberStatus: MemberStatus.ACTIVE,
-      currentStatus: AgencyStatus.AVAILABLE,
-      _id: agencyId,
-    };
+    const agencyMatch: T = {};
 
     const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
     if (!agency) {
