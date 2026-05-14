@@ -1464,7 +1464,7 @@ class AgencyService {
       // Update fields
       if (status === PropertyStatus.AVAILABLE) {
         await this.agencyModel.updateOne(
-          { _id: agency._id },
+          { _id: result.agencyId },
           {
             $inc: { propertiesTotalNumber: 1 },
           },
