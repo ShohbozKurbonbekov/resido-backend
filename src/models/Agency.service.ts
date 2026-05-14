@@ -316,28 +316,6 @@ class AgencyService {
 
     const [result] = await this.agencyModel.aggregate([
       { $match: match },
-      propertiesLookupByAgencyId,
-      agentsLookupByAgencyId,
-      {
-        $addFields: {
-          agentsTotalNumber: {
-            $size: {
-              $ifNull: ["$agentsList", []],
-            },
-          },
-          propertiesTotalNumber: {
-            $size: {
-              $ifNull: ["$propertiesList", []],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          agentsList: 0,
-          propertiesList: 0,
-        },
-      },
       {
         $sort: sort,
       },
