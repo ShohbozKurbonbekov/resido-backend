@@ -1446,6 +1446,7 @@ class AgencyService {
     agencyId: ObjectId,
     queries: T,
   ): Promise<Property> {
+    const session = await mongoose.startSession();
     const { propertyId, status } = queries;
     const agencyMatch: T = {
       memberStatus: MemberStatus.ACTIVE,
@@ -1458,32 +1459,87 @@ class AgencyService {
       throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
     }
 
-    const propertyMatch: T = {
-      _id: propertyId,
-      agencyId,
-      status: {
-        $in: [PropertyStatus.PENDING_APPROVAL, PropertyStatus.AVAILABLE],
-      },
-    };
+    try {
+      session.startTransaction();
+      const currentSession = { session };
 
-    const result = await this.propertyModel.findOneAndUpdate(
-      propertyMatch,
-      {
-        $set: {
-          status,
+      const propertyMatch: T = {
+        _id: propertyId,
+        agencyId,
+        status: {
+          $in: [PropertyStatus.PENDING_APPROVAL, PropertyStatus.AVAILABLE],
         },
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
+      };
 
-    if (!result) {
-      throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      const result = await this.propertyModel.findOneAndUpdate(
+        propertyMatch,
+        {
+          $set: {
+            status,
+          },
+        },
+        {
+          new: true,
+          runValidators: true,
+          ...currentSession,
+        },
+      );
+      if (!result) {
+        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+      }
+      // Update fields
+      if (status === PropertyStatus.AVAILABLE) {
+        await this.agencyModel.updateOne(
+          { _id: agency._id },
+          {
+            $inc: { propertiesTotalNumber: 1 },
+          },
+          currentSession,
+        );
+
+        await this.agentModel.updateOne(
+          {
+            _id: result.agentId,
+          },
+          {
+            $inc: { totalProperties: 1 },
+          },
+          currentSession,
+        );
+      }
+
+      if (status === PropertyStatus.ARCHIVED) {
+        await this.agencyModel.updateOne(
+          { _id: agency._id },
+          {
+            $inc: { propertiesTotalNumber: -1 },
+          },
+          currentSession,
+        );
+
+        await this.agentModel.updateOne(
+          {
+            _id: result.agentId,
+          },
+          {
+            $inc: { totalProperties: -1 },
+          },
+          currentSession,
+        );
+      }
+      await session.commitTransaction();
+      return result;
+    } catch (error) {
+      console.log("Error changeAgencyPropertyStatus: ", error);
+      await session.abortTransaction();
+      if (error instanceof Errors) {
+        throw error;
+      } else {
+        throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
+      }
+    } finally {
+      session.endSession();
     }
-
-    return result;
   }
 
   //////////////////////// --- DASHBOARD AGENCY MY AGENTS --- ///////////////////////////

@@ -247,27 +247,9 @@ class PropertyService {
       session.startTransaction();
       const currentSession = { session };
 
-      // Check agent's agency existance
-      const agencyMatch: T = {
-        _id: agent.agencyId,
-        memberStatus: MemberStatus.ACTIVE,
-        currentStatus: AgencyStatus.AVAILABLE,
-        isVerified: true,
-      };
-
-      const agency = await this.agencyModel.findOne(
-        agencyMatch,
-        null,
-        currentSession,
-      );
-
-      if (!agency) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.AGENCY_NOT_ACTIVE);
-      }
-
       // Subscrition activeness check
       const subscriptionMatch: T = {
-        agencyId: agency._id,
+        agencyId: agent.agencyId,
         subscriptionStatus: SubscriptionStatus.ACTIVE,
       };
 
@@ -306,30 +288,9 @@ class PropertyService {
               geoCode,
             },
             agentId: agent._id,
-            agencyId: agency._id,
+            agencyId: agent.agencyId,
           },
         ],
-        currentSession,
-      );
-
-      // Update fields
-      await this.agencyModel.updateOne(
-        { _id: agency._id },
-        {
-          $inc: { propertiesTotalNumber: 1 },
-        },
-        currentSession,
-      );
-
-      await this.agentModel.updateOne(
-        {
-          _id: agent._id,
-          memberStatus: MemberStatus.ACTIVE,
-          currentStatus: AgentStatus.AVAILABLE,
-        },
-        {
-          $inc: { totalProperties: 1 },
-        },
         currentSession,
       );
 
