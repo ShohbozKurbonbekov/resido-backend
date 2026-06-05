@@ -8,6 +8,7 @@ import {
   AdminGlobalStatsType,
   AdminPersonalStatsType,
 } from "../../libs/types/admin";
+import { PHONE_REGEX, PASSWORD_REGEX } from "../../libs/config";
 
 const AdminGlobalStatsSchema = new Schema<AdminGlobalStatsType>(
   {
@@ -123,11 +124,9 @@ const UserSchema = new Schema<User>(
       type: String,
       unique: true,
       required: true,
-      trim: true,
     },
     memberEmail: {
       type: String,
-      index: true,
       unique: true,
       required: true,
       validate: {
@@ -146,22 +145,25 @@ const UserSchema = new Schema<User>(
 
     memberPhone: {
       type: String,
-      index: true,
       unique: true,
       required: true,
+      validate: {
+        validator(value: string) {
+          return PHONE_REGEX.test(value);
+        },
+        message: "Invalid phone number, check again",
+      },
     },
 
     memberPassword: {
       type: String,
       select: false,
       required: true,
-      minLength: 7,
-      trim: true,
       validate: {
         validator(value: string) {
-          return !value.includes("password");
+          return PASSWORD_REGEX.test(value);
         },
-        message: `Type a strong password`,
+        message: `Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.`,
       },
     },
     memberAddress: {
@@ -198,18 +200,8 @@ const UserSchema = new Schema<User>(
   },
 );
 
-UserSchema.methods.toJSON = function () {
-  const user = this;
-  const userObject = user.toObject();
-  delete userObject.memberPassword;
-
-  return userObject;
-};
-
 UserSchema.index({
-  role: 1,
-  memberEmail: 1,
-  memberPassword: 1,
+  memberName: 1,
   memberStatus: 1,
 });
 UserSchema.pre("save", async function (next) {

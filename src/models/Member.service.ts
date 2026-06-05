@@ -114,7 +114,7 @@ class MemberService {
   /////////////////////////// --  MEMBER SIGN UP -- //////////////////////////////
   public async signup(input: UserMemberInput): Promise<User> {
     try {
-      const result = (await this.userModel.create(input)).toObject();
+      const result = await this.userModel.create(input);
       return result;
     } catch (error) {
       console.log("Error in userSignup service model", error);

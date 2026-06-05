@@ -118,3 +118,7 @@ export const propertiesLookupByAgencyId = {
     as: "propertiesList",
   },
 };
+
+export const PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
+export const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;

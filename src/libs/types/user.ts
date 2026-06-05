@@ -32,8 +32,8 @@ export interface UserMemberInput {
   memberPhone: string;
   memberEmail: string;
   memberPassword: string;
-  role: MemberType;
   occuption: string;
+  role?: MemberType;
   memberStatus?: MemberStatus;
   memberAddress?: string;
   memberDescription?: string;
@@ -44,7 +44,6 @@ export interface UserMemberInput {
 
 export interface User {
   _id: ObjectId;
-  agentApplicationId?: ObjectId;
   memberName: string;
   memberPhone: string;
   memberEmail: string;
@@ -57,6 +56,7 @@ export interface User {
   occupation: string;
   userFullname?: string;
   memberAddress?: string;
+  agentApplicationId?: ObjectId;
   memberDescription?: string;
   adminOverviewStats?: AdminDashboardOverviewType;
   avatar?: string;

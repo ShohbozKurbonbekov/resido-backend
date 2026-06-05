@@ -21,6 +21,7 @@ const memberController: T = {};
 const memberService = new MemberService();
 const authService = new AuthService();
 const tariffService = new TariffService();
+
 /////////////////////////////// ----- PUBLIC ADMIN ---- ///////////////////////////////////////////////////
 memberController.getAdmin = async (req: Request, res: Response) => {
   try {
