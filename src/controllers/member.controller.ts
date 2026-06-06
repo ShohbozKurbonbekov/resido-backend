@@ -70,7 +70,7 @@ memberController.getSignup = async (req: Request, res: Response) => {
 ///////////////////////////////// ----- LOGIN ---- ///////////////////////////////////////////////////
 memberController.login = async (req: Request, res: Response) => {
   try {
-    console.log("login");
+    console.log("login process");
 
     const input: LoginInput = req.body;
 
@@ -80,7 +80,7 @@ memberController.login = async (req: Request, res: Response) => {
       memberStatus: result.memberStatus,
       role: result.role,
     };
-    const token: string = await authService.createToken(tokenPayload);
+    const token = await authService.createToken(tokenPayload);
 
     res.cookie("accessToken", token, {
       maxAge: jwtTime * 60 * 60 * 1000,

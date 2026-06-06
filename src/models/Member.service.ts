@@ -124,7 +124,7 @@ class MemberService {
 
   /////////////////////////// --  MEMBER LOGIN -- //////////////////////////////
 
-  public async login(input: LoginInput): Promise<User | Agency | Agent> {
+  public async login(input: LoginInput): Promise<CommonUsers> {
     const { memberEmail, memberPassword } = input;
 
     const user = await this.userModel
@@ -143,7 +143,8 @@ class MemberService {
           agencyMode: 1,
         },
       )
-      .lean();
+      .lean()
+      .exec();
 
     if (!user) {
       throw new Errors(HttpCode.NOT_FOUND, Message.NO_MEMBER);
@@ -158,6 +159,7 @@ class MemberService {
     if (!match) {
       throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
     }
+
     if (user.agencyMode === true) {
       const agency = await this.agencyModel
         .findOne({
@@ -186,9 +188,9 @@ class MemberService {
         throw new Errors(HttpCode.CONFLICT, Message.AGENT_NOT_ACTIVE);
       }
       return agent;
-    } else {
-      return (await this.userModel.findById(user._id)) as User;
     }
+
+    return (await this.userModel.findById(user._id).lean().exec()) as User;
   }
 
   /////////////////////////// --  GET MEMBER DETAIL -- //////////////////////////////
