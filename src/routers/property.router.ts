@@ -79,5 +79,8 @@ property.post(
   allowRoles(Message.ONLY_USERS, MemberType.USER),
   propertyController.likeTargetProperty,
 );
+``;
+
+// property.get("/pr");
 
 export default property;

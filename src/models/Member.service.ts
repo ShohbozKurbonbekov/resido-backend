@@ -188,9 +188,9 @@ class MemberService {
         throw new Errors(HttpCode.CONFLICT, Message.AGENT_NOT_ACTIVE);
       }
       return agent;
+    } else {
+      return (await this.userModel.findById(user._id).lean().exec()) as User;
     }
-
-    return (await this.userModel.findById(user._id).lean().exec()) as User;
   }
 
   /////////////////////////// --  GET MEMBER DETAIL -- //////////////////////////////
