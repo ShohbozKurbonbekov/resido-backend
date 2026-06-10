@@ -11,6 +11,7 @@ import agent from "./routers/agent.router";
 import agency from "./routers/agency.router";
 import blog from "./routers/blog.router";
 import adminRouter from "./routers/admin-router";
+import properties from "./routers/properties.router";
 
 // PATHs
 const publicPath = path.join(__dirname, "public");
@@ -34,6 +35,7 @@ app.use(morgan(MORGAN_FORMAT));
 app.use("/admin", adminRouter);
 app.use("/member", member);
 app.use("/property", property);
+app.use("/properties", properties);
 app.use("/comment", comment);
 app.use("/agent", agent);
 app.use("/agency", agency);

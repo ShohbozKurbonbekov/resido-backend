@@ -14,7 +14,7 @@ export const agendaConfig = {
   cron: "40 0 * * *",
 };
 export const jwtTime = 6;
-
+export const FEATURED_SCORE = 5;
 // CHANGE INTO DB ID
 export const shapeIntoMongooseObjectId = (target: any) => {
   return typeof target === "string"
