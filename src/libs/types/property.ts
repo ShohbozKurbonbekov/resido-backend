@@ -222,7 +222,7 @@ export interface PropertyPriceRange {
 }
 export interface PropertySearchFeatures {
   propertySearch?: string;
-  propertyVerified?: boolean;
+  propertyVerified?: boolean | string;
   propertyAgentLevel?: string;
   propertyLocation?: string;
   propertyType?: PropertyType;

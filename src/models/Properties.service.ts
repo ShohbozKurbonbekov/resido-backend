@@ -4,17 +4,67 @@ import {
   FEATURED_SCORE,
   priceValueField,
 } from "../libs/config";
-import { PropertyStatus, SellingTypeEnum } from "../libs/enums/property.enum";
+import {
+  PropertyStatus,
+  PublicPropertiesSort,
+  SellingTypeEnum,
+} from "../libs/enums/property.enum";
 import { T } from "../libs/types/common";
 import { PublicPropertiesInput } from "../libs/types/properties";
 import { Properties, PropertySearchFeatures } from "../libs/types/property";
-import PropertiesModel from "../schema/Property.model";
+import PropertiesModel, { Property } from "../schema/Property.model";
 import likeTargetItem from "../libs/utils/likeTargetItem";
+import { CacheKey, TTL } from "../libs/redis/cash.constants";
+import { cacheGet, cacheSet } from "../libs/redis/cash.helpers";
+import PropertyModel from "../schema/Property.model";
+import properties from "../routers/properties.router";
 
 class PropertiesService {
   private readonly propertiesModel;
   constructor() {
     this.propertiesModel = PropertiesModel;
+  }
+
+  static async updateRedisPropertiesKeys() {
+    const [page, limit, direction] = [1, 6, -1];
+    const properties = await Promise.all([
+      PropertyModel.find({
+        status: PropertyStatus.AVAILABLE,
+        "sellingOption.optionRent.type": SellingTypeEnum.RENT,
+      })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      PropertyModel.find({
+        status: PropertyStatus.AVAILABLE,
+        featuredScore: { $gte: FEATURED_SCORE },
+      })
+        .sort({ featuredScore: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+    ]);
+
+    const keys = [
+      CacheKey.recentProperties(
+        page,
+        limit,
+        PublicPropertiesSort.createdAt,
+        direction,
+      ),
+      CacheKey.featuredProperties(
+        page,
+        limit,
+        PublicPropertiesSort.featuredScore,
+        direction,
+      ),
+    ];
+
+    for (const [i, key] of keys.entries()) {
+      const ttl = key.startsWith("props:recent")
+        ? TTL.RECENT_PROPERTIES
+        : TTL.FEATURED_PROPERTIES;
+      await cacheSet(key, properties[i], ttl);
+    }
   }
 
   public async getProperties(
@@ -30,7 +80,6 @@ class PropertiesService {
       featuredProperties,
       search,
     } = input;
-
     // Build the match and sort objects based on the input
     const match: T = {
       status: PropertyStatus.AVAILABLE,
@@ -40,38 +89,46 @@ class PropertiesService {
       [sort || "createdAt"]: direction || -1,
     };
 
-    if (recentProperties) {
-      match["sellingOption.optionRent.type"] = SellingTypeEnum.RENT;
+    if (recentProperties || featuredProperties) {
+      const key = recentProperties
+        ? CacheKey.recentProperties(page, limit, sort, direction)
+        : CacheKey.featuredProperties(page, limit, sort, direction);
+
+      const cached = await cacheGet<Property[]>(key);
+      if (cached)
+        return {
+          properties: cached || [],
+          totalPropertiesNumber: [{ total: cached.length ?? 0 }],
+        };
+
+      const data = await this.fetchRedisCachedProperties(
+        input,
+        match,
+        propertySort,
+      );
+      await cacheSet(
+        key,
+        data.properties,
+        featuredProperties ? TTL.FEATURED_PROPERTIES : TTL.RECENT_PROPERTIES,
+      );
+      return data;
     }
 
-    if (featuredProperties) {
-      match.featuredScore = { $gte: FEATURED_SCORE };
-    }
-
-    if (search) {
-      this.shapeMatchQuery(match, search);
-    }
-
+    search && this.shapeMatchQuery(match, search);
     const [result] = await this.propertiesModel.aggregate([
-      ...(search
-        ? [
-            {
-              $lookup: {
-                from: "agents",
-                localField: "agentId",
-                foreignField: "_id",
-                as: "agentData",
-                pipeline: [
-                  { $project: { fullName: 1, rank: 1, isVerified: 1 } },
-                ],
-              },
-            },
-            { $unwind: "$agentData" },
-            ...likeTargetItem(memberId),
-            priceValueField,
-            famousIndicatorField,
-          ]
-        : []),
+      {
+        $lookup: {
+          from: "agents",
+          localField: "agentId",
+          foreignField: "_id",
+          as: "agentData",
+          pipeline: [{ $project: { fullName: 1, rank: 1, isVerified: 1 } }],
+        },
+      },
+      { $unwind: "$agentData" },
+      ...likeTargetItem(memberId),
+      priceValueField,
+      famousIndicatorField,
       { $match: match },
       { $sort: propertySort },
       {
@@ -116,14 +173,14 @@ class PropertiesService {
         propertyBedrooms >= 6 ? { $gte: propertyBedrooms } : propertyBedrooms;
     }
 
-    if (propertyMood?.trim()) {
+    if (propertyMood) {
       match.mood = { $regex: propertyMood, $options: "i" };
     }
     if (propertyVerified === true || propertyVerified === false) {
       match["agentData.isVerified"] = propertyVerified;
     }
 
-    if (propertyAgentLevel?.trim()) {
+    if (propertyAgentLevel) {
       match["agentData.rank"] = propertyAgentLevel.trim();
     }
 
@@ -193,6 +250,32 @@ class PropertiesService {
         },
       ];
     }
+  }
+  private async fetchRedisCachedProperties(
+    input: PublicPropertiesInput,
+    match: T,
+    propertySort: T,
+  ): Promise<Properties> {
+    const { page, limit, recentProperties, featuredProperties } = input;
+
+    if (recentProperties) {
+      match["sellingOption.optionRent.type"] = SellingTypeEnum.RENT;
+    }
+
+    if (featuredProperties) {
+      match.featuredScore = { $gte: FEATURED_SCORE };
+    }
+
+    const result = await this.propertiesModel
+      .find(match)
+      .sort(propertySort)
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return {
+      properties: result || [],
+      totalPropertiesNumber: [{ total: result.length ?? 0 }],
+    };
   }
 }
 

@@ -5,6 +5,7 @@ import AgentService from "../models/Agent.service";
 import AgencyService from "../models/Agency.service";
 import AdminService from "../models/AdminMember.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
+import PropertiesService from "../models/Properties.service";
 
 export const defineUpdateBlogFieldsJob = (agenda: any) => {
   agenda.define("update blog fields", async (job: Job) => {
@@ -69,6 +70,19 @@ export const defineUpdateSubscriptionStatus = (agenda: any) => {
     try {
       await AgencySubscribeService.checkSubscriptionStatus();
       console.log("✅ Job completed: update subscription status");
+    } catch (error) {
+      console.error("❌ Job failed:", error);
+    }
+  });
+};
+
+////////// REDIS UPDATE KEYS WITH TTL /////////
+
+export const defineUpdateRedisPropertiesKeys = (agenda: any) => {
+  agenda.define("update properties keys", async (job: Job) => {
+    try {
+      await PropertiesService.updateRedisPropertiesKeys();
+      console.log("✅ Job completed: updateRedisPropertiesKeys");
     } catch (error) {
       console.error("❌ Job failed:", error);
     }

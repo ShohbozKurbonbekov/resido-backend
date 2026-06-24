@@ -18,7 +18,7 @@ export function getRedisClient(): Redis {
 
   redisClient.on("connect", () => console.log("[Redis]: Connected"));
   redisClient.on("ready", () => console.log("[Redis]: Ready"));
-  redisClient.on("error", () => console.log("[Redis]: Error"));
+  redisClient.on("error", (error) => console.log("[Redis]: Error", error));
   redisClient.on("close", () => console.log("[Redis]: Connection closed"));
   redisClient.on("reconnecting", () => console.log("[Redis Reconnecting..."));
   return redisClient;

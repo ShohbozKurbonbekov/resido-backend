@@ -72,3 +72,10 @@ export enum PropertySortOrder {
   HIGH_PRICE = "high_price",
   MOST_FAMOUS = "most_famous",
 }
+
+export enum PublicPropertiesSort {
+  createdAt = "createdAt",
+  priceValue = "priceValue",
+  famousIndicator = "famousIndicator",
+  featuredScore = "featuredScore",
+}

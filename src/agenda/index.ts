@@ -14,6 +14,7 @@ import {
   defineUpdateAgentFields,
   defineUpdateBlogFieldsJob,
   defineUpdateProperyFields,
+  defineUpdateRedisPropertiesKeys,
   defineUpdateSubscriptionStatus,
 } from "./agenda-start-jobs";
 
@@ -27,6 +28,7 @@ import {
   defineUpdateAgencyFields(agenda);
   defineUpdateSubscriptionStatus(agenda);
   defineUpdateAdminsOverviewStats(agenda);
+  defineUpdateRedisPropertiesKeys(agenda);
 
   await agenda.start();
 
@@ -74,6 +76,14 @@ import {
   await agenda.every(
     "10 minutes",
     "update admins overview",
+    {},
+    { skipImmediate: true },
+  );
+
+  // REDIS UPDATE ITEM KEYS
+  await agenda.every(
+    agendaConfig.updateRedisPropertiesCron, // cron = 90 minutes written
+    "update properties keys",
     {},
     { skipImmediate: true },
   );

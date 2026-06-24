@@ -12,6 +12,7 @@ export const agendaConfig = {
   mongoUri: process.env.MONGO_URL as string,
   agendaCollectionName: "agendaJobs",
   cron: "40 0 * * *",
+  updateRedisPropertiesCron: "90 minutes",
 };
 export const jwtTime = 6;
 export const FEATURED_SCORE = 5;
