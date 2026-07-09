@@ -740,7 +740,7 @@ class MemberService {
         $expr: {
           $lt: [
             "$billingSnapshot.usage.agents",
-            "$billingSnapshot.limits.agents",
+            "$billingSnapshot.limit.agents",
           ],
         },
       };
