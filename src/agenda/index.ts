@@ -22,8 +22,8 @@ import {
   await connectDB();
 
   defineUpdateBlogFieldsJob(agenda);
-  defineUpdateProperyFields(agenda);
-  defineUpdateAgentFields(agenda);
+  // defineUpdateProperyFields(agenda);
+  // defineUpdateAgentFields(agenda);
   defineUpdateAgencyFields(agenda);
   defineUpdateSubscriptionStatus(agenda);
   defineUpdateAdminsOverviewStats(agenda);
@@ -39,20 +39,20 @@ import {
   );
 
   // UPDATE PROPERTY FIELDS
-  await agenda.every(
-    agendaConfig.cron,
-    "update property fields",
-    {},
-    { skipImmediate: true },
-  );
+  // await agenda.every(
+  //   agendaConfig.cron,
+  //   "update property fields",
+  //   {},
+  //   { skipImmediate: true },
+  // );
 
   // UPDATE AGENT FIELDS
-  await agenda.every(
-    agendaConfig.cron,
-    "update agent fields",
-    {},
-    { skipImmediate: true },
-  );
+  // await agenda.every(
+  //   agendaConfig.cron,
+  //   "update agent fields",
+  //   {},
+  //   { skipImmediate: true },
+  // );
 
   // UPDATE AGENCY FIELDS
   await agenda.every(

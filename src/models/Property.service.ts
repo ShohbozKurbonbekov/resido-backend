@@ -760,6 +760,7 @@ class PropertyService {
       userId: shapeIntoMongooseObjectId(user._id),
       targetGroup: TargetGroup.PROPERTY,
     };
+
     const sort: T = {
       createdAt: -1,
     };
