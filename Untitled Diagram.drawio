@@ -1,9 +1,27 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="uClPPKk93LQSXtxoWT8z">
-    <mxGraphModel dx="1414" dy="832" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1178" dy="693" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 30px;&quot;&gt;Properties &amp;nbsp;Current Architecture&amp;nbsp;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="475" x="367" y="41" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-5" edge="1" parent="1" source="ZyItWFPPDoX8lzSqt1gw-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="ZyItWFPPDoX8lzSqt1gw-4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;fillColor=#d5e8d4;strokeColor=#82b366;" value="&amp;nbsp;Create a property (by only agents)" vertex="1">
+          <mxGeometry height="121" width="188" x="86" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="STEP 1" vertex="1">
+          <mxGeometry height="30" width="60" x="150" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="116" width="188" x="354" y="183" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyItWFPPDoX8lzSqt1gw-6" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="STEP 2" vertex="1">
+          <mxGeometry height="30" width="60" x="416" y="150" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
