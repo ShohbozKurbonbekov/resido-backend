@@ -18,7 +18,7 @@ export interface UploadFiles {
 }
 
 export type UploadRequest = Request<{ id: string }, {}, any> & {
-  files?: UploadFiles;
+  files: UploadFiles;
   member: CommonUsers;
 };
 export interface ExtendedRequest extends Request {

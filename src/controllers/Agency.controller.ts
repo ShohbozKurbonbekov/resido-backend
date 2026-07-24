@@ -15,7 +15,6 @@ import {
   AgencyAgePropertiesInput,
   AgencyInputs,
 } from "../libs/types/agency";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { handleAgencyFrontEndInput } from "../libs/utils/handleAgencyFrontEndInputs";
 import AuthService from "../models/Auth.service";
 import AgencySubscribeService from "../models/AgencySubscribe.service";
@@ -23,6 +22,7 @@ import { SubscriptionMode } from "../libs/enums/payment.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import { ObjectId } from "mongoose";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
 
 const agencyController: T = {};
 const agencyService = new AgencyService();
@@ -121,7 +121,7 @@ agencyController.applyAgency = async (req: UploadRequest, res: Response) => {
 
     const certificate = req.files?.certificate;
     if (certificate?.length) {
-      input.certificate = orrangeFiles(certificate)[0];
+      input.certificate = arrangeFiles(certificate)[0];
     }
 
     const result = await agencyService.applyAgency(userId, input);
@@ -285,10 +285,10 @@ agencyController.updateAgencyProfile = async (
     const avatar = req.files?.avatar;
     const certificate = req.files?.certificate;
     if (avatar?.length) {
-      input.avatar = orrangeFiles(avatar)[0];
+      input.avatar = arrangeFiles(avatar)[0];
     }
     if (certificate?.length) {
-      input.certificate = orrangeFiles(certificate)[0];
+      input.certificate = arrangeFiles(certificate)[0];
     }
 
     if (req.body?.socialLinks) {

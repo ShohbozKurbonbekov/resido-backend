@@ -14,10 +14,10 @@ import {
 import makeUploader from "../libs/utils/uploader";
 import buildPropertyInquery from "../libs/utils/buildPropertyInquery";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
-import { handlePropertyFrontEndInput } from "../libs/utils/handlePropertyFrontEndInput";
+import { organizePropertyInput } from "../libs/utils/organizePropertyInput.ts";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
 const propertyController: T = {};
 const propertyService = new PropertyService();
 
@@ -29,16 +29,16 @@ propertyController.createProperty = async (
   try {
     console.log("createProperty process");
     const member = req.member;
-    const input = handlePropertyFrontEndInput(req.body) as PropertyInput;
+    const input = organizePropertyInput(req.body);
     const images = req.files?.images;
     const video = req.files?.videos;
-
+    console.log(input);
     if (images?.length) {
-      input.images = orrangeFiles(images);
+      input.images = arrangeFiles(images);
     }
 
     if (video?.length) {
-      input.videos = orrangeFiles(video);
+      input.videos = arrangeFiles(video);
     }
 
     const result = await propertyService.createProperty(input, member);
@@ -68,11 +68,11 @@ propertyController.updateProperty = async (
     const propertyId = shapeIntoMongooseObjectId(id);
 
     if (videos?.length) {
-      input.videos = orrangeFiles(videos);
+      input.videos = arrangeFiles(videos);
     }
 
     if (images?.length) {
-      input.images = orrangeFiles(images);
+      input.images = arrangeFiles(images);
     }
 
     const result = await propertyService.updateProperty(propertyId, input);

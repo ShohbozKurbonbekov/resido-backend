@@ -13,9 +13,9 @@ import AuthService from "../models/Auth.service";
 import { jwtTime, shapeIntoMongooseObjectId } from "../libs/config";
 import { MessageInput } from "../libs/types/message";
 import { MemberType } from "../libs/enums/member.enum";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import TariffService from "../models/Tariff.service";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -130,7 +130,7 @@ memberController.updateMember = async (req: UploadRequest, res: Response) => {
     const input = req.body;
     const avatar = req.files?.avatar;
     if (avatar?.length) {
-      input.avatar = orrangeFiles(avatar)[0];
+      input.avatar = arrangeFiles(avatar)[0];
     }
     let socials;
     if (

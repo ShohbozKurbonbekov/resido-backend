@@ -19,12 +19,11 @@ import { ObjectId } from "mongoose";
 import { AgentPropertyType } from "../libs/enums/agent.enum";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
-import { Agent } from "http";
 import { CommentsSearchInput } from "../libs/types/comment";
 import { OrderRender } from "../libs/enums/common.enum";
-import { handlePropertyFrontEndInput } from "../libs/utils/handlePropertyFrontEndInput";
 import { PropertyInput } from "../libs/types/property";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
+import { organizePropertyInput } from "../libs/utils/organizePropertyInput.ts";
 
 const agentController: T = {};
 const agentService = new AgentService();
@@ -207,10 +206,10 @@ agentController.agentApply = async (req: UploadRequest, res: Response) => {
     const avatar = req.files?.avatar;
     const certificate = req.files?.certificate;
     if (avatar?.length) {
-      input.avatar = orrangeFiles(avatar)[0];
+      input.avatar = arrangeFiles(avatar)[0];
     }
     if (certificate?.length) {
-      input.certificate = orrangeFiles(certificate)[0];
+      input.certificate = arrangeFiles(certificate)[0];
     }
 
     if (req.body?.socialLinks) {
@@ -250,10 +249,10 @@ agentController.updateAgentProfile = async (
     const avatar = req.files?.avatar;
     const certificate = req.files?.certificate;
     if (avatar?.length) {
-      input.avatar = orrangeFiles(avatar)[0];
+      input.avatar = arrangeFiles(avatar)[0];
     }
     if (certificate?.length) {
-      input.certificate = orrangeFiles(certificate)[0];
+      input.certificate = arrangeFiles(certificate)[0];
     }
 
     if (req.body?.socialLinks) {
@@ -362,19 +361,19 @@ agentController.updatePublisherProperty = async (
       ? JSON.parse(req.body.staticImages)
       : [];
     const propertyId = shapeIntoMongooseObjectId(id);
-    const input = handlePropertyFrontEndInput(req.body) as PropertyInput;
+    const input = organizePropertyInput(req.body) as PropertyInput;
 
     const images = req.files?.images;
     const video = req.files?.videos;
 
     if (images?.length) {
-      input.images = [...staticImages, ...orrangeFiles(images)];
+      input.images = [...staticImages, ...arrangeFiles(images)];
     } else {
       input.images = [...staticImages];
     }
 
     if (video?.length) {
-      input.videos = orrangeFiles(video);
+      input.videos = arrangeFiles(video);
     }
 
     const queries = {

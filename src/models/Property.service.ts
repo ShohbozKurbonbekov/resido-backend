@@ -230,8 +230,6 @@ class PropertyService {
     input: PropertyInput,
     member: CommonUsers,
   ): Promise<Property> {
-    const session = await mongoose.startSession();
-
     // Get agent  full agent data, partial one is not enough and agent is be gonna checked in getMemberData, whether agent is found or not
     const agent = (await this.memberService.getMemberData(
       member.role,
@@ -242,71 +240,49 @@ class PropertyService {
     const { street, city, country } = input.address;
     const address = [street, city, country].filter(Boolean).join(", ");
     const geoCode = await geocodeAddress(address);
+    // Subscrition activeness check
+    const subscriptionMatch: T = {
+      agencyId: agent.agencyId,
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
+    };
+
+    const subscription = await this.subscriptionModel
+      .findOne(subscriptionMatch)
+      .lean()
+      .exec();
+
+    if (!subscription) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.NO_ACTIVE_SUBSCRIPTION);
+    }
+
+    if (
+      subscription.billingSnapshot.usage.properties >=
+      subscription.billingSnapshot.limit.properties
+    ) {
+      throw new Errors(HttpCode.FORBIDDEN, Message.EXCEED_LIMIT);
+    }
 
     try {
-      session.startTransaction();
-      const currentSession = { session };
-
-      // Subscrition activeness check
-      const subscriptionMatch: T = {
-        agencyId: agent.agencyId,
-        subscriptionStatus: SubscriptionStatus.ACTIVE,
-      };
-
-      const subscription = await this.subscriptionModel
-        .findOne(subscriptionMatch, null, currentSession)
-        .lean()
-        .exec();
-
-      if (!subscription) {
-        throw new Errors(HttpCode.FORBIDDEN, Message.NO_ACTIVE_SUBSCRIPTION);
-      }
-
-      // Check limit
-      const { limit } = subscription.billingSnapshot;
-
-      const updatedSub = await this.subscriptionModel.updateOne(
-        {
-          ...subscriptionMatch,
-          "billingSnapshot.usage.properties": { $lt: limit.properties },
-        },
-        { $inc: { "billingSnapshot.usage.properties": 1 } },
-        currentSession,
-      );
-
-      if (updatedSub.modifiedCount === 0) {
-        throw new Errors(HttpCode.FORBIDDEN, Message.EXCEED_LIMIT);
-      }
-
       // Property creation
-      const result = await this.propertyModel.create(
-        [
-          {
-            ...input,
-            address: {
-              ...input.address,
-              geoCode,
-            },
-            agentId: agent._id,
-            agencyId: agent.agencyId,
-          },
-        ],
-        currentSession,
-      );
+      const result = await this.propertyModel.create({
+        ...input,
+        address: {
+          ...input.address,
+          geoCode,
+        },
+        agentId: agent._id,
+        agencyId: agent.agencyId,
+      });
 
-      await session.commitTransaction();
-      return result[0];
+      return result;
     } catch (error) {
       console.log("Error: in createProduct Model ", error);
-      await session.abortTransaction();
 
       if (error instanceof Errors) {
         throw error;
       } else {
         throw new Errors(HttpCode.BAD_REQUEST, Message.CREATING_FAILED);
       }
-    } finally {
-      session.endSession();
     }
   }
 

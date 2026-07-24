@@ -11,6 +11,7 @@ export enum HttpCode {
 }
 
 export enum Message {
+  FILE_TYPE_ERROR = `Please provide image formats jpg/jpeg/png and mp4 for videos`,
   INVALID_TOKEN = "Invalid  token!",
   SESSION_EXPIRED = "Session expired, Please login again!",
   SYSTEM_PROBLEM = "System problem, please try later!",
@@ -46,7 +47,7 @@ export enum Message {
   NO_ACTIVE_MEMBER = "No active member is found",
 
   ALLOW_USER_COMMENT = "Only common users are allowed to write a comment",
-  PROPERTY_CREATE_AGENTS = "Only agents are authorized to create a property",
+  PROPERTY_CREATE_AGENTS = "Only agents are authorized for it",
   PROPERTY_UPDATE_AGENTS = "Only agents are authorized to update a property",
   NO_COMMENT_TYPE = "No such comment type registered",
   NO_PROPERTIES_DELETE = "No property found to delete!",

@@ -3,7 +3,6 @@ import { CommonPageInput, StatusChangeType, T } from "../libs/types/common";
 import Errors, { Message, HttpCode } from "../libs/Errors";
 import { MemberStatus, MemberType } from "../libs/enums/member.enum";
 import AdminService from "../models/AdminMember.service";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { ExtendedRequest, UploadRequest } from "../libs/types/user";
 import AuthService from "../models/Auth.service";
 import { AdminAddTariffInput, TariffInputType } from "../libs/types/payment";
@@ -22,6 +21,7 @@ import CommentService from "../models/Comment.service";
 import { BlogSearchInput, BlogSearchType } from "../libs/types/blog";
 import BlogService from "../models/Blog.service";
 import { BlogStatus } from "../libs/enums/blog.enum";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
 
 const adminController: T = {};
 const adminService = new AdminService();
@@ -41,7 +41,7 @@ adminController.processSignup = async (req: UploadRequest, res: Response) => {
     }
 
     const input = req.body;
-    input.avatar = orrangeFiles(adminAvatar)[0];
+    input.avatar = arrangeFiles(adminAvatar)[0];
     input.role = MemberType.REAL_ESTATE_ADMIN;
 
     const result = await adminService.processSignup(input);

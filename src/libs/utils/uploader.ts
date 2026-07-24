@@ -2,6 +2,8 @@ import fs from "fs";
 import multer from "multer";
 import { v4 } from "uuid";
 import path from "path";
+import { max_file_capacity } from "../config";
+import Errors, { HttpCode, Message } from "../Errors";
 
 export const getTargetFileStorage = (address: string) => {
   const uploadPath = `./uploads/${address}`;
@@ -28,17 +30,13 @@ const makeUploader = (address: string) => {
   return multer({
     storage: storage,
     limits: {
-      fileSize: 1024 * 1024 * 10,
+      fileSize: 1024 * 1024 * max_file_capacity,
     },
 
     fileFilter: (req, file, cb) => {
       const hasFile = file.originalname.match(/\.(jpg|jpeg|png|mp4)$/);
       if (!hasFile) {
-        return cb(
-          new Error(
-            `Please provide image formats jpg/jpeg/png and mp4 for videos`
-          )
-        );
+        return cb(new Errors(HttpCode.FORBIDDEN, Message.FILE_TYPE_ERROR));
       }
 
       return cb(null, true);

@@ -11,6 +11,16 @@ import {
   SellingTypeEnum,
 } from "../libs/enums/property.enum";
 
+const GeoCodeSchema = new Schema(
+  {
+    lat: { type: Number, required: true },
+    long: { type: Number, required: true },
+  },
+  {
+    _id: false,
+  },
+);
+
 const PropertyAddressSchema = new Schema(
   {
     street: { type: String, required: true },
@@ -19,59 +29,71 @@ const PropertyAddressSchema = new Schema(
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
     geoCode: {
-      lat: { type: Number },
-      long: { type: Number },
+      type: GeoCodeSchema,
+      required: false,
     },
   },
   { _id: false },
 );
+
+///////////////////// Price Db Validation ///////////
+const RentSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: [SellingTypeEnum.RENT],
+      required: true,
+    },
+    monthlyPayment: { type: Number, required: true },
+    overalAmount: { type: Number, required: true },
+    devidedMonths: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const SellSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: [SellingTypeEnum.SALE],
+      required: true,
+    },
+    overalAmunt: { type: Number, required: true },
+    discount: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
 const PropertySellingOptionSchema = new Schema(
   {
     optionRent: {
-      type: {
-        type: String,
-        enum: SellingTypeEnum.RENT,
-      },
-      monthlyPayment: { type: Number },
-      overalAmount: { type: Number },
-      devidedMonths: { type: Number },
+      type: RentSchema,
+      required: false,
     },
     optionSell: {
-      type: {
-        type: String,
-        enum: SellingTypeEnum.SALE,
-      },
-      overalAmunt: { type: Number },
-      discount: { type: Number },
+      type: SellSchema,
+      required: false,
     },
   },
   { _id: false },
 );
 
-PropertySellingOptionSchema.pre("save", function (next) {
-  if (!this.optionRent && Object.keys(this.optionRent ?? {}).length === 0) {
-    this.optionRent = undefined;
-  }
-  if (!this.optionSell && Object.keys(this.optionSell ?? {}).length === 0) {
-    this.optionSell = undefined;
-  }
-  next();
-});
+///////////////////// Price Db Validation End ///////////
 
 const PropertyAmenitiesSchema = new Schema(
   {
-    airConditioning: { type: Boolean, default: false },
-    swimmingPool: { type: Boolean, default: false },
-    centralHeating: { type: Boolean, default: false },
-    laundryRoom: { type: Boolean, default: false },
-    gym: { type: Boolean, default: false },
-    alarm: { type: Boolean, default: false },
-    windowCovering: { type: Boolean, default: false },
-    internet: { type: Boolean, default: false },
-    petsAllow: { type: Boolean, default: false },
-    freeWifi: { type: Boolean, default: false },
-    carParking: { type: Boolean, default: false },
-    spaMassage: { type: Boolean, default: false },
+    airConditioning: { type: Boolean },
+    swimmingPool: { type: Boolean },
+    centralHeating: { type: Boolean },
+    laundryRoom: { type: Boolean },
+    gym: { type: Boolean },
+    alarm: { type: Boolean },
+    windowCovering: { type: Boolean },
+    internet: { type: Boolean },
+    petsAllow: { type: Boolean },
+    freeWifi: { type: Boolean },
+    carParking: { type: Boolean },
+    spaMassage: { type: Boolean },
   },
   { _id: false },
 );
@@ -110,7 +132,7 @@ const PropertySchema = new Schema<PropertyInput>(
     area: { type: Number, required: true },
     images: {
       type: [String],
-      default: [],
+      required: true,
     },
     bathrooms: {
       type: Number,
@@ -170,11 +192,9 @@ const PropertySchema = new Schema<PropertyInput>(
     },
     nearBySchools: {
       type: Boolean,
-      required: true,
     },
     nearByTransports: {
       type: Boolean,
-      required: true,
     },
     views: {
       type: Number,
@@ -205,10 +225,9 @@ const PropertySchema = new Schema<PropertyInput>(
       enum: PropertyMood,
       required: true,
     },
-    firePlace: { type: Boolean, required: true },
+    firePlace: { type: Boolean },
     videos: {
       type: [String],
-      default: [],
     },
     recentBoost: {
       type: Number,

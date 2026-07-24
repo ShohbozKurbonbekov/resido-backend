@@ -60,6 +60,7 @@ export interface PropertyAmenities {
 
 export interface PropertyInput {
   _id?: ObjectId;
+  status?: PropertyStatus;
   agencyId: ObjectId;
   agentId: ObjectId;
   title: string;
@@ -67,35 +68,33 @@ export interface PropertyInput {
   floors: number;
   propertyType: PropertyType;
   area: number;
+  images: string[];
   bathrooms: number;
   bedrooms: number;
   hall: number;
   kitchen: number;
+  address: PropertyAddress;
   description: string;
   heating: PropertyHeating;
   cooling: PropertyCooling;
-  address: PropertyAddress;
   furnished: PropertyFurnature;
-  images: string[];
   security: PropertySecurity;
   yearBuilt: number;
-  mood: PropertyMood;
   garageSpace: number;
   amenities: PropertyAmenities;
   nearBySchools?: boolean;
   nearByTransports?: boolean;
   views?: number;
-  averageRating?: number;
-  status?: PropertyStatus;
-  totalLikes?: number;
   totalComments?: number;
   totalSavings?: number;
   featuredScore?: number;
-  recentBoost?: number;
-  daysSinceCreated?: number;
+  averageRating?: number;
+  totalLikes?: number;
+  mood: PropertyMood;
   firePlace?: boolean;
   videos?: string[];
-  comments?: [];
+  recentBoost?: number;
+  daysSinceCreated?: number;
 }
 
 // UPDATE PROPERTY TYPE

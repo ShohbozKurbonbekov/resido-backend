@@ -5,9 +5,9 @@ import { BlogInput, BlogSearchInput } from "../libs/types/blog";
 import { Response, Request } from "express";
 import Errors, { HttpCode, Message } from "../libs/Errors";
 import { shapeIntoMongooseObjectId } from "../libs/config";
-import { orrangeFiles } from "../libs/utils/orrangeFiles";
 import { SavingInput } from "../libs/types/userSaving";
 import { TargetGroup } from "../libs/enums/userSaving.enum";
+import { arrangeFiles } from "../libs/utils/orrangeFiles";
 
 const blogController: T = {};
 const blogService = new BlogService();
@@ -20,7 +20,7 @@ blogController.postBlog = async (req: UploadRequest, res: Response) => {
     const input = req.body;
     input.blogTags = parsedTags;
     if (req.files?.blogImage?.length) {
-      input.blogImage = orrangeFiles(req.files?.blogImage)[0];
+      input.blogImage = arrangeFiles(req.files?.blogImage)[0];
     }
 
     const result = await blogService.postBlog(member, input);
@@ -211,7 +211,7 @@ blogController.updateMyBlog = async (req: UploadRequest, res: Response) => {
     }
 
     if (req.files?.blogImage?.length) {
-      input.blogImage = orrangeFiles(req.files?.blogImage)[0];
+      input.blogImage = arrangeFiles(req.files?.blogImage)[0];
       console.log("image");
     }
 

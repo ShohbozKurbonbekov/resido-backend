@@ -14,17 +14,17 @@ const uploadFiles = (
   imgAvailable?: boolean,
   videoAvailabe?: boolean,
   videoKey?: string,
-  maxVideoLimit?: number
+  maxVideoLimit?: number,
 ): RequestHandler => {
   const middleware = (req: Request, res: Response, next: NextFunction) => {
     const fieldValue: FieldValueType[] = [];
 
-    // FOR A SINGLE IMAGE UPLOAD
+    // FOR IMAGE UPLOAD
     if (imgAvailable && imgKey && maxImgLimit) {
       fieldValue.push({ name: imgKey, maxCount: maxImgLimit });
     }
 
-    // FOR A SINGLE VIDEO UPLOAD
+    // FOR  VIDEO UPLOAD
     if (videoAvailabe && videoKey && maxVideoLimit) {
       fieldValue.push({ name: videoKey, maxCount: maxVideoLimit });
     }
@@ -33,10 +33,7 @@ const uploadFiles = (
 
     upload(req, res, (error: any) => {
       if (error) {
-        return res.status(HttpCode.BAD_REQUEST).json({
-          error: error.code,
-          message: error.message,
-        });
+        return res.status(error?.code ?? HttpCode.FORBIDDEN).json(error);
       }
 
       next();
