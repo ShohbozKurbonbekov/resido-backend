@@ -79,7 +79,7 @@ class PropertyService {
   // UPDATE PROPERTY
   static async updatePropertyFields() {
     console.log(
-      chalk.green("✅ Working with updatePropertyFields statis method"),
+      chalk.green("✅ Working with updatePropertyFields static method"),
     );
     const match: T = {
       status: PropertyStatus.AVAILABLE,
@@ -94,13 +94,10 @@ class PropertyService {
 
       {
         $addFields: {
-          totalLikes: {
-            $ifNull: ["$totalLikes", 0],
-          },
           daysSinceCreated: {
             $floor: {
               $divide: [
-                { $subtract: [new Date(), "$createdAt"] },
+                { $subtract: ["$$NOW", "$createdAt"] },
                 1000 * 60 * 60 * 24,
               ],
             },
@@ -146,8 +143,6 @@ class PropertyService {
       {
         $project: {
           comments: 0,
-          daysSinceCreated: 0,
-          recentBoost: 0,
         },
       },
       {
