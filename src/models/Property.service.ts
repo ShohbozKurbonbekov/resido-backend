@@ -291,19 +291,24 @@ class PropertyService {
     propertyId: ObjectId,
     input: PropertyUpdateInput,
   ): Promise<Property> {
-    const target = await this.propertyModel.findById(propertyId);
-
-    if (!target) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
-
-    const result = await this.propertyModel.findByIdAndUpdate(
-      propertyId,
-      input,
-      { new: true },
+    const propertyMatch: T = {
+      _id: propertyId,
+    };
+    const result = await this.propertyModel.findOneAndUpdate(
+      propertyMatch,
+      {
+        $set: input,
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
     );
 
     if (!result) {
       throw new Errors(HttpCode.BAD_REQUEST, Message.UPDATING_FAILED);
     }
+
     return result;
   }
 

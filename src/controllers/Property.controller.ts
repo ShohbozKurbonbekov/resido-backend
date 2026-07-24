@@ -32,7 +32,6 @@ propertyController.createProperty = async (
     const input = organizePropertyInput(req.body);
     const images = req.files?.images;
     const video = req.files?.videos;
-    console.log(input);
     if (images?.length) {
       input.images = arrangeFiles(images);
     }

@@ -10,7 +10,7 @@ const property = express.Router();
 property.post(
   "/create",
   memberController.verifyMember,
-  allowRoles(Message.PROPERTY_CREATE_AGENTS, MemberType.AGENT),
+  allowRoles(Message.ALLOW_ONLY_AGENTS, MemberType.AGENT),
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
   propertyController.createProperty,
 );
@@ -19,7 +19,7 @@ property.post(
 property.post(
   "/update/:id",
   memberController.verifyMember,
-  allowRoles(Message.PROPERTY_UPDATE_AGENTS, MemberType.AGENT),
+  allowRoles(Message.ALLOW_ONLY_AGENTS, MemberType.AGENT),
   uploadFiles("properties", "images", 5, true, true, "videos", 1),
   propertyController.updateProperty,
 );
