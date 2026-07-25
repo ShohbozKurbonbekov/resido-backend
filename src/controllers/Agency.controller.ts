@@ -495,6 +495,8 @@ agencyController.changeAgenyPropertyStatus = async (
       PropertyStatus.REJECTED,
       PropertyStatus.AVAILABLE,
       PropertyStatus.ARCHIVED,
+      PropertyStatus.RENTED,
+      PropertyStatus.SOLD,
     ];
     if (!allowedPropertyStatus.includes(input.status)) {
       throw new Errors(HttpCode.FORBIDDEN, Message.INVALID_PROPERTY_STATUS);

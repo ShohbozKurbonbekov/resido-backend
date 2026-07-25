@@ -40,7 +40,11 @@ import {
 } from "../libs/types/agency";
 import AgentModel, { AgentDoc } from "../schema/members/Agent.model";
 import PropertyModel, { Property } from "../schema/Property.model";
-import { AgencyStatus, AgencyTargetType } from "../libs/enums/agency.enum";
+import {
+  AgencyStatus,
+  AgencyTargetType,
+  SubscriptionStatus,
+} from "../libs/enums/agency.enum";
 import { AgentStatus } from "../libs/enums/agent.enum";
 import { PropertyStatus } from "../libs/enums/property.enum";
 import UserModel from "../schema/members/User.model";
@@ -1424,15 +1428,20 @@ class AgencyService {
     agencyId: ObjectId,
     queries: T,
   ): Promise<Property> {
-    const session = await mongoose.startSession();
     const { propertyId, status } = queries;
-    const agencyMatch: T = {};
+
+    const agencyMatch: T = {
+      _id: agencyId,
+      memberStatus: MemberStatus.ACTIVE,
+      currentStatus: AgencyStatus.AVAILABLE,
+    };
 
     const agency = await this.agencyModel.findOne(agencyMatch).lean().exec();
     if (!agency) {
       throw new Errors(HttpCode.FORBIDDEN, Message.AGENCY_NOT_ACTIVE);
     }
 
+    const session = await mongoose.startSession();
     try {
       session.startTransaction();
       const currentSession = { session };
@@ -1459,12 +1468,34 @@ class AgencyService {
         },
       );
       if (!result) {
-        throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+        throw new Errors(HttpCode.NOT_MODIFIELD, Message.UPDATING_FAILED);
       }
-      // Update fields
+
       if (status === PropertyStatus.AVAILABLE) {
+        // Subscription Update
+        const subscriptionMatch: T = {
+          agencyId,
+          subscriptionStatus: SubscriptionStatus.ACTIVE,
+          $expr: {
+            $lt: [
+              "$billingSnapshot.usage.properties",
+              "$billingSnapshot.limit.properties",
+            ],
+          },
+        };
+        const updatedSubscription =
+          await this.agencySubscriptionModel.updateOne(
+            subscriptionMatch,
+            { $inc: { "billingSnapshot.usage.properties": 1 } },
+            currentSession,
+          );
+
+        if (updatedSubscription.modifiedCount === 0) {
+          throw new Errors(HttpCode.FORBIDDEN, Message.EXCEED_LIMIT);
+        }
+
         await this.agencyModel.updateOne(
-          { _id: result.agencyId },
+          { _id: agencyId },
           {
             $inc: { propertiesTotalNumber: 1 },
           },
@@ -1483,8 +1514,23 @@ class AgencyService {
       }
 
       if (status === PropertyStatus.ARCHIVED) {
+        const updatedSubscription =
+          await this.agencySubscriptionModel.updateOne(
+            {
+              agencyId,
+              subscriptionStatus: SubscriptionStatus.ACTIVE,
+              $expr: {
+                $gt: ["$billingSnapshot.usage.properties", 0],
+              },
+            },
+            { $inc: { "billingSnapshot.usage.properties": -1 } },
+            currentSession,
+          );
+        if (updatedSubscription.modifiedCount === 0) {
+          throw new Errors(HttpCode.BAD_REQUEST, Message.PROPERTIES_USAGE_ZERO);
+        }
         await this.agencyModel.updateOne(
-          { _id: agency._id },
+          { _id: agencyId },
           {
             $inc: { propertiesTotalNumber: -1 },
           },

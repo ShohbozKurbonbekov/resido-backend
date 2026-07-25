@@ -11,6 +11,7 @@ export enum HttpCode {
 }
 
 export enum Message {
+  PROPERTIES_USAGE_ZERO = "Usages Properties number is 0",
   FILE_TYPE_ERROR = `Please provide image formats jpg/jpeg/png and mp4 for videos`,
   INVALID_TOKEN = "Invalid  token!",
   SESSION_EXPIRED = "Session expired, Please login again!",
